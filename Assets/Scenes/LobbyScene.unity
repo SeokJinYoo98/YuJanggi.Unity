@@ -7536,7 +7536,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LobyScene
   _aiPanel: {fileID: 5352754}
   _localPanel: {fileID: 1392650274}
-  _tcpClient: {fileID: 3380247418818404715, guid: 79cdd2a0a91de1b489d230e4538805c7, type: 3}
+  _tcpClientPrefab: {fileID: 3380247418818404715, guid: 79cdd2a0a91de1b489d230e4538805c7, type: 3}
+  _onlinePlayerName: Player
 --- !u!1 &963847788
 GameObject:
   m_ObjectHideFlags: 0
@@ -13711,8 +13712,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.LobyManager, Assembly-CSharp
-        m_MethodName: HandleGameStart
+        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.LobbyManager, Assembly-CSharp
+        m_MethodName: HandleServerButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

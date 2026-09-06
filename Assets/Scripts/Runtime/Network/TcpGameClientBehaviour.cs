@@ -59,6 +59,11 @@ namespace Yujanggi.Runtime.Network
             {
                 await _client.ConnectAsync(_host, _port, cancellationToken);
             }
+            catch (Exception) when (cancellationToken.IsCancellationRequested)
+            {
+                // 취소로 소켓이 닫히면 SocketException 등으로 완료될 수도 있습니다.
+                throw new OperationCanceledException(cancellationToken);
+            }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
                 OnErrorOccurred?.Invoke(exception.Message);

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Serialization;
 using YuJanggiCommon;
@@ -24,8 +25,12 @@ namespace Yujanggi.Runtime.Game
         private TcpGameClientBehaviour _tcpClient;
         private bool _isTcpClientBound;
         private bool _isConnecting;
+        private CancellationTokenSource _serverConnectionCancellation;
         private bool _isJoinPending;
         private bool _isMatchmakingPending;
+        private bool _isJoined;
+        private bool _isMatched;
+        private string _sessionPlayerName;
 
         public event Action<GameStartEvent> OnOnlineGameStarted;
 
@@ -36,6 +41,11 @@ namespace Yujanggi.Runtime.Game
         {
             Application.targetFrameRate = 60;
             Application.runInBackground = true;
+            // 같은 빌드를 여러 개 실행해도 기본 이름이 중복되지 않도록 합니다.
+            _sessionPlayerName = string.IsNullOrWhiteSpace(_onlinePlayerName) ||
+                                 _onlinePlayerName.Trim() == "Player"
+                ? $"Player-{Guid.NewGuid():N}".Substring(0, 15)
+                : _onlinePlayerName.Trim();
         }
         private void OnEnable()
         {
@@ -44,6 +54,10 @@ namespace Yujanggi.Runtime.Game
         private void OnDisable()
         {
             UnbindTcpClientEvents();
+        }
+        private void OnDestroy()
+        {
+            _serverConnectionCancellation?.Cancel();
         }
         private void Start()
         {
@@ -100,18 +114,25 @@ namespace Yujanggi.Runtime.Game
             _curr = null;
             SceneManager.LoadScene("JanggiScene");
         }
-        public async void HandleStartMatchmaking()
+        public void HandleServerButton()
         {
-            _audio.PlayButton();
-            if (_isConnecting || _isJoinPending || _isMatchmakingPending)
+            if (_serverConnectionCancellation != null ||
+                (_tcpClient != null && _tcpClient.IsConnected))
             {
-                return;
+                HandleDisconnectServer();
             }
-
-            string playerName = _onlinePlayerName.Trim();
-            if (string.IsNullOrEmpty(playerName))
+            else
             {
-                Debug.LogWarning("온라인 플레이어 이름을 입력하세요.");
+                HandleConnectServer();
+            }
+        }
+
+        private async void HandleConnectServer()
+        {
+            _audio?.PlayButton();
+            if (_isConnecting || _serverConnectionCancellation != null ||
+                (_tcpClient != null && _tcpClient.IsConnected))
+            {
                 return;
             }
 
@@ -119,18 +140,68 @@ namespace Yujanggi.Runtime.Game
             {
                 return;
             }
-
+            Debug.Log("서버에 연결중입니다.");
             _isConnecting = true;
-            await _tcpClient.ConnectAsync();
-            _isConnecting = false;
 
-            if (!_tcpClient.IsConnected)
+            var cancellation = new CancellationTokenSource();
+            _serverConnectionCancellation = cancellation;
+            try
+            {
+                await _tcpClient.ConnectAsync(cancellation.Token);
+                cancellation.Token.ThrowIfCancellationRequested();
+                if (_tcpClient != null && _tcpClient.IsConnected)
+                {
+                    Debug.Log("서버에 연결되었습니다.");
+                    _isJoinPending = true;
+                    await _tcpClient.SendAsync(
+                        ServerMessageFactory.CreateJoin(_sessionPlayerName), cancellation.Token);
+                }
+            }
+            catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+            {
+                if (_tcpClient != null)
+                    _tcpClient.Disconnect();
+            }
+            finally
+            {
+                _serverConnectionCancellation = null;
+                cancellation.Dispose();
+                _isConnecting = false;
+            }
+        }
+
+        private void HandleDisconnectServer()
+        {
+            _audio?.PlayButton();
+            CancelServerConnection();
+        }
+
+        private void CancelServerConnection()
+        {
+            _serverConnectionCancellation?.Cancel();
+            if (_tcpClient != null)
+                _tcpClient.Disconnect();
+
+            ResetConnectionState();
+            Debug.Log("서버 연결을 취소했습니다.");
+        }
+
+        public void HandleStartMatchmaking()
+        {
+            if (_isConnecting || _serverConnectionCancellation != null ||
+                _isJoinPending || _isMatchmakingPending || _isMatched)
             {
                 return;
             }
 
-            _isJoinPending = true;
-            await _tcpClient.SendAsync(ServerMessageFactory.CreateJoin(playerName));
+            if (_tcpClient != null && _tcpClient.IsConnected)
+            {
+                if (_isJoined)
+                    StartMatchmakingAsync().Forget();
+                return;
+            }
+
+            HandleConnectServer();
         }
 
         public async void HandleCancelMatchmaking()
@@ -212,17 +283,24 @@ namespace Yujanggi.Runtime.Game
                         }
 
                         _isJoinPending = false;
+                        _isJoined = true;
                         StartMatchmakingAsync().Forget();
                         break;
 
                     case MessageType.MatchmakingStatus:
                         MatchmakingStatusResponse status = message.GetPayload<MatchmakingStatusResponse>();
                         _isMatchmakingPending = status.State == MatchmakingState.Waiting;
+                        if (_isMatchmakingPending)
+                            Debug.Log("매칭 상대를 기다리고 있습니다.");
                         break;
 
                     case MessageType.MatchFound:
                         MatchFoundResponse match = message.GetPayload<MatchFoundResponse>();
-                        Debug.Log($"{match.Opponent.PlayerName} 님과 매칭되었습니다.");
+                        _isMatchmakingPending = false;
+                        _isMatched = true;
+                        Debug.Log(string.IsNullOrEmpty(match.Message)
+                            ? $"{match.Opponent.PlayerName} 님과 매칭되었습니다."
+                            : match.Message);
                         break;
 
                     case MessageType.GameStart:
@@ -275,6 +353,8 @@ namespace Yujanggi.Runtime.Game
             _isConnecting = false;
             _isJoinPending = false;
             _isMatchmakingPending = false;
+            _isJoined = false;
+            _isMatched = false;
         }
     }
 
