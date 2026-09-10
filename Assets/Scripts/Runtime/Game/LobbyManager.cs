@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Serialization;
 using YuJanggiCommon;
@@ -22,10 +21,8 @@ namespace Yujanggi.Runtime.Game
         [FormerlySerializedAs("_tcpClient")]
         [SerializeField] private TcpGameClientBehaviour _tcpClientPrefab;
         [SerializeField] private string                 _onlinePlayerName = "Player";
-        private TcpGameClientBehaviour _tcpClient;
-        private bool _isTcpClientBound;
-        private bool _isConnecting;
-        private CancellationTokenSource _serverConnectionCancellation;
+        private OnlineGameClient _onlineClient;
+        private bool _isOnlineClientBound;
         private bool _isJoinPending;
         private bool _isMatchmakingPending;
         private bool _isJoined;
@@ -49,15 +46,12 @@ namespace Yujanggi.Runtime.Game
         }
         private void OnEnable()
         {
-            BindTcpClientEvents();
+            TryAttachOnlineClient();
+            BindOnlineClientEvents();
         }
         private void OnDisable()
         {
-            UnbindTcpClientEvents();
-        }
-        private void OnDestroy()
-        {
-            _serverConnectionCancellation?.Cancel();
+            UnbindOnlineClientEvents();
         }
         private void Start()
         {
@@ -116,57 +110,46 @@ namespace Yujanggi.Runtime.Game
         }
         public void HandleServerButton()
         {
-            if (_serverConnectionCancellation != null ||
-                (_tcpClient != null && _tcpClient.IsConnected))
+            if (_onlineClient != null &&
+                (_onlineClient.IsConnecting || _onlineClient.IsConnected))
             {
                 HandleDisconnectServer();
             }
             else
             {
-                HandleConnectServer();
+                ConnectServerAsync().Forget();
             }
         }
 
-        private async void HandleConnectServer()
+        private async UniTask ConnectServerAsync()
         {
             _audio?.PlayButton();
-            if (_isConnecting || _serverConnectionCancellation != null ||
-                (_tcpClient != null && _tcpClient.IsConnected))
+            if (_onlineClient != null &&
+                (_onlineClient.IsConnecting || _onlineClient.IsConnected))
             {
                 return;
             }
 
-            if (!TryCreateTcpClient())
+            if (!TryCreateOnlineClient())
             {
                 return;
             }
             Debug.Log("서버에 연결중입니다.");
-            _isConnecting = true;
 
-            var cancellation = new CancellationTokenSource();
-            _serverConnectionCancellation = cancellation;
             try
             {
-                await _tcpClient.ConnectAsync(cancellation.Token);
-                cancellation.Token.ThrowIfCancellationRequested();
-                if (_tcpClient != null && _tcpClient.IsConnected)
-                {
-                    Debug.Log("서버에 연결되었습니다.");
-                    _isJoinPending = true;
-                    await _tcpClient.SendAsync(
-                        ServerMessageFactory.CreateJoin(_sessionPlayerName), cancellation.Token);
-                }
+                bool connected = await _onlineClient.ConnectAsync();
+                if (!connected)
+                    return;
+
+                Debug.Log("서버에 연결되었습니다.");
+                _isJoinPending = true;
+                await _onlineClient.SendAsync(
+                    ServerMessageFactory.CreateJoin(_sessionPlayerName));
             }
-            catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+            catch (OperationCanceledException)
             {
-                if (_tcpClient != null)
-                    _tcpClient.Disconnect();
-            }
-            finally
-            {
-                _serverConnectionCancellation = null;
-                cancellation.Dispose();
-                _isConnecting = false;
+                _onlineClient?.Disconnect();
             }
         }
 
@@ -178,9 +161,7 @@ namespace Yujanggi.Runtime.Game
 
         private void CancelServerConnection()
         {
-            _serverConnectionCancellation?.Cancel();
-            if (_tcpClient != null)
-                _tcpClient.Disconnect();
+            _onlineClient?.Disconnect();
 
             ResetConnectionState();
             Debug.Log("서버 연결을 취소했습니다.");
@@ -188,50 +169,54 @@ namespace Yujanggi.Runtime.Game
 
         public void HandleStartMatchmaking()
         {
-            if (_isConnecting || _serverConnectionCancellation != null ||
+            if ((_onlineClient != null && _onlineClient.IsConnecting) ||
                 _isJoinPending || _isMatchmakingPending || _isMatched)
             {
                 return;
             }
 
-            if (_tcpClient != null && _tcpClient.IsConnected)
+            if (_onlineClient != null && _onlineClient.IsConnected)
             {
                 if (_isJoined)
                     StartMatchmakingAsync().Forget();
                 return;
             }
 
-            HandleConnectServer();
+            ConnectServerAsync().Forget();
         }
 
         public async void HandleCancelMatchmaking()
         {
             _audio.PlayButton();
-            if (_tcpClient == null || !_tcpClient.IsConnected || _isConnecting)
+            if (_onlineClient == null || !_onlineClient.IsConnected ||
+                _onlineClient.IsConnecting)
             {
                 return;
             }
 
             if (!_isMatchmakingPending)
             {
-                _tcpClient.Disconnect();
+                _onlineClient.Disconnect();
                 return;
             }
 
             _isMatchmakingPending = false;
-            await _tcpClient.SendAsync(ServerMessageFactory.CreateMatchmakingCancel());
+            await _onlineClient.SendAsync(ServerMessageFactory.CreateMatchmakingCancel());
         }
         public void HandleQuitGame()
         {
             _audio.PlayButton(); 
             Application.Quit();
         }
-        private bool TryCreateTcpClient()
+        private bool TryCreateOnlineClient()
         {
-            if (_tcpClient != null)
+            if (_onlineClient != null)
             {
                 return true;
             }
+
+            if (TryAttachOnlineClient())
+                return true;
 
             if (_tcpClientPrefab == null)
             {
@@ -239,35 +224,45 @@ namespace Yujanggi.Runtime.Game
                 return false;
             }
 
-            _tcpClient = Instantiate(_tcpClientPrefab);
-            BindTcpClientEvents();
+            TcpGameClientBehaviour transport = Instantiate(_tcpClientPrefab);
+            _onlineClient = OnlineGameClient.Create(transport);
+            BindOnlineClientEvents();
             return true;
         }
 
-        private void BindTcpClientEvents()
+        private bool TryAttachOnlineClient()
         {
-            if (_tcpClient == null || _isTcpClientBound)
-            {
-                return;
-            }
+            if (_onlineClient != null)
+                return true;
 
-            _tcpClient.OnMessageReceived += HandleServerMessage;
-            _tcpClient.OnErrorOccurred += HandleConnectionError;
-            _tcpClient.OnDisconnected += HandleDisconnected;
-            _isTcpClientBound = true;
+            _onlineClient = OnlineGameClient.Instance;
+            return _onlineClient != null;
         }
 
-        private void UnbindTcpClientEvents()
+        private void BindOnlineClientEvents()
         {
-            if (_tcpClient == null || !_isTcpClientBound)
+            if (_onlineClient == null || _isOnlineClientBound)
             {
                 return;
             }
 
-            _tcpClient.OnMessageReceived -= HandleServerMessage;
-            _tcpClient.OnErrorOccurred -= HandleConnectionError;
-            _tcpClient.OnDisconnected -= HandleDisconnected;
-            _isTcpClientBound = false;
+            _onlineClient.OnMessageReceived += HandleServerMessage;
+            _onlineClient.OnErrorOccurred += HandleConnectionError;
+            _onlineClient.OnDisconnected += HandleDisconnected;
+            _isOnlineClientBound = true;
+        }
+
+        private void UnbindOnlineClientEvents()
+        {
+            if (_onlineClient == null || !_isOnlineClientBound)
+            {
+                return;
+            }
+
+            _onlineClient.OnMessageReceived -= HandleServerMessage;
+            _onlineClient.OnErrorOccurred -= HandleConnectionError;
+            _onlineClient.OnDisconnected -= HandleDisconnected;
+            _isOnlineClientBound = false;
         }
 
         private void HandleServerMessage(ChatMessage message)
@@ -307,7 +302,6 @@ namespace Yujanggi.Runtime.Game
                         GameStartEvent gameStart = message.GetPayload<GameStartEvent>();
                         _isMatchmakingPending = false;
                         GameSessionStore.Current = GameSessionFactory.CreateNetworkSession(gameStart.Side);
-                        DontDestroyOnLoad(_tcpClient.gameObject);
                         OnOnlineGameStarted?.Invoke(gameStart);
                         break;
 
@@ -327,13 +321,13 @@ namespace Yujanggi.Runtime.Game
 
         private async UniTask StartMatchmakingAsync()
         {
-            if (_tcpClient == null || !_tcpClient.IsConnected)
+            if (_onlineClient == null || !_onlineClient.IsConnected)
             {
                 return;
             }
 
             _isMatchmakingPending = true;
-            await _tcpClient.SendAsync(ServerMessageFactory.CreateMatchmakingStart());
+            await _onlineClient.SendAsync(ServerMessageFactory.CreateMatchmakingStart());
         }
 
         private void HandleConnectionError(string message)
@@ -350,7 +344,6 @@ namespace Yujanggi.Runtime.Game
 
         private void ResetConnectionState()
         {
-            _isConnecting = false;
             _isJoinPending = false;
             _isMatchmakingPending = false;
             _isJoined = false;
