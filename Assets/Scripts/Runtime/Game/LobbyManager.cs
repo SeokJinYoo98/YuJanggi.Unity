@@ -285,6 +285,8 @@ namespace Yujanggi.Runtime.Game
                     case MessageType.MatchmakingStatus:
                         MatchmakingStatusResponse status = message.GetPayload<MatchmakingStatusResponse>();
                         _isMatchmakingPending = status.State == MatchmakingState.Waiting;
+                        if (status.State == MatchmakingState.Cancelled)
+                            _onlineClient.ClearMatch();
                         if (_isMatchmakingPending)
                             Debug.Log("매칭 상대를 기다리고 있습니다.");
                         break;
@@ -293,14 +295,22 @@ namespace Yujanggi.Runtime.Game
                         MatchFoundResponse match = message.GetPayload<MatchFoundResponse>();
                         _isMatchmakingPending = false;
                         _isMatched = true;
+                        _onlineClient.BeginMatch(match);
                         Debug.Log(string.IsNullOrEmpty(match.Message)
                             ? $"{match.Opponent.PlayerName} 님과 매칭되었습니다."
                             : match.Message);
                         break;
 
+                    case MessageType.FormationSelected:
+                        FormationSelectedResponse formation =
+                            message.GetPayload<FormationSelectedResponse>();
+                        _onlineClient.ApplyFormationSelected(formation);
+                        break;
+
                     case MessageType.GameStart:
                         GameStartEvent gameStart = message.GetPayload<GameStartEvent>();
                         _isMatchmakingPending = false;
+                        _onlineClient.ApplyGameStart(gameStart);
                         GameSessionStore.Current = GameSessionFactory.CreateNetworkSession(gameStart.Side);
                         OnOnlineGameStarted?.Invoke(gameStart);
                         break;
@@ -327,6 +337,7 @@ namespace Yujanggi.Runtime.Game
             }
 
             _isMatchmakingPending = true;
+            _onlineClient.ClearMatch();
             await _onlineClient.SendAsync(ServerMessageFactory.CreateMatchmakingStart());
         }
 

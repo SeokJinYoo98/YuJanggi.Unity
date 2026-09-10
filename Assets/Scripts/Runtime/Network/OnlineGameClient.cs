@@ -14,9 +14,14 @@ namespace Yujanggi.Runtime.Network
 
         bool IsConnected { get; }
         bool IsConnecting { get; }
+        OnlineMatchContext CurrentMatch { get; }
 
         UniTask<bool> ConnectAsync(CancellationToken cancellationToken = default);
         UniTask SendAsync(ChatMessage message, CancellationToken cancellationToken = default);
+        OnlineMatchContext BeginMatch(MatchFoundResponse match);
+        void ApplyFormationSelected(FormationSelectedResponse response);
+        void ApplyGameStart(GameStartEvent gameStart);
+        void ClearMatch();
         void Disconnect();
     }
 
@@ -39,6 +44,7 @@ namespace Yujanggi.Runtime.Network
 
         public bool IsConnected => _transport != null && _transport.IsConnected;
         public bool IsConnecting => _isConnecting;
+        public OnlineMatchContext CurrentMatch { get; private set; }
 
         public static OnlineGameClient Create(TcpGameClientBehaviour transport)
         {
@@ -129,10 +135,32 @@ namespace Yujanggi.Runtime.Network
             return _transport.SendAsync(message, cancellationToken);
         }
 
+        public OnlineMatchContext BeginMatch(MatchFoundResponse match)
+        {
+            CurrentMatch = new OnlineMatchContext(match);
+            return CurrentMatch;
+        }
+
+        public void ApplyFormationSelected(FormationSelectedResponse response)
+        {
+            EnsureCurrentMatch();
+            CurrentMatch.ApplyFormationSelected(response);
+        }
+
+        public void ApplyGameStart(GameStartEvent gameStart)
+        {
+            EnsureCurrentMatch();
+            CurrentMatch.ApplyGameStart(gameStart);
+        }
+
+        public void ClearMatch()
+            => CurrentMatch = null;
+
         public void Disconnect()
         {
             _connectionCancellation?.Cancel();
             _transport?.Disconnect();
+            ClearMatch();
         }
 
         private void Initialize(TcpGameClientBehaviour transport)
@@ -149,6 +177,12 @@ namespace Yujanggi.Runtime.Network
         {
             if (!_isInitialized || _transport == null)
                 throw new InvalidOperationException("온라인 게임 클라이언트가 초기화되지 않았습니다.");
+        }
+
+        private void EnsureCurrentMatch()
+        {
+            if (CurrentMatch == null)
+                throw new InvalidOperationException("진행 중인 온라인 매칭 정보가 없습니다.");
         }
 
         private void BindTransportEvents()
@@ -175,6 +209,9 @@ namespace Yujanggi.Runtime.Network
             => OnErrorOccurred?.Invoke(message);
 
         private void HandleDisconnected()
-            => OnDisconnected?.Invoke();
+        {
+            ClearMatch();
+            OnDisconnected?.Invoke();
+        }
     }
 }
