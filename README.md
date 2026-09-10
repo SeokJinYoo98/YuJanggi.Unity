@@ -62,6 +62,8 @@ Core는 Git UPM으로 참조합니다. Unity와 Server의 Core 커밋은 함께 
 
 공용 DLL: Assets/Plugins/YuJanggiCommon
 
+통신 계약 소스는 별도 로컬 저장소 D:\Git\YuJanggi.Protocol에서 관리합니다. 해당 저장소의 Publish-Protocol.ps1로 서버용·Unity용 DLL을 함께 갱신합니다. protocol-version.json에 소스 커밋과 DLL SHA-256을 기록합니다. 기존 DLL의 Unity 메타데이터와 JSON 의존 DLL은 유지합니다.
+
 ## 사용 에셋
 
 - 장기말: [장기 Janggi KOREA Ver](https://www.acon3d.com/ko/product/1000013872)
