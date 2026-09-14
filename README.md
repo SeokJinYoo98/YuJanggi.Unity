@@ -60,9 +60,9 @@ Core는 Git UPM으로 참조합니다. Unity와 Server의 Core 커밋은 함께 
 
 통신 코드: Assets/Scripts/Runtime/Network
 
-공용 DLL: Assets/Plugins/YuJanggiCommon
+공용 통신 계약은 Git UPM의 Protocol upm/v1.0.0으로 참조합니다. Core는 v0.1.0이며 서버 NuGet 버전과 맞춰 관리합니다. Packages/manifest.json과 packages-lock.json을 함께 커밋합니다.
 
-통신 계약 소스는 별도 로컬 저장소 D:\Git\YuJanggi.Protocol에서 관리합니다. 해당 저장소의 Publish-Protocol.ps1로 서버용·Unity용 DLL을 함께 갱신합니다. protocol-version.json에 소스 커밋과 DLL SHA-256을 기록합니다. 기존 DLL의 Unity 메타데이터와 JSON 의존 DLL은 유지합니다.
+Assets/Plugins/YuJanggiCommon에는 기존 JSON 런타임 의존 DLL만 유지합니다. YuJanggiCommon.dll은 UPM에서 제공하므로 직접 복사하지 않습니다. Protocol의 소스 커밋과 DLL 해시는 설치된 패키지의 protocol-version.json에서 확인합니다. private Git 패키지 접근에는 PC의 GitHub Git 인증이 필요합니다.
 
 ## 사용 에셋
 
