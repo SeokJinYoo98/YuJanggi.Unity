@@ -8,10 +8,11 @@ namespace Yujanggi.Runtime.Network
 {
     public interface IOnlineGameClient
     {
-        event Action<ChatMessage> OnMessageReceived;
-        event Action<string> OnErrorOccurred;
-        event Action OnDisconnected;
+        event Action<ChatMessage>   OnMessageReceived;
+        event Action<string>        OnErrorOccurred;
+        event Action                OnDisconnected;
 
+        string PlayerName { get; }
         bool IsConnected { get; }
         bool IsConnecting { get; }
         OnlineMatchContext CurrentMatch { get; }
@@ -46,16 +47,23 @@ namespace Yujanggi.Runtime.Network
         public bool IsConnecting => _isConnecting;
         public OnlineMatchContext CurrentMatch { get; private set; }
 
-        public static OnlineGameClient Create(TcpGameClientBehaviour transport)
+
+        public string PlayerName { get; private set; }
+        public static OnlineGameClient Create(TcpGameClientBehaviour transport, string playerName)
         {
             if (transport == null)
                 throw new ArgumentNullException(nameof(transport));
+
+            if (string.IsNullOrWhiteSpace(playerName))
+                throw new ArgumentException(
+                    "클라이언트 이름이 필요합니다.",
+                    nameof(playerName));
 
             if (Instance != null)
             {
                 if (transport.gameObject == Instance.gameObject)
                 {
-                    Instance.Initialize(transport);
+                    Instance.Initialize(transport, playerName);
                     return Instance;
                 }
 
@@ -63,11 +71,14 @@ namespace Yujanggi.Runtime.Network
                 return Instance;
             }
 
-            OnlineGameClient client = transport.GetComponent<OnlineGameClient>();
+            OnlineGameClient client =
+                transport.GetComponent<OnlineGameClient>();
+
             if (client == null)
                 client = transport.gameObject.AddComponent<OnlineGameClient>();
 
-            client.Initialize(transport);
+            client.Initialize(transport, playerName);
+
             return client;
         }
 
@@ -163,12 +174,13 @@ namespace Yujanggi.Runtime.Network
             ClearMatch();
         }
 
-        private void Initialize(TcpGameClientBehaviour transport)
+        private void Initialize(TcpGameClientBehaviour transport, string playerName)
         {
             if (_isInitialized)
                 return;
 
             _transport = transport;
+            PlayerName = playerName;
             BindTransportEvents();
             _isInitialized = true;
         }
