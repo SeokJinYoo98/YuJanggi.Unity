@@ -3,7 +3,7 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Pool;
 
-namespace Yujanggi.Runtime.Particle
+namespace YuJanggi.Runtime.Particle
 {
     public class ParticleView : MonoBehaviour
     {

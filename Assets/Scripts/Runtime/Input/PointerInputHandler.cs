@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Yujanggi.Runtime.Input
+namespace YuJanggi.Runtime.Input
 {
     using Core.Domain;
 

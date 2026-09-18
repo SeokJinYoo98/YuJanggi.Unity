@@ -1,11 +1,12 @@
 
 using System.Collections.Generic;
 using UnityEngine;
-using Yujanggi.Core.Board;
-using Yujanggi.Core.Domain;
 
-namespace Yujanggi.Runtime.Piece
+
+namespace YuJanggi.Runtime.Piece
 {
+    using Core.Board;
+    using Core.Domain;
     public class PieceManager : MonoBehaviour
     {
         private PieceSpawner _pieceSpawner;

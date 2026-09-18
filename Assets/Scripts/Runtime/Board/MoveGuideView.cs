@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Yujanggi.Runtime.Board
+namespace YuJanggi.Runtime.Board
 { 
     using Core.Domain;
     using System.Collections.Generic;

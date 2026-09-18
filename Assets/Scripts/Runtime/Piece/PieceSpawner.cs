@@ -1,10 +1,11 @@
 using UnityEngine;
-using Yujanggi.Core.Board;
-using Yujanggi.Core.Domain;
-using Yujanggi.Data.Board;
 
-namespace Yujanggi.Runtime.Piece
+namespace YuJanggi.Runtime.Piece
 {
+    using Core.Board;
+    using Core.Domain;
+    using Data.Board;
+
     public class PieceSpawner : MonoBehaviour
     {
         [SerializeField] private PieceDataBase _pieceDB;

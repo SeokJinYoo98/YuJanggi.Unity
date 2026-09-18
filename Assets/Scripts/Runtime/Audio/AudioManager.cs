@@ -1,5 +1,5 @@
 using UnityEngine;
-namespace Yujanggi.Runtime.Audio
+namespace YuJanggi.Runtime.Audio
 {
     public class AudioManager : MonoBehaviour
     {

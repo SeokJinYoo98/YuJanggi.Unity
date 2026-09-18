@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using YuJanggiCommon;
 
-namespace Yujanggi.Runtime.Network
+namespace YuJanggi.Runtime.Network
 {
     /// <summary>
     /// Thread-safe TCP transport for the server's length-prefixed JSON protocol.

@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Yujanggi.Core.Domain;
-using Yujanggi.Core.Match;
-using static UnityEngine.AdaptivePerformance.Provider.AdaptivePerformanceSubsystemDescriptor;
 
-namespace Yujanggi.Runtime.GameSession
+namespace YuJanggi.Runtime.GameSession
 {
+    using Core.Domain;
+    using Core.Match;
+
     public sealed class SessionReplayState : SessionStateBase
     {
         private readonly MatchView  _matchView;

@@ -1,10 +1,12 @@
 using UnityEngine;
-namespace Yujanggi.Runtime.Board
+
+namespace YuJanggi.Runtime.Board
 {
     using Core.Board;
-    using System.Collections.Generic;
-    using Yujanggi.Core.Domain;
-    using Yujanggi.Runtime.Piece;
+    using Core.Domain;
+
+    using Piece;
+
     public interface IReplayBoardRenderer
     {
         public void RestoreCapturedPiece(int id, PlayerTeam team, Pos to);

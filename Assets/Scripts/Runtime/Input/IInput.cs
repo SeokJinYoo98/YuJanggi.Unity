@@ -1,9 +1,10 @@
 using System;
 using UnityEngine;
-using Yujanggi.Core.Domain;
 
-namespace Yujanggi.Runtime.Input
+namespace YuJanggi.Runtime.Input
 {
+    using Core.Domain;
+
     public abstract class InputHandlerBehaviour : MonoBehaviour, IInputHandler
     {
         public abstract event Action<Pos> OnBoardClicked;

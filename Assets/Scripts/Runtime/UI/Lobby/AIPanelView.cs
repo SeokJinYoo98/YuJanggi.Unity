@@ -1,11 +1,9 @@
-
+using UnityEngine;
 using TMPro;
 
-using UnityEngine;
-using Yujanggi.Runtime.Controller;
-
-namespace Yujanggi.Runtime.UI
+namespace YuJanggi.Runtime.UI
 {
+    using Controller;
     public class AIPanelView : UIVisible
     {
         [SerializeField] private TMP_Dropdown _teamDropdown;

@@ -1,12 +1,13 @@
 using UnityEngine;
-using System.Collections;
+using DG.Tweening;
 
-namespace Yujanggi.Runtime.Piece
+using YuJanggi.Runtime.Input;
+
+
+namespace YuJanggi.Runtime.Piece
 {
-    using DG.Tweening;
-    using Yujanggi.Core.Domain;
-    using Yujanggi.Data.Board;
-    using Yujanggi.Runtime.Input;
+    using Core.Domain;
+    using Data.Board;
 
     public interface IPieceView
     {

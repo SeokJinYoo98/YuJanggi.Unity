@@ -1,11 +1,12 @@
 
 using System.Collections.Generic;
 using UnityEngine;
-using Yujanggi.Core.Domain;
-using Yujanggi.Core.Match;
 
-namespace Yujanggi.Runtime.GameSession
+namespace YuJanggi.Runtime.GameSession
 {
+    using Core.Domain;
+    using Core.Match;
+
     public enum SessionState
     {
         BaseState,

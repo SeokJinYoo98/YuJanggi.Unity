@@ -1,8 +1,9 @@
 using System;
-using Yujanggi.Core.Domain;
 
-namespace Yujanggi.Runtime.Controller
+namespace YuJanggi.Runtime.Controller
 {
+    using Core.Domain;
+
     public sealed class NetworkController : IPlayerController
     {
         public NetworkController(PlayerTeam team)

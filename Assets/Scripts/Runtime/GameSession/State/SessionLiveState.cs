@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Yujanggi.Core.Domain;
-using Yujanggi.Core.Match;
-using Yujanggi.Runtime.Piece;
 
-namespace Yujanggi.Runtime.GameSession
+
+namespace YuJanggi.Runtime.GameSession
 {
+    using Core.Domain;
+    using Core.Match;
+    using Piece;
 
     public sealed class SessionLiveState : SessionStateBase
     {

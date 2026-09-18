@@ -1,10 +1,12 @@
 using System.Collections.Generic;
-using Yujanggi.Core.Domain;
-using Yujanggi.Core.Match;
-using Yujanggi.Runtime.Piece;
 
-namespace Yujanggi.Runtime.GameSession
+namespace YuJanggi.Runtime.GameSession
 {
+    using Core.Domain;
+    using Core.Match;
+
+    using Piece;
+
     public class GameSession : ISessionTransition, IGameInputReceiver, IGameResultContext
     {
         #region public Field F

@@ -1,7 +1,7 @@
 using System;
 using YuJanggiCommon;
 
-namespace Yujanggi.Runtime.Network.Protocol
+namespace YuJanggi.Runtime.Network.Protocol
 {
     /// <summary>
     /// Creates client-originated messages defined by the shared server contract.

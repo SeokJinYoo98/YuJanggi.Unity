@@ -1,10 +1,11 @@
 using System;
 using UnityEngine;
-using Yujanggi.Core.Domain;
-using Yujanggi.Core.Match;
 
-namespace Yujanggi.Runtime.GameSession
+
+namespace YuJanggi.Runtime.GameSession
 {
+    using Core.Domain;
+    using Core.Match;
     public sealed class SessionEndReplayState : SessionStateBase
     {
         private readonly ReplayView _replayView;

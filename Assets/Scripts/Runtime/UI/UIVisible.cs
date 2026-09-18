@@ -2,7 +2,7 @@
 
 using UnityEngine;
 
-namespace Yujanggi.Runtime.UI
+namespace YuJanggi.Runtime.UI
 {
     public class UIVisible : MonoBehaviour
     {

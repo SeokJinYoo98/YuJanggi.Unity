@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace Yujanggi.Runtime.Controller
+namespace YuJanggi.Runtime.Controller
 {
     using Core.Board;
     using Core.Domain;

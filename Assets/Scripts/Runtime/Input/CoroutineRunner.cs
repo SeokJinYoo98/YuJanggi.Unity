@@ -1,8 +1,7 @@
 using System.Collections;
 using UnityEngine;
-using Yujanggi.Core.Domain;
 
-namespace Yujanggi.Runtime.Input
+namespace YuJanggi.Runtime.Input
 {
     public interface ICoroutineRunner
     {

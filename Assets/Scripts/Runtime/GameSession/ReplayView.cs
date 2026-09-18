@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using TMPro;
-namespace Yujanggi.Runtime.GameSession
+namespace YuJanggi.Runtime.GameSession
 {
     using Core.Match;
 

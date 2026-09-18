@@ -1,9 +1,10 @@
-using TMPro;
 using UnityEngine;
-using Yujanggi.Core.Domain;
+using TMPro;
 
-namespace Yujanggi.Runtime.UI
+namespace YuJanggi.Runtime.UI
 {
+    using Core.Domain;
+
     public class ResultUI : UIVisible
     {
         [SerializeField] private TMP_Text _winner;

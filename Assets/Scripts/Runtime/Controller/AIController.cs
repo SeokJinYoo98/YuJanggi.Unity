@@ -2,7 +2,7 @@ using System;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 
-namespace Yujanggi.Runtime.Controller
+namespace YuJanggi.Runtime.Controller
 {
     using Core.Board;
     using Core.Domain;

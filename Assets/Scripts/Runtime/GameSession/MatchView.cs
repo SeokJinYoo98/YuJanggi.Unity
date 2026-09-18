@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace Yujanggi.Runtime.GameSession
+namespace YuJanggi.Runtime.GameSession
 {
     using Core.Board;
     using Core.Domain;

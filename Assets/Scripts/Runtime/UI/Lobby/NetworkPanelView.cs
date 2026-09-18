@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
-namespace Yujanggi.Runtime.UI
+namespace YuJanggi.Runtime.UI
 {
     using Cysharp.Threading.Tasks;
     using Game;

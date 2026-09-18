@@ -1,5 +1,5 @@
 using UnityEngine;
-namespace Yujanggi.Data.Board
+namespace YuJanggi.Data.Board
 {
     using Core.Domain;
     [CreateAssetMenu(fileName = "PieceData", menuName = "Piece/PieceData")]

@@ -4,7 +4,7 @@ using System;
 using DG.Tweening;
 using UnityEngine;
 
-namespace Yujanggi.Runtime.Particle
+namespace YuJanggi.Runtime.Particle
 {
     public sealed class PooledParticle : MonoBehaviour
     {

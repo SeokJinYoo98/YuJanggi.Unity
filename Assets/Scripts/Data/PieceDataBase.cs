@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Yujanggi.Core.Domain;
-using Yujanggi.Runtime.Piece;
 
-namespace Yujanggi.Data.Board
+namespace YuJanggi.Data.Board
 {
+    using Core.Domain;
+
+    using Runtime.Piece;
+
     [CreateAssetMenu(fileName = "PieceDataBase", menuName = "Piece/PieceDataBase")]
     public class PieceDataBase : ScriptableObject
     {

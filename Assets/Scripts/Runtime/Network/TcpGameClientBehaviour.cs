@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using YuJanggiCommon;
 
-namespace Yujanggi.Runtime.Network
+namespace YuJanggi.Runtime.Network
 {
     /// <summary>
     /// Unity-facing bridge that dispatches queued TCP events from Update.

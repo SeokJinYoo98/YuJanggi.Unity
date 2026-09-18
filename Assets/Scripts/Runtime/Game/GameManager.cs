@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
-namespace Yujanggi.Runtime.Game
+namespace YuJanggi.Runtime.Game
 {
 
     using Core.Board;

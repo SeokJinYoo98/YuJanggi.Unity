@@ -8,11 +8,10 @@
       "hash": "e5acc106ee196bc5a32fb14cdf2987b0f96d11e0"
     },
     "com.seokjinyoo.yujanggi.core": {
-      "version": "https://github.com/SeokJinYoo98/YuJanggi.Core.git#v0.1.0",
+      "version": "file:D:/Git/YuJanggi.Core/artifacts/1.0.0/com.seokjinyoo.yujanggi.core-1.0.0.tgz",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "13dc6d68982e85662b44d1e489831156fa04e69d"
+      "source": "local-tarball",
+      "dependencies": {}
     },
     "com.seokjinyoo.yujanggi.protocol": {
       "version": "https://github.com/SeokJinYoo98/YuJanggi.Protocol.git#upm/v1.0.0",

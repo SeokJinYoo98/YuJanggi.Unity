@@ -3,7 +3,7 @@ using TMPro;
 
 using UnityEngine;
 
-namespace Yujanggi.Runtime.UI
+namespace YuJanggi.Runtime.UI
 {
     public class LocalPanelView : UIVisible
     {

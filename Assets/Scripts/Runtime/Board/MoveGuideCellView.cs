@@ -1,9 +1,11 @@
 using UnityEngine;
-using Yujanggi.Core.Domain;
-using Yujanggi.Runtime.Input;
+using YuJanggi.Runtime.Input;
 
-namespace Yujanggi.Runtime.Board
+namespace YuJanggi.Runtime.Board
 {
+    using Core.Domain;
+
+
     public class MoveGuideCellView : MonoBehaviour, IBoardClickable
     {
         Renderer    _renderer;

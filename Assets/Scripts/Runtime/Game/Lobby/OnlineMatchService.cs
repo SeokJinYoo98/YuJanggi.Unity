@@ -3,7 +3,7 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 
 
-namespace Yujanggi.Runtime.Game
+namespace YuJanggi.Runtime.Game
 {
     using Network;
     using Network.Protocol;

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using YuJanggiCommon;
 
-namespace Yujanggi.Runtime.Network
+namespace YuJanggi.Runtime.Network
 {
     public enum OnlineMatchPhase
     {

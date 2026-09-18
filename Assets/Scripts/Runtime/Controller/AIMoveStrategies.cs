@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Yujanggi.Core.Board;
-using Yujanggi.Core.Domain;
-using Yujanggi.Core.Rule;
 
-namespace Yujanggi.Runtime.Controller
+
+namespace YuJanggi.Runtime.Controller
 {
+    using Core.Board;
+    using Core.Domain;
+    using Core.Rule;
     public enum AIMoveStrategyType
     {
         Random,

@@ -1,16 +1,18 @@
 using System;
 using UnityEngine;
 using YuJanggiCommon;
-using Yujanggi.Core.Domain;
-using Yujanggi.Core.Match;
-using Yujanggi.Runtime.Controller;
-using Yujanggi.Runtime.GameSession;
 
-namespace Yujanggi.Runtime.Game
+
+namespace YuJanggi.Runtime.Game
 {
+    using Core.Domain;
+    using Core.Match;
+
+    using Controller;
+    using GameSession;
     public static class GameSessionFactory
     {
-        public static Yujanggi.Runtime.GameSession.GameSession CreateSession(
+        public static GameSession CreateSession(
             GameSessionInfo sessionInfo,
             MatchView matchView,
             MatchModel matchModel,
@@ -28,7 +30,7 @@ namespace Yujanggi.Runtime.Game
                 localInput,
                 matchModel);
 
-            return new Yujanggi.Runtime.GameSession.GameSession(
+            return new GameSession(
                 sessionInfo,
                 matchView,
                 matchModel,

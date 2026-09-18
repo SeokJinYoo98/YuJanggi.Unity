@@ -1,11 +1,12 @@
 
 using TMPro;
 using UnityEngine;
-using Yujanggi.Core.Domain;
-using Yujanggi.Core.Match;
 
-namespace Yujanggi.Runtime.UI
+namespace YuJanggi.Runtime.UI
 {
+    using Core.Domain;
+    using Core.Match;
+
     public class MatchUI : MonoBehaviour
     {
         [SerializeField] private TMP_Text _recordText;
