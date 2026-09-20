@@ -6,7 +6,7 @@ using YuJanggi.Runtime.Input;
 
 namespace YuJanggi.Runtime.Piece
 {
-    using Core.Domain;
+    using Core.V2.Domain;
     using Data.Board;
 
     public interface IPieceView

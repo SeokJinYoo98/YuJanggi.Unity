@@ -3,10 +3,15 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
+
 namespace YuJanggi.Network_V2
 {
-    using Protocol.V2.Messages;
+    using Core.V2;
+    using Core.V2.Board;
 
+    using Protocol.V2;
+    using Protocol.V2.Messages;
+ 
     public interface IOnlineGameClient_V2
     {
 
@@ -49,6 +54,7 @@ namespace YuJanggi.Network_V2
         /// <summary>
         /// 서버와 프로토콜 핸드셰이크를 수행합니다.
         /// </summary>
+        
         private async UniTask HandshakeAsync(
             CancellationToken cancellationToken)
         {

@@ -4,9 +4,9 @@ using System.Collections.Generic;
 
 namespace YuJanggi.Runtime.Controller
 {
-    using Core.Board;
-    using Core.Domain;
-    using Core.Rule;
+    using Core.V2.Board;
+    using Core.V2.Domain;
+    using Core.V2.Rule;
     public class LocalController : IPlayerController, ILocalPlayer
     {
         public  PlayerTeam              Team { get; }

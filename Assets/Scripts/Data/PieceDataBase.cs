@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace YuJanggi.Data.Board
 {
-    using Core.Domain;
+    using Core.V2.Domain;
 
     using Runtime.Piece;
 

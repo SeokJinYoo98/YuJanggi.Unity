@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 
 namespace YuJanggi.Runtime.Input
 {
-    using Core.Domain;
+    using Core.V2.Domain;
 
     public class PointerInputHandler : InputHandlerBehaviour
     {

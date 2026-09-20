@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace YuJanggi.Runtime.Input
 {
-    using Core.Domain;
+    using Core.V2.Domain;
 
     public abstract class InputHandlerBehaviour : MonoBehaviour, IInputHandler
     {

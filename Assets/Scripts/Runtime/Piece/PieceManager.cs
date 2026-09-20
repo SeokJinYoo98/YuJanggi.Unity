@@ -5,8 +5,8 @@ using UnityEngine;
 
 namespace YuJanggi.Runtime.Piece
 {
-    using Core.Board;
-    using Core.Domain;
+    using Core.V2.Board;
+    using Core.V2.Domain;
     public class PieceManager : MonoBehaviour
     {
         private PieceSpawner _pieceSpawner;

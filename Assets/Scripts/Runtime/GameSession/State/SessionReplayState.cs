@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace YuJanggi.Runtime.GameSession
 {
-    using Core.Domain;
-    using Core.Match;
+    using Core.V2.Domain;
+    using Core.V2.Match;
 
     public sealed class SessionReplayState : SessionStateBase
     {

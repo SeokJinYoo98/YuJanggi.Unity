@@ -1,7 +1,8 @@
 using UnityEngine;
+using YuJanggi.Core.V2.Domain;
 namespace YuJanggi.Data.Board
 {
-    using Core.Domain;
+
     [CreateAssetMenu(fileName = "PieceData", menuName = "Piece/PieceData")]
     public class PieceData : ScriptableObject
     {

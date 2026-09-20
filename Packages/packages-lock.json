@@ -7,10 +7,10 @@
       "dependencies": {},
       "hash": "e5acc106ee196bc5a32fb14cdf2987b0f96d11e0"
     },
-    "com.seokjinyoo.yujanggi.core": {
-      "version": "file:D:/Git/YuJanggi.Core/artifacts/1.0.0/com.seokjinyoo.yujanggi.core-1.0.0.tgz",
+    "com.seokjinyoo.yujanggi.core.v2": {
+      "version": "file:D:/Git/YuJanggi.Core.V2/upm",
       "depth": 0,
-      "source": "local-tarball",
+      "source": "local",
       "dependencies": {}
     },
     "com.seokjinyoo.yujanggi.protocol": {

@@ -2,7 +2,7 @@ using System;
 
 namespace YuJanggi.Runtime.Controller
 {
-    using Core.Domain;
+    using Core.V2.Domain;
 
     public sealed class NetworkController : IPlayerController
     {

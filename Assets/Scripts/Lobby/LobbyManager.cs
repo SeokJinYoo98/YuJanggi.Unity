@@ -1,21 +1,19 @@
 using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.SceneManagement;
-using YuJanggiCommon;
-
+using UnityEngine.Serialization;
 namespace YuJanggi.Lobby
 {
     using BootStrap;
-
-    using Runtime.Network;
-    using Runtime.UI;
-    using Runtime.GameSession;
-
+    using Core.V2.Domain;
     using Data.AI;
 
-    using Core.Domain;
+    using Runtime.GameSession;
+    using Runtime.Network;
+    using Runtime.UI;
+
+    using YuJanggiCommon;
 
 
     public class LobbyManager : MonoBehaviour

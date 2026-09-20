@@ -6,9 +6,10 @@ namespace YuJanggi.Runtime.GameSession
 {
     using BootStrap;
 
-    using Core.Board;
-    using Core.Domain;
-    using Core.Match;
+    using Core.V2.Board;
+    using Core.V2.Domain;
+    using Core.V2.Match;
+
     using Particle;
     using Audio;
     using UI;

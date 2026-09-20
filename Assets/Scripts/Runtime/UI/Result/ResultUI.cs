@@ -3,7 +3,7 @@ using TMPro;
 
 namespace YuJanggi.Runtime.UI
 {
-    using Core.Domain;
+    using Core.V2.Domain;
 
     public class ResultUI : UIVisible
     {

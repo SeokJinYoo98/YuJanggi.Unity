@@ -3,7 +3,7 @@ using YuJanggi.Runtime.Input;
 
 namespace YuJanggi.Runtime.Board
 {
-    using Core.Domain;
+    using Core.V2.Domain;
 
 
     public class MoveGuideCellView : MonoBehaviour, IBoardClickable

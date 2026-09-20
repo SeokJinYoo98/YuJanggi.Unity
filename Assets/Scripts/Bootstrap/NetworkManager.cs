@@ -14,8 +14,8 @@ namespace YuJanggi.BootStrap
     /// </summary>
     public sealed class NetworkManager : MonoBehaviour
     {
-        private CancellationTokenSource? _lifetimeCts;
-        private OnlineGameClient_V2? _client;
+        private CancellationTokenSource?    _lifetimeCts;
+        private OnlineGameClient_V2?        _client;
 
         public IOnlineGameClient_V2 Client
             => _client ?? throw new InvalidOperationException(
@@ -81,8 +81,8 @@ namespace YuJanggi.BootStrap
         {
             if (_client is not null)
             {
-                _client.OnStateChanged -= HandleStateChanged;
-                _client.OnConnectionFailed -= HandleConnectionFailed;
+                _client.OnStateChanged      -= HandleStateChanged;
+                _client.OnConnectionFailed  -= HandleConnectionFailed;
 
                 _client.Dispose();
             }

@@ -4,9 +4,10 @@ using System.Threading;
 
 namespace YuJanggi.Runtime.Controller
 {
-    using Core.Board;
-    using Core.Domain;
-    using Core.Rule;
+    using Core.V2.Board;
+    using Core.V2.Domain;
+    using Core.V2.Rule;
+
     public class AIController : IPlayerController, IAIController
     {
         public PlayerTeam Team { get; }
