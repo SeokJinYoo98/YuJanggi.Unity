@@ -6,18 +6,19 @@ using Cysharp.Threading.Tasks;
 namespace YuJanggi.Network_V2
 {
     using Protocol.V2.Messages;
-    public enum ConnectionEvent
+
+    public interface IOnlineGameClient_V2
     {
-        Connecting, 
+
     }
-    public sealed class OnlineGameClient_V2 :IDisposable
+    public sealed class OnlineGameClient_V2 :IDisposable, IOnlineGameClient_V2
     {
         private readonly TcpGameClient_V2   _tcpClient;
 
         private CancellationTokenSource?    _receiveCts;
         private bool                        _disposed;
 
-        private bool IsConnected => _tcpClient.IsConnected;
+        public bool IsConnected => _tcpClient.IsConnected;
         public OnlineGameClient_V2(string host, int port)
         {
             _tcpClient = new(host, port);
@@ -98,5 +99,21 @@ namespace YuJanggi.Network_V2
         public void Dispose()
         {
         }
+
+        public event Action<string>?                OnConnectionFailed;
+        public event Action<OnlineConnectionState>? OnStateChanged;
+        private OnlineConnectionState _state = OnlineConnectionState.Disconnected;
+        private void ChangeState(OnlineConnectionState state)
+        {
+            if (_state == state)
+                return;
+
+            _state = state;
+            OnStateChanged?.Invoke(_state);
+        }
+    }
+    public enum OnlineConnectionState
+    {
+        Disconnected, Connecting, Handshaking, Connected
     }
 }

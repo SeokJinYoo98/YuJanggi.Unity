@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace YuJanggi.Runtime.Audio
+namespace YuJanggi.Audio
 {
     public enum UISfx
     { Button }
