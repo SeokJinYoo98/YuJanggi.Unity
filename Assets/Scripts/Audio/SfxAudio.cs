@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace Yujanggi.Runtime.Audio
+namespace YuJanggi.Audio
 {
     public enum JanggiSfx
     { Select, Move, Capture, Check, UnCheck, CheckMate, TurnAlert, Win, Lose }

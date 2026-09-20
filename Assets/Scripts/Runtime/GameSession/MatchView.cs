@@ -2,8 +2,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace Yujanggi.Runtime.GameSession
+namespace YuJanggi.Runtime.GameSession
 {
+    using BootStrap;
+
     using Core.Board;
     using Core.Domain;
     using Core.Match;
@@ -25,7 +27,7 @@ namespace Yujanggi.Runtime.GameSession
             _boardView      = boardView;
             _resultUI       = resultUI;
             _matchUI        = matchUI;
-            _audioManager   = AudioManager.Instance;
+            _audioManager   = YuJanggiBootStrap.Instance.AudioManager;
         }
         public void CheckOccured(PlayerTeam team)
         {

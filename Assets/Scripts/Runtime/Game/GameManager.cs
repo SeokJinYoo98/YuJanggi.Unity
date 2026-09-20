@@ -3,6 +3,7 @@ using UnityEngine.SceneManagement;
 using TMPro;
 namespace Yujanggi.Runtime.Game
 {
+    using BootStrap;
 
     using Core.Board;
     using Core.Domain;
@@ -33,11 +34,11 @@ namespace Yujanggi.Runtime.Game
         [SerializeField] private CoroutineRunner       _runner;
 
         private GameSession  _session;
-        private AudioManager _audio;
+        private AudioManager _audioManager;
 
         private void Awake()
         {
-            _audio = AudioManager.Instance;
+            _audioManager = YuJanggiBootStrap.Instance.AudioManager;
             var sessionInfo = GetSessionInfo();
             var matchView = CreateMatchView();
             var matchModel = CreateMatchModel(sessionInfo.TurnTime, out var record);
@@ -83,7 +84,7 @@ namespace Yujanggi.Runtime.Game
         #region SessionFactory       
         private ReplayView           CreateReplayView(Record record)
         {
-            return new ReplayView(_boardView, record, _runner, _audio, _displayModeText);
+            return new ReplayView(_boardView, record, _runner, _audioManager, _displayModeText);
         }
         private MatchModel           CreateMatchModel(float turnTime, out Record record)
         {
@@ -100,27 +101,27 @@ namespace Yujanggi.Runtime.Game
         #region UIRequestHandlers        
         public void HandleGiveUp()
         {
-            _audio.PlayButton();
+            _audioManager.PlayButton();
             _session.GiveUp();
         }
         public void HandleResetGame()
         {
-            _audio.PlayButton();
+            _audioManager.PlayButton();
             _session.ResetGame();
         }
         public void HandleHandicap()
         {
-            _audio.PlayButton();
+            _audioManager.PlayButton();
             _session.Handicap();
         }
         public void HandleUndo()
         {
-            _audio.PlayButton();
+            _audioManager.PlayButton();
             _session.UnDo();
         }
         public void HandleMainLobby()
         {
-            _audio.PlayButton();
+            _audioManager.PlayButton();
             _session.UnBindEvents();
             SceneManager.LoadScene("LobbyScene");
         }
@@ -131,12 +132,12 @@ namespace Yujanggi.Runtime.Game
         }
         public void HandleReplayForward()
         {
-            _audio.PlayButton();
+            _audioManager.PlayButton();
             _session.StepForward();
         }
         public void HandleReplayBackward()
         {
-            _audio.PlayButton();
+            _audioManager.PlayButton();
             _session.StepBackward();
      
         }

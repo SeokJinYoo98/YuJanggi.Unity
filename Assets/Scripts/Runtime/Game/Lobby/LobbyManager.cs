@@ -2,17 +2,30 @@ using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.SceneManagement;
 using Yujanggi.Core.Domain;
-using Yujanggi.Runtime.UI;
 using YuJanggiCommon;
 
-namespace Yujanggi.Runtime.Game
+namespace YuJanggi.Runtime.Game
 {
     using Audio;
+    using Network;
+    using UI;
+    using BootStrap;
+<<<<<<< Updated upstream
+    using Audio;
     using GameSession;
-    using UnityEngine.SceneManagement;
+
     using Yujanggi.Runtime.Network;
 
+=======
+ 
+
+    using Core.Domain;
+    using Network;
+
+
+>>>>>>> Stashed changes
 
     public class LobbyManager : MonoBehaviour
     {
@@ -30,9 +43,9 @@ namespace Yujanggi.Runtime.Game
         private TcpGameClientBehaviour _tcpClientPrefab;
         public event Action<GameStartEvent> OnOnlineGameStarted;
 
-        private UIVisible _curr;
-        private AudioManager _audio;
-        private OnlineMatchService _onlineMatchService;
+        private UIVisible           _curr;
+        private AudioManager        _audioManager;
+        private OnlineMatchService  _onlineMatchService;
         private void Awake()
         {
             Application.targetFrameRate = 60;
@@ -46,7 +59,7 @@ namespace Yujanggi.Runtime.Game
         }
         private void Start()
         {
-            _audio = AudioManager.Instance;
+            _audioManager = YuJanggiBootStrap.Instance.AudioManager;
         }
 
         private void OnDestroy()
@@ -64,28 +77,28 @@ namespace Yujanggi.Runtime.Game
 
         public void HandleClosePanel()
         {
-            _audio.PlayButton();
+            _audioManager.PlayButton();
             if (_curr == null) return;
             _curr.Hide();
             _curr = null;
         }
         public void HandleAIPanel()
         {
-            _audio.PlayButton();
+            _audioManager.PlayButton();
             if (_curr != null) return;
             _curr = _aiPanel;
             _curr.Show();
         }
         public void HandleLocalPanel()
         {
-            _audio.PlayButton();
+            _audioManager.PlayButton();
             if (_curr != null) return;
             _curr = _localPanel;
             _curr.Show();
         }
         public void HandleCreateSession()
         {
-            _audio.PlayButton();
+            _audioManager.PlayButton();
             if (_curr == null) return;
 
             GameSessionInfo info;
@@ -121,77 +134,8 @@ namespace Yujanggi.Runtime.Game
 
         public void HandleQuitGame()
         {
-            _audio.PlayButton();
+            _audioManager.PlayButton();
             Application.Quit();
-        }
-
-
-
-
-
-
-        private void HandleServerMessage(ChatMessage message)
-        {
-            //try
-            //{
-            //    switch (message.Type)
-            //    {
-            //        case MessageType.Join:
-            //            if (!_isJoinPending)
-            //            {
-            //                return;
-            //            }
-
-            //            _isJoinPending = false;
-            //            _isJoined = true;
-            //            StartMatchmakingAsync().Forget();
-            //            break;
-
-            //        case MessageType.MatchmakingStatus:
-            //            MatchmakingStatusResponse status = message.GetPayload<MatchmakingStatusResponse>();
-            //            _isMatchmakingPending = status.State == MatchmakingState.Waiting;
-            //            if (status.State == MatchmakingState.Cancelled)
-            //                _onlineClient.ClearMatch();
-            //            if (_isMatchmakingPending)
-            //                Debug.Log("매칭 상대를 기다리고 있습니다.");
-            //            break;
-
-            //        case MessageType.MatchFound:
-            //            MatchFoundResponse match = message.GetPayload<MatchFoundResponse>();
-            //            _isMatchmakingPending = false;
-            //            _isMatched = true;
-            //            _onlineClient.BeginMatch(match);
-            //            Debug.Log(string.IsNullOrEmpty(match.Message)
-            //                ? $"{match.Opponent.PlayerName} 님과 매칭되었습니다."
-            //                : match.Message);
-            //            break;
-
-            //        case MessageType.FormationSelected:
-            //            FormationSelectedResponse formation =
-            //                message.GetPayload<FormationSelectedResponse>();
-            //            _onlineClient.ApplyFormationSelected(formation);
-            //            break;
-
-            //        case MessageType.GameStart:
-            //            GameStartEvent gameStart = message.GetPayload<GameStartEvent>();
-            //            _isMatchmakingPending = false;
-            //            _onlineClient.ApplyGameStart(gameStart);
-            //            GameSessionStore.Current = GameSessionFactory.CreateNetworkSession(gameStart.Side);
-            //            OnOnlineGameStarted?.Invoke(gameStart);
-            //            break;
-
-            //        case MessageType.Error:
-            //            ErrorResponse error = message.GetPayload<ErrorResponse>();
-            //            ResetConnectionState();
-            //            Debug.LogWarning($"서버 오류 ({error.Code}): {error.Message}");
-            //            break;
-            //    }
-            //}
-            //catch (Exception exception)
-            //{
-            //    ResetConnectionState();
-            //    Debug.LogWarning($"서버 메시지를 처리하지 못했습니다: {exception.Message}");
-            //}
         }
 
 
@@ -199,19 +143,19 @@ namespace Yujanggi.Runtime.Game
         #region Refactoring : OnlineMatchService
         public void HandleCloseNetworkPanel()
         {
-            _audio.PlayButton();
+            _audioManager.PlayButton();
             _onlineMatchService.DisconnectAsync().Forget();
 
         }
         public void HandleConnectServer()
         {
-            _audio.PlayButton();
+            _audioManager.PlayButton();
             ChangePanel(_networkPanel);
             _onlineMatchService.StartOnlineSessionAsync().Forget();
         }
         public void HandleStartMatchMaking()
         {
-            _audio.PlayButton();
+            _audioManager.PlayButton();
             _onlineMatchService.StartMatchMakingAsync().Forget();
         }
         private void InitializeOnlineService()
@@ -287,8 +231,37 @@ namespace Yujanggi.Runtime.Game
             _curr = nextPanel;
             _curr?.Show();
         }
-   
 
+
+        #endregion
+
+        #region Network_V2
+        public void HandleNetworkButton()
+        {
+            _audioManager.PlayButton();
+            ChangePanel(_networkPanel);
+            ConnectNetworkAsync().Forget();
+        }
+        private async UniTask ConnectNetworkAsync()
+        {
+            var network =
+                YuJanggiBootStrap.Instance.NetworkManager;
+
+            try
+            {
+                await network.ConnectAsync();
+                _networkPanel.ChangeMessage(OnlineMatchState.Connected);
+                // 연결 + 핸드셰이크 성공 후 처리
+            }
+            catch (OperationCanceledException)
+            {
+                // 사용자가 연결을 취소한 경우
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
         #endregion
     }
 

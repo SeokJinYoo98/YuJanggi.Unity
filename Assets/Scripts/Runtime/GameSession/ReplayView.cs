@@ -4,6 +4,8 @@ using UnityEngine;
 using TMPro;
 namespace Yujanggi.Runtime.GameSession
 {
+    using BootStrap;
+
     using Core.Match;
 
 
