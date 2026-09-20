@@ -3,13 +3,15 @@ using UnityEngine;
 using YuJanggiCommon;
 
 
-namespace YuJanggi.Runtime.Game
+namespace YuJanggi.Runtime.GameSession
 {
     using Core.Domain;
     using Core.Match;
 
     using Controller;
-    using GameSession;
+
+    using Data.AI;
+
     public static class GameSessionFactory
     {
         public static GameSession CreateSession(

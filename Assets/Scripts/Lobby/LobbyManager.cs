@@ -3,29 +3,20 @@ using System;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.SceneManagement;
-using Yujanggi.Core.Domain;
 using YuJanggiCommon;
 
-namespace YuJanggi.Runtime.Game
+namespace YuJanggi.Lobby
 {
-    using Audio;
-    using Network;
-    using UI;
     using BootStrap;
-<<<<<<< Updated upstream
-    using Audio;
-    using GameSession;
 
-    using Yujanggi.Runtime.Network;
+    using Runtime.Network;
+    using Runtime.UI;
+    using Runtime.GameSession;
 
-=======
- 
+    using Data.AI;
 
     using Core.Domain;
-    using Network;
 
-
->>>>>>> Stashed changes
 
     public class LobbyManager : MonoBehaviour
     {

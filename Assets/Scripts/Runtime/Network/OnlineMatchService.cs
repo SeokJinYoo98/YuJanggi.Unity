@@ -3,10 +3,9 @@ using UnityEngine;
 using Cysharp.Threading.Tasks;
 
 
-namespace YuJanggi.Runtime.Game
+namespace YuJanggi.Runtime.Network
 {
-    using Network;
-    using Network.Protocol;
+    using Runtime.Network.Protocol;
     using YuJanggiCommon;
 
     public enum OnlineMatchState

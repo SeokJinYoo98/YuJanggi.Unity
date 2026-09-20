@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
+
 namespace YuJanggi.Runtime.UI
 {
-    using Cysharp.Threading.Tasks;
-    using Game;
-    using System.Threading;
+    using Network;
     using TMPro;
 
     public class NetworkPanelView : UIVisible
