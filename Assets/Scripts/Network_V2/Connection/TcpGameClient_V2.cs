@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.IO;
 
-namespace YuJanggi.Network_V2
+namespace YuJanggi.Network.V2
 {
     using Protocol.V2.Messages;
     using Protocol.V2.Framing;

@@ -1,5 +1,4 @@
 #nullable enable
-
 using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
@@ -7,100 +6,93 @@ using UnityEngine;
 
 namespace YuJanggi.BootStrap
 {
-    using Network_V2;
+    using Network.V2;
+    using Network.V2.Status;
+    using Protocol.V2.Connection;
 
-    /// <summary>
-    /// 온라인 네트워크 클라이언트의 생성과 생명주기를 관리합니다.
-    /// </summary>
+    /// <summary>클라이언트의 생명주기를 관리하고 해석된 데이터로 네트워크 상태를 생성합니다.</summary>
     public sealed class NetworkManager : MonoBehaviour
     {
         private CancellationTokenSource?    _lifetimeCts;
-        private OnlineGameClient_V2?        _client;
-
-        public IOnlineGameClient_V2 Client
-            => _client ?? throw new InvalidOperationException(
-                    "NetworkManager가 초기화되지 않았습니다.");
-
+        private IOnlineGameClient_V2?       _client;
         public bool IsConnected
             => _client?.IsConnected ?? false;
 
-        /// <summary>
-        /// 네트워크 클라이언트를 초기화합니다.
-        /// </summary>
-        public void Initialize(
-            string  host,
-            int     port)
+        public NetworkStatus Status { get; private set; }
+            = new NetworkStatus(
+                NetworkState.Offline,
+                ConnectionState.Disconnected,
+                null, null);
+
+        public event Action? OnNetworkChanged;
+
+        public void Initialize(string host, int port)
         {
             if (_client is not null)
-            {
-                throw new InvalidOperationException(
-                    "NetworkManager가 이미 초기화되었습니다.");
-            }
+                throw new InvalidOperationException("NetworkManager가 이미 초기화되었습니다.");
 
-            _lifetimeCts = new CancellationTokenSource();
+            _client         = new OnlineGameClient_V2(host, port);
+            _lifetimeCts    = new CancellationTokenSource();
 
-            _client = new OnlineGameClient_V2(
-                host,
-                port);
-
-            _client.OnStateChanged      += HandleStateChanged;
-            _client.OnConnectionFailed  += HandleConnectionFailed;
+            _client.OnDataChanged += HandleClientDataChanged;
         }
 
-        /// <summary>
-        /// 서버 연결과 프로토콜 핸드셰이크를 시작합니다.
-        /// </summary>
-        public async UniTask ConnectAsync(
-            CancellationToken cancellationToken = default)
+        public async UniTask ConnectAsync(CancellationToken cancellationToken = default)
         {
-            if (_client is null ||
-                _lifetimeCts is null)
-            {
-                throw new InvalidOperationException(
-                    "NetworkManager가 초기화되지 않았습니다.");
-            }
+            if (_client is null || _lifetimeCts is null)
+                throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
 
-            using CancellationTokenSource linkedCts =
-                CancellationTokenSource.CreateLinkedTokenSource(
-                    _lifetimeCts.Token,
-                    cancellationToken);
+            using var connectCts = CancellationTokenSource.CreateLinkedTokenSource(
+                _lifetimeCts.Token, cancellationToken);
 
-            await _client.ConnectAsync(
-                linkedCts.Token);
+            await _client.ConnectAsync(connectCts.Token);
         }
 
-        /// <summary>
-        /// 서버 연결을 종료합니다.
-        /// </summary>
         public void Disconnect()
         {
             _client?.Disconnect();
         }
 
+        private void HandleClientDataChanged()
+        {
+            if (_client is null)
+                return;
+
+            NetworkError? error = null;
+            if (_client.Failure is not null)
+            {
+                var result = _client.HandshakeResponse?.Result
+                    ?? ProtocolHandshakeResult.Success;
+
+                NetworkError versionErrors = NetworkError.None;
+
+                if ((result & ProtocolHandshakeResult.CoreVersionMismatch) != 0)
+                    versionErrors |= NetworkError.CoreVersionMismatch;
+
+                if ((result & ProtocolHandshakeResult.ProtocolVersionMismatch) != 0)
+                    versionErrors |= NetworkError.ProtocolVersionMismatch;
+
+                error = NetworkError.ConnectionFailed | versionErrors;
+            }
+
+            Status = new NetworkStatus(
+                _client.IsConnected ? NetworkState.Online : NetworkState.Offline,
+                _client.State,
+                error,
+                _client.Failure?.Message);
+
+            OnNetworkChanged?.Invoke();
+        }
+
         private void OnDestroy()
         {
             if (_client is not null)
-            {
-                _client.OnStateChanged      -= HandleStateChanged;
-                _client.OnConnectionFailed  -= HandleConnectionFailed;
-
-                _client.Dispose();
-            }
-
+                _client.OnDataChanged -= HandleClientDataChanged;
             _lifetimeCts?.Cancel();
+            _client?.Dispose();
+            _client = null;
             _lifetimeCts?.Dispose();
-        }
-
-        private void HandleStateChanged(
-            OnlineConnectionState state)
-        {
-            Debug.Log($"Network State: {state}");
-        }
-
-        private void HandleConnectionFailed(
-            string reason)
-        {
-            Debug.LogError($"Connection Failed: {reason}");
+            _lifetimeCts = null;
         }
     }
 }
