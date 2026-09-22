@@ -39,8 +39,7 @@ namespace YuJanggi.Lobby
         private OnlineMatchService  _onlineMatchService;
         private void Awake()
         {
-            Application.targetFrameRate = 60;
-            Application.runInBackground = true;
+
 
             // 같은 빌드를 여러 개 실행해도 기본 이름이 중복되지 않도록 합니다.
 
@@ -125,23 +124,14 @@ namespace YuJanggi.Lobby
 
 
         #region Refactoring : OnlineMatchService
-        public void HandleCloseNetworkPanel()
-        {
-            _audioManager.PlayButton();
-            _onlineMatchService.DisconnectAsync().Forget();
 
-        }
         public void HandleConnectServer()
         {
             _audioManager.PlayButton();
             ChangePanel(_networkPanel);
             _onlineMatchService.StartOnlineSessionAsync().Forget();
         }
-        public void HandleStartMatchMaking()
-        {
-            _audioManager.PlayButton();
-            _onlineMatchService.StartMatchMakingAsync().Forget();
-        }
+
         private void InitializeOnlineService()
         {
             _onlinePlayerName = string.IsNullOrWhiteSpace(_onlinePlayerName) ||
@@ -218,8 +208,6 @@ namespace YuJanggi.Lobby
 
 
         #endregion
-
-        #region Network_V2
         public void HandleClosePanel()
         {
             _audioManager.PlayButton();
@@ -227,6 +215,27 @@ namespace YuJanggi.Lobby
             _curr.Hide();
             _curr = null;
         }
+        #region Network_V2
+        public void HandleNetworkButton()
+        {
+            _audioManager.PlayButton();
+            ChangePanel(_networkPanel);
+            ConnectNetworkAsync().Forget();
+        }
+        public void HandleStartMatchMaking()
+        {
+            _audioManager.PlayButton();
+            _networkManager.StartMatchMakingAsync().Forget();
+        }
+        public void HandleCloseNetworkPanel()
+        {
+            _audioManager.PlayButton();
+            _networkManager.Disconnect();
+            HandleClosePanel();
+        }
+
+
+
         private void HandleNetworkChanged()
         {
             NetworkStatus status = _networkManager.Status;
@@ -239,15 +248,10 @@ namespace YuJanggi.Lobby
                 ShowHomeUI();
             }
             _networkPanel.ChangeMessage(status);
-            _curr = _networkPanel;
+
         }
 
-        public void HandleNetworkButton()
-        {
-            _audioManager.PlayButton();
-            ChangePanel(_networkPanel);
-            ConnectNetworkAsync().Forget();
-        }
+
         private async UniTask ConnectNetworkAsync()
         {
             var network = YuJanggiBootStrap.Instance.NetworkManager;

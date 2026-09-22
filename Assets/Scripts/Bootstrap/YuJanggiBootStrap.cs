@@ -26,6 +26,9 @@ namespace YuJanggi.BootStrap
 
         private void Awake()
         {
+            Application.targetFrameRate = 60;
+            Application.runInBackground = true;
+
             if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
