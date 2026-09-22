@@ -10,7 +10,10 @@ namespace YuJanggi.Network.V2
     using Protocol.V2.Messages;
     using Protocol.V2.Framing;
     using Protocol.V2.Serialization;
-
+    /// <summary>
+    /// TCP 연결을 관리하고
+    /// 프로토콜 메시지의 송수신을 처리하는 전송 계층 클라이언트입니다.
+    /// </summary>
     public sealed class TcpGameClient_V2 : IDisposable
     {
         private TcpClient?              _client;
