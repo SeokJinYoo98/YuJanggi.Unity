@@ -39,8 +39,7 @@ namespace YuJanggi.Lobby
         private OnlineMatchService  _onlineMatchService;
         private void Awake()
         {
-            Application.targetFrameRate = 60;
-            Application.runInBackground = true;
+
 
             // 같은 빌드를 여러 개 실행해도 기본 이름이 중복되지 않도록 합니다.
 
