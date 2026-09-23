@@ -11,7 +11,6 @@ namespace YuJanggi.Lobby
     using Network.V2.Status;
 
     using Runtime.GameSession;
-    using Runtime.Network;
     using Runtime.UI;
 
     using YuJanggiCommon;
@@ -23,28 +22,12 @@ namespace YuJanggi.Lobby
         [SerializeField] private AIPanelView        _aiPanel;
         [SerializeField] private LocalPanelView     _localPanel;
 
-        [FormerlySerializedAs("_tcpClient")]
-
-        [SerializeField]
-        private string _onlinePlayerName = "Player";
-
-
-        [SerializeField]
-        private TcpGameClientBehaviour _tcpClientPrefab;
-        public event Action<GameStartEvent> OnOnlineGameStarted;
-
         private UIVisible           _curr;
         private AudioManager        _audioManager;
         private NetworkManager      _networkManager;
-        private OnlineMatchService  _onlineMatchService;
+
         private void Awake()
         {
-
-
-            // 같은 빌드를 여러 개 실행해도 기본 이름이 중복되지 않도록 합니다.
-
-
-            InitializeOnlineService();
 
         }
         private void Start()
@@ -54,17 +37,15 @@ namespace YuJanggi.Lobby
 
         private void OnDestroy()
         {
-            _onlineMatchService?.Dispose();
+           
         }
         private void OnEnable()
         {
-            RegisterOnlineEvents();
             _networkManager = YuJanggiBootStrap.Instance.NetworkManager;
             _networkManager.OnNetworkChanged += HandleNetworkChanged;
         }
         private void OnDisable()
         {
-            UnregisterOnlineEvents();
             if (_networkManager != null)
                 _networkManager.OnNetworkChanged -= HandleNetworkChanged;
         }
@@ -125,62 +106,12 @@ namespace YuJanggi.Lobby
 
         #region Refactoring : OnlineMatchService
 
-        public void HandleConnectServer()
-        {
-            _audioManager.PlayButton();
-            ChangePanel(_networkPanel);
-            _onlineMatchService.StartOnlineSessionAsync().Forget();
-        }
 
-        private void InitializeOnlineService()
-        {
-            _onlinePlayerName = string.IsNullOrWhiteSpace(_onlinePlayerName) ||
-                                 _onlinePlayerName.Trim() == "Player"
-                ? $"Player-{Guid.NewGuid():N}".Substring(0, 15)
-                : _onlinePlayerName.Trim();
 
-            TcpGameClientBehaviour transport = Instantiate(_tcpClientPrefab);
-            OnlineGameClient client = OnlineGameClient.Create(transport, _onlinePlayerName);
 
-            _onlineMatchService = new OnlineMatchService(client);
-        }
-        private void RegisterOnlineEvents()
-        {
-            _onlineMatchService.OnStateChanged += HandleOnlineStateChanged;
-            _onlineMatchService.StateCheck += Check;
-        }
-        private void UnregisterOnlineEvents()
-        {
-            _onlineMatchService.OnStateChanged -= HandleOnlineStateChanged;
-            _onlineMatchService.StateCheck -= Check;
-        }
         private void Check(string str)
             => Debug.Log(str);
-        private void HandleOnlineStateChanged(OnlineMatchState state)
-        {
-            switch (state)
-            {
-                case OnlineMatchState.Local:
-                    ShowHomeUI();
-                    break;
-                case OnlineMatchState.Connecting:
-                    Debug.Log("Client: 서버에 연결중입니다.");
-                    break;
-                case OnlineMatchState.Connected:
-                    Debug.Log("Client: 서버에 연결되었습니다.");
-                    break;
-                case OnlineMatchState.ConnectionFailed:
-                    Debug.Log("Client: 서버 연결에 실패했습니다.");
-                    break;
-                case OnlineMatchState.MatchMaking:
-                    Debug.Log("Client: 매칭을 찾는 중입니다.");
-                    break;
-                case OnlineMatchState.MatchFound:
-                    Debug.Log("Client: 매칭이 완료되었습니다.");
-                    break;
-            }
-            _networkPanel.ChangeMessage(state);
-        }
+   
         
         private void ShowHomeUI()
         {
