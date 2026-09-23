@@ -199,25 +199,6 @@ namespace YuJanggi.Lobby
             _networkPanel.ChangeMessage(status);
 
         }
-
-
-        private async UniTask ConnectNetworkAsync()
-        {
-            try
-            {
-                await _networkManager.ConnectAsync();
-            }
-            catch (OperationCanceledException)
-            {
-                _networkManager.Disconnect();
-                ShowHomeUI();
-            }
-            catch (Exception)
-            {
-                _networkManager.Disconnect();
-                ShowHomeUI();
-            }
-        }
         #endregion
     }
 
