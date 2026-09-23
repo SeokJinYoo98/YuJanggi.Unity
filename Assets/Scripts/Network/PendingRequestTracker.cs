@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using YuJanggi.Protocol.V2.Messages;
 
-namespace YuJanggi.Network.V2
+namespace YuJanggi.Network
 {
     public sealed class PendingRequestTracker
     {

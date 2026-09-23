@@ -1,39 +1,44 @@
-using System;
-using System.Threading;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace YuJanggi.Runtime.UI
 {
-    using Network;
     using TMPro;
-    using YuJanggi.Network.V2.Status;
+    using YuJanggi.Core.V2.Domain;
+    using YuJanggi.Network.Status;
+    using YuJanggi.Matching;
 
     public class NetworkPanelView : UIVisible
     {
- 
         [SerializeField] private TMP_Text _statusText;
         [SerializeField] private TMP_Text _statusDetailText;
-        private void OnDestroy()
-        {
-            
-        }
+        [SerializeField] private TMP_Dropdown _formationDropDown;
+
+        public int Selected
+            => _formationDropDown.value;
         private void ClearText()
         {
             _statusText.SetText(string.Empty);
             _statusDetailText.SetText(string.Empty);
         }
-        public void ChangeMessage(in NetworkStatus status)
+        public void ChangeMessage(in NetworkStatus status, int? timerSeconds = null)
         {
 
             ClearText();
             NetworkError error = status.Error ?? NetworkError.None;
             bool failed = error != NetworkError.None;
+
             string title = !failed && status.NetworkState == NetworkState.Online
                 ? "Online" : "Offline";
+            if (!failed && status.NetworkState == NetworkState.Online &&
+                status.MatchingState == MatchingState.Matched)
+                title = status.Team is PlayerTeam.Cho or PlayerTeam.Han
+                    ? $"선택된 진영: {status.Team}"
+                    : "선택된 진영: 확인 불가";
             string detail = failed
                 ? GetFailureReason(error)
-                : GetConnectionStage(status.ConnectionState);
+                : timerSeconds.HasValue
+                    ? GetTimerText(status.MatchingState, timerSeconds.Value)
+                    : GetConnectionStage(status);
 
             _statusText.SetText(title);
             _statusDetailText.SetText(detail);
@@ -44,16 +49,37 @@ namespace YuJanggi.Runtime.UI
                 Debug.Log($"Client: {title} - {detail}");
         }
 
-        private static string GetConnectionStage(ConnectionState state)
+        /// <summary>로비가 계산한 매칭 대기 시간 또는 게임 진입 카운트다운을 표시합니다.</summary>
+        public void UpdateTimer(MatchingState state, int seconds)
         {
-            return state switch
+            _statusDetailText.SetText(GetTimerText(state, seconds));
+        }
+
+        private static string GetTimerText(MatchingState state, int seconds)
+        {
+            if (state == MatchingState.Matching)
+                return $"매칭: {seconds / 60:00}분{seconds % 60:00}초";
+
+            return $"남은 시간: {seconds}초";
+        }
+        private static string GetConnectionStage(in NetworkStatus status)
+        {
+            if (status.ConnectionState == ConnectionState.Connected)
+            {
+                return status.MatchingState switch
+                {
+                    MatchingState.Requesting => "매칭 신청 중",
+                    MatchingState.Matching => "매칭 중",
+                    MatchingState.Matched => "매칭 완료",
+                    _ => "연결 완료"
+                };
+            }
+            return status.ConnectionState switch
             {
                 ConnectionState.Disconnected => "연결 해제",
                 ConnectionState.Connecting => "연결 중",
                 ConnectionState.Handshaking => "버전 확인 중",
                 ConnectionState.Connected => "연결 완료",
-                ConnectionState.Matching => "매칭 중",
-                ConnectionState.Matched => "매칭 완료",
                 _ => "상태 확인 불가"
             };
         }

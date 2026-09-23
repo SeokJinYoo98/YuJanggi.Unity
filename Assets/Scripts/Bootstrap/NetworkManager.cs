@@ -6,8 +6,10 @@ using UnityEngine;
 
 namespace YuJanggi.BootStrap
 {
-    using Network.V2;
-    using Network.V2.Status;
+    using Network;
+    using Matching;
+    using Core.V2.Domain;
+    using Network.Status;
 
 
     /// <summary>
@@ -21,14 +23,23 @@ namespace YuJanggi.BootStrap
         private CancellationTokenSource? _lifetimeCts;
         private CancellationTokenSource? _connectingRequestCts;
         private CancellationTokenSource? _matchingRequestCts;
-        private IOnlineGameClient_V2?    _client;
+        private NetworkConnection? _connection;
+        private RequestDispatcher? _requests;
+        private MatchingService? _matchingService;
+        private MatchingHandler? _matchingHandler;
 
         #endregion
         #region Properties
+        public NetworkConnection Connection => _connection
+            ?? throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
+        public MatchingHandler Matching => _matchingHandler
+            ?? throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
+        public MatchingService MatchingService => _matchingService
+            ?? throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
         public bool IsMatched
-            => Status.ConnectionState == ConnectionState.Matched;
+            => Status.MatchingState == MatchingState.Matched;
         public bool IsOnline
-            => _client?.IsOnline ?? false;
+            => _connection?.IsOnline ?? false;
         public NetworkStatus Status { get; private set; }
             = new NetworkStatus(
                 NetworkState.Offline,
@@ -43,12 +54,20 @@ namespace YuJanggi.BootStrap
         #region Unity Lifecycle
         private void OnDestroy()
         {
-            if (_client is not null)
-                _client.OnDataChanged -= HandleClientDataChanged;
-            _lifetimeCts?.Cancel();
+            if (_connection is not null)
+                _connection.OnDataChanged -= HandleClientDataChanged;
+            if (_matchingService is not null)
+                _matchingService.OnDataChanged -= HandleClientDataChanged;
 
-            _client?.Dispose();
-            _client = null;
+            // 연결 종료가 Service 초기화와 pending 취소를 먼저 수행합니다.
+            _connection?.Dispose();
+            _lifetimeCts?.Cancel();
+            _matchingHandler?.Dispose();
+            _requests?.Dispose();
+            _connection = null;
+            _requests = null;
+            _matchingHandler = null;
+            _matchingService = null;
 
             _lifetimeCts?.Dispose();
             _lifetimeCts = null;
@@ -58,19 +77,23 @@ namespace YuJanggi.BootStrap
         // Init
         public void Initialize(string host, int port)
         {
-            if (_client is not null)
+            if (_connection is not null)
                 throw new InvalidOperationException(
                     "NetworkManager가 이미 초기화되었습니다.");
 
-            _client         = new OnlineGameClient_V2(host, port);
-            _lifetimeCts    = new CancellationTokenSource();
+            _connection = new NetworkConnection(host, port);
+            _requests = new RequestDispatcher(_connection);
+            _matchingService = new MatchingService();
+            _matchingHandler = new MatchingHandler(_connection, _requests, _matchingService);
+            _lifetimeCts = new CancellationTokenSource();
 
-            _client.OnDataChanged += HandleClientDataChanged;
+            _connection.OnDataChanged += HandleClientDataChanged;
+            _matchingService.OnDataChanged += HandleClientDataChanged;
         }
         // Connection
         public async UniTask ConnectAsync()
         {
-            if (_client is null || _lifetimeCts is null)
+            if (_connection is null || _lifetimeCts is null)
                 throw new InvalidOperationException(
                     "NetworkManager가 초기화되지 않았습니다.");
 
@@ -86,7 +109,7 @@ namespace YuJanggi.BootStrap
 
             try
             {
-                await _client.ConnectAsync(
+                await _connection.ConnectAsync(
                     connectCts.Token);
             }
             finally
@@ -97,46 +120,58 @@ namespace YuJanggi.BootStrap
         }
         public void Disconnect()
         {
-            // 진행 중인 작업을 취소한 뒤 실제 연결을 종료합니다.
+            // 이전 연결을 무효화하고 상태를 초기화한 뒤 요청 취소를 완료합니다.
+            _connection?.Disconnect();
             _matchingRequestCts?.Cancel();
             _connectingRequestCts?.Cancel();
-
-            _client?.Disconnect();
         }
 
-        // Matching: 서버 응답 해석과 상태 변경은 클라이언트가 담당합니다.
+        // Matching: Unity 요청 수명만 관리하고 메시지 해석은 Handler에 위임합니다.
         public UniTask StartMatchMakingAsync()
         {
-            return RunMatchingRequestAsync((client, token) => client.MatchRequestAsync(token));
+            return RunMatchingRequestAsync((handler, token) => handler.MatchRequestAsync(token));
         }
 
         public UniTask CancelMatchMakingAsync()
         {
-            return RunMatchingRequestAsync((client, token) => client.MatchCancelRequestAsync(token));
+            return RunMatchingRequestAsync((handler, token) => handler.MatchCancelRequestAsync(token));
+        }
+
+        /// <summary>선택한 포진을 제출합니다. 접수 성공은 게임 시작을 의미하지 않습니다.</summary>
+        public async UniTask<bool> SubmitFormationAsync(Formation formation)
+        {
+            bool accepted = false;
+            await RunMatchingRequestAsync(async (handler, token) =>
+            {
+                accepted = await handler.SubmitFormationAsync(formation, token);
+            });
+            return accepted;
         }
 
         #endregion
         #region Event Handlers
         private void HandleClientDataChanged()
         {
-            if (_client is null)
+            if (_connection is null || _matchingService is null)
                 return;
 
             Status = new NetworkStatus(
-                _client.IsOnline ? NetworkState.Online : NetworkState.Offline,
-                _client.State,
-                _client.Error,
-                _client.Failure?.Message,
-                _client.CurrentMatch);
+                _connection.IsOnline ? NetworkState.Online : NetworkState.Offline,
+                _connection.State,
+                _connection.Error,
+                _connection.Failure?.Message,
+                _matchingService.CurrentMatch,
+                _matchingService.Team,
+                _matchingService.State);
 
             OnNetworkChanged?.Invoke();
         }
         #endregion
         #region Private Methods
         private async UniTask RunMatchingRequestAsync(
-            Func<IOnlineGameClient_V2, CancellationToken, UniTask> sendRequest)
+            Func<MatchingHandler, CancellationToken, UniTask> sendRequest)
         {
-            if (_client is null || _lifetimeCts is null)
+            if (_connection is null || _lifetimeCts is null)
                 throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
             if (_matchingRequestCts is not null)
                 throw new InvalidOperationException("이미 매칭 신청 또는 취소 요청을 처리 중입니다.");
@@ -146,7 +181,7 @@ namespace YuJanggi.BootStrap
             try
             {
                 matchingCts.Token.ThrowIfCancellationRequested();
-                await sendRequest(_client, matchingCts.Token);
+                await sendRequest(Matching, matchingCts.Token);
             }
             finally
             {

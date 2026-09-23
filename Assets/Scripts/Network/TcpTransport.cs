@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.IO;
 
-namespace YuJanggi.Network.V2
+namespace YuJanggi.Network
 {
     using Protocol.V2.Messages;
     using Protocol.V2.Framing;
@@ -14,7 +14,7 @@ namespace YuJanggi.Network.V2
     /// TCP 연결을 관리하고
     /// 프로토콜 메시지의 송수신을 처리하는 전송 계층 클라이언트입니다.
     /// </summary>
-    public sealed class TcpGameClient_V2 : IDisposable
+    public sealed class TcpTransport : IDisposable
     {
         private TcpClient?              _client;
         private NetworkStream?          _stream;
@@ -32,7 +32,7 @@ namespace YuJanggi.Network.V2
             _stream is not null &&
             _client.Connected;
 
-        public TcpGameClient_V2(string host, int port)
+        public TcpTransport(string host, int port)
         {
             if (string.IsNullOrWhiteSpace(host))
                 throw new ArgumentException("서버 호스트가 필요합니다.", nameof(host));
@@ -73,7 +73,7 @@ namespace YuJanggi.Network.V2
             if (_disposed)
             {
                 throw new ObjectDisposedException(
-                    nameof(TcpGameClient_V2));
+                    nameof(TcpTransport));
             }
         }
 

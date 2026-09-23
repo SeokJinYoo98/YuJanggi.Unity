@@ -2,7 +2,6 @@
   "dependencies": {
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.seokjinyoo.yujanggi.core.v2": "file:D:/Git/YuJanggi.Core.V2/upm",
-    "com.seokjinyoo.yujanggi.protocol": "https://github.com/SeokJinYoo98/YuJanggi.Protocol.git#upm/v1.0.0",
     "com.seokjinyoo.yujanggi.protocol.v2": "file:D:/Git/YuJanggi.Protocol.V2/upm",
     "com.unity.ai.navigation": "2.0.11",
     "com.unity.collab-proxy": "2.10.2",

@@ -13,13 +13,6 @@
       "source": "local",
       "dependencies": {}
     },
-    "com.seokjinyoo.yujanggi.protocol": {
-      "version": "https://github.com/SeokJinYoo98/YuJanggi.Protocol.git#upm/v1.0.0",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "3a48d39954d85ea1dc70d852ff87fa49dbccee6f"
-    },
     "com.seokjinyoo.yujanggi.protocol.v2": {
       "version": "file:D:/Git/YuJanggi.Protocol.V2/upm",
       "depth": 0,

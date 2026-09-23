@@ -1,8 +1,9 @@
 #nullable enable
 using System;
-using YuJanggi.Protocol.V2.Matching;
+using YuJanggi.Core.V2.Domain;
+using YuJanggi.Matching;
 
-namespace YuJanggi.Network.V2.Status
+namespace YuJanggi.Network.Status
 {
     public readonly struct NetworkStatus
     {
@@ -10,20 +11,26 @@ namespace YuJanggi.Network.V2.Status
         public ConnectionState      ConnectionState { get; }
         public NetworkError?        Error { get; }
         public string?              Message { get; }
-        public MatchingFound?       CurrentMatch { get; }
+        public MatchInfo?           CurrentMatch { get; }
+        public PlayerTeam           Team { get; }
+        public MatchingState        MatchingState { get; }
 
         public NetworkStatus(
             NetworkState    networkState,
             ConnectionState connectionState,
             NetworkError?   error,
             string?         message,
-            MatchingFound?  currentMatch = null)
+            MatchInfo?      currentMatch = null,
+            PlayerTeam      team = PlayerTeam.None,
+            MatchingState matchingState = MatchingState.Idle)
         {
             NetworkState    = networkState;
             ConnectionState = connectionState;
             Error           = error;
             Message         = message;
             CurrentMatch    = currentMatch;
+            Team            = team;
+            MatchingState   = matchingState;
         }
     }
     public enum NetworkState
@@ -32,7 +39,7 @@ namespace YuJanggi.Network.V2.Status
     }
     public enum ConnectionState
     {
-        Disconnected, Connecting, Handshaking, Connected, Matching, Matched
+        Disconnected, Connecting, Handshaking, Connected
     }
 
     [Flags]
