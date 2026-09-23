@@ -179,6 +179,11 @@ namespace YuJanggi.Lobby
         public void HandleCloseNetworkPanel()
         {
             _audioManager.PlayButton();
+            if (_networkManager.IsMatched)
+            {
+                Debug.Log("이미 매치가 성사되어 취소하지 못합니다.");
+                return;
+            }
             _networkManager.Disconnect();
             HandleClosePanel();
         }

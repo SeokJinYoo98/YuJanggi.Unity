@@ -25,6 +25,8 @@ namespace YuJanggi.BootStrap
 
         #endregion
         #region Properties
+        public bool IsMatched
+            => Status.ConnectionState == ConnectionState.Matched;
         public bool IsOnline
             => _client?.IsOnline ?? false;
         public NetworkStatus Status { get; private set; }
