@@ -1,9 +1,7 @@
-
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using UnityEditor;
 using YuJanggi.Protocol.V2.Messages;
 
 namespace YuJanggi.Network.V2
@@ -72,7 +70,11 @@ namespace YuJanggi.Network.V2
 
         public void Clear()
         {
+            // 완료 시 요청 메서드의 finally가 재진입할 수 있으므로 먼저 컬렉션을 비웁니다.
+            var pendingRequests = new List<PendingRequest>(_pendingRequests.Values);
             _pendingRequests.Clear();
+            foreach (var pendingRequest in pendingRequests)
+                pendingRequest.CompletionSource.TrySetCanceled();
         }
         public void Complete(ServerMessage serverMsg)
         {
@@ -86,8 +88,8 @@ namespace YuJanggi.Network.V2
                 serverMsg.RequestId,
                 out var pendingRequest))
             {
-                throw new InvalidOperationException(
-                    $"대기 중인 요청이 없습니다. RequestId: {serverMsg.RequestId}");
+                // 취소·연결 종료 후 늦게 도착한 응답이나 중복 응답은 새 요청을 완료하지 않습니다.
+                return;
             }
 
             if (pendingRequest.ExpectedResponseType != serverMsg.Type)

@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using YuJanggi.Protocol.V2.Matching;
 
 namespace YuJanggi.Network.V2.Status
 {
@@ -9,17 +10,20 @@ namespace YuJanggi.Network.V2.Status
         public ConnectionState      ConnectionState { get; }
         public NetworkError?        Error { get; }
         public string?              Message { get; }
+        public MatchingFound?       CurrentMatch { get; }
 
         public NetworkStatus(
             NetworkState    networkState,
             ConnectionState connectionState,
             NetworkError?   error,
-            string?         message)
+            string?         message,
+            MatchingFound?  currentMatch = null)
         {
             NetworkState    = networkState;
             ConnectionState = connectionState;
             Error           = error;
             Message         = message;
+            CurrentMatch    = currentMatch;
         }
     }
     public enum NetworkState

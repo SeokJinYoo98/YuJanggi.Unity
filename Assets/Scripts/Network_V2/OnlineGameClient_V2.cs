@@ -2,7 +2,6 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
-using UnityEngine;
 
 namespace YuJanggi.Network.V2
 {
@@ -16,213 +15,185 @@ namespace YuJanggi.Network.V2
 
     public interface IOnlineGameClient_V2 : IDisposable
     {
-        bool                        IsOnline { get; }
-        ConnectionState             State { get; }
-        ProtocolHandshakeResponse?  HandshakeResponse { get; }
-        Exception?                  Failure { get; }
-        event Action?               OnDataChanged;
+        bool IsOnline { get; }
+        ConnectionState State { get; }
+        ProtocolHandshakeResponse? HandshakeResponse { get; }
+        MatchingFound? CurrentMatch { get; }
+        Exception? Failure { get; }
+        NetworkError? Error { get; }
+        event Action? OnDataChanged;
         UniTask ConnectAsync(CancellationToken cancellationToken = default);
         UniTask MatchRequestAsync(CancellationToken cancellationToken = default);
         UniTask MatchCancelRequestAsync(CancellationToken cancellationToken = default);
         void Disconnect();
     }
 
-    /// <summary>
-    /// TCP 클라이언트를 기반으로 서버 연결, 핸드셰이크, 메시지 수신 루프,
-    /// 서버 메시지 해석 및 온라인 상태 관리를 담당합니다.
-    /// </summary>
+    /// <summary>TCP 연결, Handshake, 요청 응답 및 서버 이벤트에 따른 상태를 관리합니다.</summary>
     public sealed class OnlineGameClient_V2 : IOnlineGameClient_V2
     {
-        #region Fields
-        // 내부 상태와 참조를 저장하는 변수
-        private readonly TcpGameClient_V2       _tcpClient;
-        private readonly PendingRequestTracker  _pendingRequestTracker;
-        private CancellationTokenSource?        _receiveCts;
-
+        private readonly TcpGameClient_V2 _tcpClient;
+        private readonly PendingRequestTracker _pendingRequestTracker;
+        private CancellationTokenSource? _connectionCts;
+        private int _connectionVersion;
+        private bool _matchingRequestInProgress;
+        private bool _matchingCancelInProgress;
+        private MatchingFound? _deferredMatchingFound;
         private bool _disposed;
 
-        #endregion
-
-        #region Properties
-        // 상태를 조회하거나 변경하는 접근 속성
         public ProtocolHandshakeResponse? HandshakeResponse { get; private set; }
-        public bool IsOnline =>
-            State is ConnectionState.Connected or
-            ConnectionState.Matched or
-            ConnectionState.Matching;
-
-        public ConnectionState State { get; private set; }
-            = ConnectionState.Disconnected;
-
+        public MatchingFound? CurrentMatch { get; private set; }
         public Exception? Failure { get; private set; }
-        #endregion
+        public ConnectionState State { get; private set; } = ConnectionState.Disconnected;
+        public bool IsOnline => State is ConnectionState.Connected or
+            ConnectionState.Matching or ConnectionState.Matched;
 
-        #region Events
-        // 상태 변화나 특정 동작을 외부에 알리는 이벤트
+        // 프로토콜 결과 해석은 클라이언트에서 끝내고 Manager에는 상태만 전달합니다.
+        public NetworkError? Error
+        {
+            get
+            {
+                if (Failure is null)
+                    return null;
+
+                var error = NetworkError.ConnectionFailed;
+                var result = HandshakeResponse?.Result ?? ProtocolHandshakeResult.Success;
+                if ((result & ProtocolHandshakeResult.CoreVersionMismatch) != 0)
+                    error |= NetworkError.CoreVersionMismatch;
+                if ((result & ProtocolHandshakeResult.ProtocolVersionMismatch) != 0)
+                    error |= NetworkError.ProtocolVersionMismatch;
+                return error;
+            }
+        }
+
         public event Action? OnDataChanged;
-        #endregion
 
-        #region Constructors
-        // 순수 C#
         public OnlineGameClient_V2(string host, int port)
         {
-            _pendingRequestTracker = new();
-            _tcpClient      = new TcpGameClient_V2(host, port);
+            _pendingRequestTracker = new PendingRequestTracker();
+            _tcpClient = new TcpGameClient_V2(host, port);
         }
-        #endregion
 
-        #region Public Methods
-        // 외부에서 호출하는 기능
-        public async UniTask MatchCancelRequestAsync(
-            CancellationToken cancellationToken = default)
+        public async UniTask MatchRequestAsync(CancellationToken cancellationToken = default)
         {
-            ThrowIfDisposed();
-            EnsureConnected();
-
-            var request =
-                new MatchingCancelRequest();
-
-            var requestMsg =
-                ClientMessageFactory.Create(
-                    ClientMessageType.MatchingCancelRequest,
-                    request);
-
-            string requestId =
-                requestMsg.RequestId!;
-
-            _pendingRequestTracker.Add(
-                requestId,
-                ServerMessageType.MatchingCancelResponse);
+            EnsureMatchingOperationAllowed(ConnectionState.Connected);
+            cancellationToken.ThrowIfCancellationRequested();
+            int connectionVersion = _connectionVersion;
+            _matchingRequestInProgress = true;
+            _deferredMatchingFound = null;
 
             try
             {
-                await _tcpClient.SendAsync(
-                    requestMsg,
-                    cancellationToken);
+                var responseMsg = await SendRequestAsync(
+                    ClientMessageType.MatchingRequest, new MatchingRequest(),
+                    ServerMessageType.MatchingResponse, cancellationToken);
+                EnsureCurrentConnection(connectionVersion);
+                var response = responseMsg.GetPayload<MatchingResponse>();
+                if (response.Result != MatchingResult.Accepted)
+                    return;
 
-                ServerMessage responseMsg =
-                    await _pendingRequestTracker.WaitAsync(
-                        requestId,
-                        cancellationToken);
-
-                var response =
-                    responseMsg.GetPayload<MatchingCancelResponse>();
-
-                if (response.Result == MatchingCancelResult.Cancelled)         
-                    ChangeState(ConnectionState.Connected);
-                
-                // 취소 성공 시
-
+                ChangeState(ConnectionState.Matching);
+                // 응답과 이벤트가 연속 수신되면 SendAsync의 continuation보다 이벤트가 빠를 수 있습니다.
+                // 미리 받은 이벤트는 Accepted로 Matching 전환한 뒤에만 적용합니다. 이벤트를 기다리지는 않습니다.
+                if (connectionVersion == _connectionVersion && _deferredMatchingFound is not null)
+                    ApplyMatchingFound(_deferredMatchingFound);
             }
             finally
             {
-                _pendingRequestTracker.Remove(requestId);
+                if (connectionVersion == _connectionVersion)
+                {
+                    _matchingRequestInProgress = false;
+                    _deferredMatchingFound = null;
+                }
             }
         }
-        public async UniTask MatchRequestAsync(
-            CancellationToken cancellationToken = default)
+
+        public async UniTask MatchCancelRequestAsync(CancellationToken cancellationToken = default)
         {
-            ThrowIfDisposed();
-            EnsureConnected();
-
-            var request = new MatchingRequest();
-
-            var requestMsg =
-                ClientMessageFactory.Create(
-                    ClientMessageType.MatchingRequest,
-                    request);
-
-            string requestId = requestMsg.RequestId!;
-
-            // 어떤 응답을 기다리는 요청인지 등록
-            _pendingRequestTracker.Add(
-                requestId,
-                ServerMessageType.MatchingResponse);
+            EnsureMatchingOperationAllowed(ConnectionState.Matching);
+            cancellationToken.ThrowIfCancellationRequested();
+            int connectionVersion = _connectionVersion;
+            _matchingCancelInProgress = true;
 
             try
             {
-                await _tcpClient.SendAsync(
-                    requestMsg,
-                    cancellationToken);
+                var responseMsg = await SendRequestAsync(
+                    ClientMessageType.MatchingCancelRequest, new MatchingCancelRequest(),
+                    ServerMessageType.MatchingCancelResponse, cancellationToken);
+                EnsureCurrentConnection(connectionVersion);
+                var response = responseMsg.GetPayload<MatchingCancelResponse>();
+                if (response.Result != MatchingCancelResult.Cancelled)
+                    return;
 
-                // 여기서 MatchingResponse가 올 때까지 기다림
-                ServerMessage responseMsg =
-                    await _pendingRequestTracker.WaitAsync(
-                        requestId,
-                        cancellationToken);
+                // TODO:
+                // 취소 응답 대기 중 MatchingFound가 먼저 도착하면 이미 Matched 상태일 수 있습니다.
+                // 현재는 늦은 Cancelled로 매칭 정보를 지우지 않고 Matched와 CurrentMatch를 보존합니다.
+                // 서버 취소/확정 정책에 맞춰 MatchSession / GameSession에서 우선순위와 복구를 결정해야 합니다.
+                if (State == ConnectionState.Matched)
+                    return;
 
-                var response =
-                    responseMsg.GetPayload<MatchingResponse>();
-
-                if (response.Result == MatchingResult.Accepted)
-                    ChangeState(ConnectionState.Matching);
+                CurrentMatch = null;
+                ChangeState(ConnectionState.Connected);
             }
             finally
             {
-                _pendingRequestTracker.Remove(requestId);
+                if (connectionVersion == _connectionVersion)
+                    _matchingCancelInProgress = false;
             }
         }
-        public async UniTask ConnectAsync(
-            CancellationToken cancellationToken = default)
+
+        public async UniTask ConnectAsync(CancellationToken cancellationToken = default)
         {
             ThrowIfDisposed();
-
             if (State != ConnectionState.Disconnected)
-                throw new InvalidOperationException(
-                    "이미 연결 중이거나 서버에 연결되어 있습니다.");
+                throw new InvalidOperationException("이미 연결 중이거나 서버에 연결되어 있습니다.");
 
+            int connectionVersion = ++_connectionVersion;
+            _connectionCts = new CancellationTokenSource();
+            CancellationToken connectionToken = _connectionCts.Token;
+            using var connectCts = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken, connectionToken);
+            var connectToken = connectCts.Token;
+            CurrentMatch = null;
+            _deferredMatchingFound = null;
             HandshakeResponse = null;
             Failure = null;
 
             try
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                connectToken.ThrowIfCancellationRequested();
                 ChangeState(ConnectionState.Connecting);
-
-                await _tcpClient.ConnectAsync(cancellationToken);
-                cancellationToken.ThrowIfCancellationRequested();
+                await _tcpClient.ConnectAsync(connectToken);
+                connectToken.ThrowIfCancellationRequested();
+                EnsureCurrentConnection(connectionVersion);
                 ChangeState(ConnectionState.Handshaking);
 
-                await HandshakeAsync(cancellationToken);
-                cancellationToken.ThrowIfCancellationRequested();
-                ReceiveLoopAsync(CancellationToken.None).Forget();
+                var response = await HandshakeAsync(connectToken);
+                connectToken.ThrowIfCancellationRequested();
+                EnsureCurrentConnection(connectionVersion);
+                HandshakeResponse = response;
+                if (response.Result != ProtocolHandshakeResult.Success)
+                    throw new InvalidOperationException($"핸드셰이크 실패: {response.Result}");
+
                 ChangeState(ConnectionState.Connected);
+                if (connectionVersion == _connectionVersion)
+                    ReceiveLoopAsync(connectionVersion, connectionToken).Forget();
             }
-            catch (Exception)
-                when (cancellationToken.IsCancellationRequested)
+            catch (Exception) when (connectToken.IsCancellationRequested)
             {
-                _tcpClient.Disconnect();
-
-                HandshakeResponse = null;
-                Failure = null;
-
-                ChangeState(ConnectionState.Disconnected);
-
-                throw new OperationCanceledException(
-                    cancellationToken);
+                if (connectionVersion == _connectionVersion)
+                    CloseConnection();
+                throw new OperationCanceledException(connectToken);
             }
             catch (Exception exception)
             {
-                _tcpClient.Disconnect();
-
-                Failure = exception;
-
-                ChangeState(ConnectionState.Disconnected);
-
+                if (connectionVersion == _connectionVersion)
+                    CloseConnection(exception);
                 throw;
             }
         }
-        public void Disconnect()
-        {
-            _receiveCts?.Cancel();
 
-            _tcpClient.Disconnect();
+        public void Disconnect() => CloseConnection();
 
-            HandshakeResponse = null;
-            Failure = null;
-
-            ChangeState(ConnectionState.Disconnected);
-        }
         public void Dispose()
         {
             if (_disposed)
@@ -231,158 +202,184 @@ namespace YuJanggi.Network.V2
             Disconnect();
             _tcpClient.Dispose();
         }
-        #endregion
 
-        #region Event Handlers
-        // 구독한 이벤트가 발생했을 때 실행하는 처리 메서드
-        #endregion
-
-        #region Private Methods
-        // 클래스 내부에서 사용하는 보조 로직
-        private async UniTask HandshakeAsync(
+        private async UniTask<ServerMessage> SendRequestAsync<TPayload>(
+            ClientMessageType requestType, TPayload payload, ServerMessageType responseType,
             CancellationToken cancellationToken)
+        {
+            var request = ClientMessageFactory.Create(requestType, payload);
+            string requestId = request.RequestId!;
+            using var requestCts = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken, _connectionCts!.Token);
+            var requestToken = requestCts.Token;
+            _pendingRequestTracker.Add(requestId, responseType);
+
+            try
+            {
+                requestToken.ThrowIfCancellationRequested();
+                await _tcpClient.SendAsync(request, requestToken);
+                requestToken.ThrowIfCancellationRequested();
+                return await _pendingRequestTracker.WaitAsync(requestId, requestToken);
+            }
+            finally
+            {
+                _pendingRequestTracker.Remove(requestId);
+            }
+            // TODO:
+            // 전송 후 호출자 토큰만 취소되면 서버는 요청을 처리했어도 로컬 응답 대기는 끝납니다.
+            // 현재 상태는 확정되지 않고 늦은 응답은 무시되므로 서버와 대기 상태가 다를 수 있습니다.
+            // MatchSession에서 상태 재조회 또는 명시적 서버 취소 정책을 결정해야 합니다.
+        }
+
+        private async UniTask<ProtocolHandshakeResponse> HandshakeAsync(CancellationToken cancellationToken)
         {
             var request = new ProtocolHandshakeRequest
             {
                 YuJanggiProtocolVersion = ProtocolVersion.Current,
                 YuJanggiCoreVersion = CoreVersion.Current
             };
-            ClientMessage requestMsg = ClientMessageFactory.Create(
-                ClientMessageType.ProtocolHandshake, request);
-
+            var requestMsg = ClientMessageFactory.Create(ClientMessageType.ProtocolHandshake, request);
             await _tcpClient.SendAsync(requestMsg, cancellationToken);
-
-            ServerMessage responseMsg =
-                await _tcpClient.ReceiveAsync(cancellationToken);
-
-            ValidateCheck(
-                requestMsg,
-                responseMsg,
-                ServerMessageType.ProtocolHandshake);
-
-            HandshakeResponse = responseMsg.GetPayload<ProtocolHandshakeResponse>();
-
-            if (HandshakeResponse.Result != ProtocolHandshakeResult.Success)
-                throw new InvalidOperationException($"핸드셰이크 실패: {HandshakeResponse.Result}");
+            var responseMsg = await _tcpClient.ReceiveAsync(cancellationToken);
+            ValidateResponse(requestMsg, responseMsg, ServerMessageType.ProtocolHandshake);
+            return responseMsg.GetPayload<ProtocolHandshakeResponse>();
         }
-        private async UniTask ReceiveLoopAsync(
-            CancellationToken cancellationToken)
+
+        private async UniTask ReceiveLoopAsync(int connectionVersion, CancellationToken cancellationToken)
         {
-            using var receiveCts =
-                CancellationTokenSource.CreateLinkedTokenSource(
-                    cancellationToken);
-
-            _receiveCts = receiveCts;
-
             try
             {
-                while (!receiveCts.Token.IsCancellationRequested)
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    ServerMessage serverMsg =
-                        await _tcpClient.ReceiveAsync(
-                            receiveCts.Token);
-
+                    var serverMsg = await _tcpClient.ReceiveAsync(cancellationToken);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (connectionVersion != _connectionVersion)
+                        return;
                     HandleMessage(serverMsg);
                 }
             }
-            catch (Exception) when (cancellationToken.IsCancellationRequested || receiveCts.IsCancellationRequested)
+            catch (Exception) when (cancellationToken.IsCancellationRequested)
             {
-                // Disconnect / Dispose 등 정상적인 취소
+                // Disconnect / Dispose가 이미 연결과 요청을 정리했습니다.
             }
             catch (Exception exception)
             {
-                Failure = exception;
-
-                _tcpClient.Disconnect();
-
-                ChangeState(
-                    ConnectionState.Disconnected);
-            }
-            finally
-            {
-                // 연결 종료 시 매칭 응답 대기도 끝냅니다.
-                receiveCts.Cancel();
-                if (_receiveCts == receiveCts)
-                    _receiveCts = null;
+                // 이전 연결의 지연된 실패가 새 연결을 종료하지 않도록 합니다.
+                if (connectionVersion == _connectionVersion)
+                    CloseConnection(exception);
             }
         }
-   
+
+        private void HandleMessage(ServerMessage serverMsg)
+        {
+            if (serverMsg.RequestId is not null)
+            {
+                _pendingRequestTracker.Complete(serverMsg);
+                return;
+            }
+
+            switch (serverMsg.Type)
+            {
+                case ServerMessageType.MatchingFound:
+                    HandleMatchingFound(serverMsg);
+                    break;
+            }
+        }
+
+        private void HandleMatchingFound(ServerMessage serverMsg)
+        {
+            var matchingFound = serverMsg.GetPayload<MatchingFound>();
+            if (CurrentMatch?.MatchId == matchingFound.MatchId)
+                return;
+
+            if (State == ConnectionState.Connected && _matchingRequestInProgress)
+            {
+                // 응답 처리가 재개되기 전 수신된 첫 이벤트만 보관합니다.
+                _deferredMatchingFound ??= matchingFound;
+                return;
+            }
+
+            ApplyMatchingFound(matchingFound);
+        }
+
+        private void ApplyMatchingFound(MatchingFound matchingFound)
+        {
+            if (State != ConnectionState.Matching)
+            {
+                // TODO:
+                // 취소 성공 뒤 늦은 MatchingFound 또는 Matched 중 다른 MatchId가 도착할 수 있습니다.
+                // 현재는 Matching 이외의 이벤트를 무시하여 Connected나 기존 매칭 정보를 보존합니다.
+                // MatchSession / GameSession에서 서버 상태 재동기화와 취소/확정 우선순위를 결정해야 합니다.
+                return;
+            }
+
+            CurrentMatch = matchingFound;
+            ChangeState(ConnectionState.Matched);
+        }
+
+        private void CloseConnection(Exception? failure = null)
+        {
+            ++_connectionVersion;
+            var connectionCts = _connectionCts;
+            _connectionCts = null;
+            _matchingRequestInProgress = false;
+            _matchingCancelInProgress = false;
+            _deferredMatchingFound = null;
+            CurrentMatch = null;
+            Failure = failure;
+            if (failure is null)
+                HandshakeResponse = null;
+            State = ConnectionState.Disconnected;
+
+            _tcpClient.Disconnect();
+            _pendingRequestTracker.Clear();
+            connectionCts?.Cancel();
+            connectionCts?.Dispose();
+            OnDataChanged?.Invoke();
+            // TODO:
+            // MatchingFound 직후 연결이 끊겨도 서버에 확정된 매칭이 남아 있을 수 있습니다.
+            // 현재는 로컬 CurrentMatch를 지우고 Disconnected로 돌아가며 재연결 시 복원하지 않습니다.
+            // GameSession / MatchSession / GameScene에서 재접속 복원과 진행 중 대국 이탈 정책을 결정해야 합니다.
+        }
+
+        private void EnsureMatchingOperationAllowed(ConnectionState requiredState)
+        {
+            ThrowIfDisposed();
+            if (State != requiredState)
+                throw new InvalidOperationException($"현재 상태에서는 매칭 요청을 처리할 수 없습니다: {State}");
+            if (_matchingRequestInProgress || _matchingCancelInProgress)
+                throw new InvalidOperationException("이미 매칭 신청 또는 취소 응답을 기다리고 있습니다.");
+        }
+
+        private void EnsureCurrentConnection(int connectionVersion)
+        {
+            if (connectionVersion != _connectionVersion)
+                throw new OperationCanceledException("요청을 시작한 연결이 종료되었습니다.");
+        }
+
         private void ChangeState(ConnectionState state)
         {
             State = state;
             OnDataChanged?.Invoke();
         }
+
         private void ThrowIfDisposed()
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(OnlineGameClient_V2));
         }
-        private void EnsureConnected()
+
+        private static void ValidateResponse(
+            ClientMessage request, ServerMessage response, ServerMessageType expectedType)
         {
-            if (!IsOnline)
-            {
+            if (response.Type != expectedType)
                 throw new InvalidOperationException(
-                    "서버에 연결되어 있지 않습니다.");
-            }
-        }
-
-        private void HandleMessage(
-            ServerMessage serverMsg)
-        {
-            switch (serverMsg.Type)
-            {
-                case ServerMessageType.MatchingResponse:
-                case ServerMessageType.MatchingCancelResponse:
-                    _pendingRequestTracker.Complete(
-                        serverMsg);
-                    break;
-            }
-        }
-
-        private static void ValidateCheck(
-            ClientMessage requestMsg,
-            ServerMessage responseMsg,
-            ServerMessageType expectedType)
-        {
-            ValidateResponseType(
-                responseMsg,
-                expectedType);
-
-            ValidateRequestId(
-                requestMsg,
-                responseMsg);
-        }
-        private static void ValidateRequestId(
-            ClientMessage requestMsg,
-            ServerMessage responseMsg)
-        {
-            if (string.IsNullOrEmpty(requestMsg.RequestId))
-            {
+                    $"잘못된 서버 응답입니다. Expected: {expectedType}, Actual: {response.Type}");
+            if (string.IsNullOrWhiteSpace(request.RequestId))
+                throw new InvalidOperationException("요청 메시지에 RequestId가 없습니다.");
+            if (request.RequestId != response.RequestId)
                 throw new InvalidOperationException(
-                    "요청 메시지에 RequestId가 없습니다.");
-            }
-
-            if (requestMsg.RequestId != responseMsg.RequestId)
-            {
-                throw new InvalidOperationException(
-                    $"RequestId가 일치하지 않습니다. " +
-                    $"Expected: {requestMsg.RequestId}, " +
-                    $"Actual: {responseMsg.RequestId}");
-            }
+                    $"RequestId가 일치하지 않습니다. Expected: {request.RequestId}, Actual: {response.RequestId}");
         }
-        private static void ValidateResponseType(
-            ServerMessage responseMsg,
-            ServerMessageType expectedType)
-        {
-            if (responseMsg.Type != expectedType)
-            {
-                throw new InvalidOperationException(
-                    $"잘못된 서버 응답입니다. " +
-                    $"Expected: {expectedType}, " +
-                    $"Actual: {responseMsg.Type}");
-            }
-        }
-        #endregion
-
     }
 }

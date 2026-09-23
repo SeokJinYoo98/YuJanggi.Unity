@@ -8,10 +8,10 @@ namespace YuJanggi.BootStrap
 {
     using Network.V2;
     using Network.V2.Status;
-    using Protocol.V2.Connection;
+
 
     /// <summary>
-    /// TurnBasedNetworkService로 승격 예정
+    /// Unity 네트워크 요청의 수명과 UI에 전달할 상태를 관리합니다.
     /// Unity쪽 네트워크 진입점
     /// 상태를 조립해서 이벤트로 전달
     /// </summary>
@@ -102,48 +102,17 @@ namespace YuJanggi.BootStrap
             _client?.Disconnect();
         }
 
-        // Matching
-        public async UniTask StartMatchMakingAsync()
+        // Matching: 서버 응답 해석과 상태 변경은 클라이언트가 담당합니다.
+        public UniTask StartMatchMakingAsync()
         {
-            if (_client is null || _lifetimeCts is null)
-                throw new InvalidOperationException(
-                    "NetworkManager가 초기화되지 않았습니다.");
-            if (!IsOnline)
-                throw new InvalidOperationException(
-                    "서버에 연결되어 있지 않습니다.");
-            if (_matchingRequestCts is not null)
-                throw new InvalidOperationException(
-                    "이미 매칭 요청을 처리 중입니다.");
-
-            // 매니저 수명에 연결하되, 연결 시도와는 별도의 CTS를 사용합니다.
-            using var matchingCts = CancellationTokenSource.CreateLinkedTokenSource(
-                _lifetimeCts.Token);
-            _matchingRequestCts = matchingCts;
-
-            try
-            {
-                matchingCts.Token.ThrowIfCancellationRequested();
-                await _client.MatchRequestAsync(matchingCts.Token);
-            }
-            finally
-            {
-                if (matchingCts == _matchingRequestCts)
-                    _matchingRequestCts = null;
-            }
+            return RunMatchingRequestAsync((client, token) => client.MatchRequestAsync(token));
         }
 
-        public async UniTask CancelMatchMakingAsync()
+        public UniTask CancelMatchMakingAsync()
         {
-            if (_client is null ||
-                _lifetimeCts is null)
-            {
-                throw new InvalidOperationException(
-                    "NetworkManager가 초기화되지 않았습니다.");
-            }
-
-            await _client.MatchCancelRequestAsync(
-                _lifetimeCts.Token);
+            return RunMatchingRequestAsync((client, token) => client.MatchCancelRequestAsync(token));
         }
+
         #endregion
         #region Event Handlers
         private void HandleClientDataChanged()
@@ -151,33 +120,38 @@ namespace YuJanggi.BootStrap
             if (_client is null)
                 return;
 
-            NetworkError? error = null;
-            if (_client.Failure is not null)
-            {
-                var result = _client.HandshakeResponse?.Result
-                    ?? ProtocolHandshakeResult.Success;
-
-                NetworkError versionErrors = NetworkError.None;
-
-                if ((result & ProtocolHandshakeResult.CoreVersionMismatch) != 0)
-                    versionErrors |= NetworkError.CoreVersionMismatch;
-
-                if ((result & ProtocolHandshakeResult.ProtocolVersionMismatch) != 0)
-                    versionErrors |= NetworkError.ProtocolVersionMismatch;
-
-                error = NetworkError.ConnectionFailed | versionErrors;
-            }
-
             Status = new NetworkStatus(
                 _client.IsOnline ? NetworkState.Online : NetworkState.Offline,
                 _client.State,
-                error,
-                _client.Failure?.Message);
+                _client.Error,
+                _client.Failure?.Message,
+                _client.CurrentMatch);
 
             OnNetworkChanged?.Invoke();
         }
         #endregion
         #region Private Methods
+        private async UniTask RunMatchingRequestAsync(
+            Func<IOnlineGameClient_V2, CancellationToken, UniTask> sendRequest)
+        {
+            if (_client is null || _lifetimeCts is null)
+                throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
+            if (_matchingRequestCts is not null)
+                throw new InvalidOperationException("이미 매칭 신청 또는 취소 요청을 처리 중입니다.");
+
+            using var matchingCts = CancellationTokenSource.CreateLinkedTokenSource(_lifetimeCts.Token);
+            _matchingRequestCts = matchingCts;
+            try
+            {
+                matchingCts.Token.ThrowIfCancellationRequested();
+                await sendRequest(_client, matchingCts.Token);
+            }
+            finally
+            {
+                if (_matchingRequestCts == matchingCts)
+                    _matchingRequestCts = null;
+            }
+        }
 
         #endregion
     }
