@@ -69,27 +69,27 @@ namespace YuJanggi.BootStrap
         public async UniTask ConnectAsync()
         {
             if (_client is null || _lifetimeCts is null)
-                throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
+                throw new InvalidOperationException(
+                    "NetworkManager가 초기화되지 않았습니다.");
 
-            // 연결 시도의 중복 실행을 막습니다.
             if (_connectingRequestCts is not null || IsOnline)
-                throw new InvalidOperationException("이미 연결 중이거나 서버에 연결되어 있습니다.");
+                throw new InvalidOperationException(
+                    "이미 연결 중이거나 서버에 연결되어 있습니다.");
 
-            // 매니저 파괴 시 함께 취소되며, 메서드 종료 시 using이 CTS를 해제합니다.
-            using var connectCts
-                = CancellationTokenSource.CreateLinkedTokenSource(
+            using var connectCts =
+                CancellationTokenSource.CreateLinkedTokenSource(
                     _lifetimeCts.Token);
 
-            // Disconnect에서도 취소할 수 있도록 현재 작업의 CTS를 보관합니다.
             _connectingRequestCts = connectCts;
 
             try
             {
-                await _client.ConnectAsync(connectCts.Token);
+                await _client.ConnectAsync(
+                    connectCts.Token);
             }
             finally
             {
-                if (connectCts == _connectingRequestCts)
+                if (_connectingRequestCts == connectCts)
                     _connectingRequestCts = null;
             }
         }

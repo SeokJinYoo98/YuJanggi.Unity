@@ -150,8 +150,13 @@ namespace YuJanggi.Lobby
         public void HandleNetworkButton()
         {
             _audioManager.PlayButton();
+            if (_networkManager.IsOnline)
+                return;
+
             ChangePanel(_networkPanel);
-            ConnectNetworkAsync().Forget();
+            _networkManager.
+                ConnectAsync().
+                Forget();
         }
         public void HandleMatchMakingButton()
         {
@@ -174,9 +179,6 @@ namespace YuJanggi.Lobby
         public void HandleCloseNetworkPanel()
         {
             _audioManager.PlayButton();
-            if (!_networkManager.IsOnline)
-                return;
-
             _networkManager.Disconnect();
             HandleClosePanel();
         }
@@ -201,30 +203,19 @@ namespace YuJanggi.Lobby
 
         private async UniTask ConnectNetworkAsync()
         {
-            var network = YuJanggiBootStrap.Instance.NetworkManager;
-
             try
             {
-                // 연결 중 버튼 재입력을 막아 중복 ConnectAsync 호출을 방지해야 합니다.
-                // 현재는 로비 종료용 토큰과 제한 시간이 없으므로, 서버가 응답하지 않으면
-                // 핸드셰이크 대기가 계속될 수 있습니다. 취소/타임아웃은 토큰으로 전달합니다.
-                await network.ConnectAsync();
+                await _networkManager.ConnectAsync();
             }
             catch (OperationCanceledException)
             {
-                // 정상적인 취소 흐름입니다. OnlineGameClient_V2에서 이미 연결을 정리하므로
-                // 아래 Disconnect는 필수가 아니며 연결 해제 알림이 중복 발생할 수 있습니다.
-                network.Disconnect();
+                _networkManager.Disconnect();
+                ShowHomeUI();
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                // 접속 실패(SocketException), 수신 종료/패킷 오류(IOException 계열),
-                // 역직렬화 오류, 핸드셰이크 거절은 클라이언트에서 연결 정리 후 전달됩니다.
-                // 사용자 안내는 OnNetworkChanged에서 Status.Error/Message를 보고 처리합니다.
-                // 여기서 Disconnect를 호출하면 저장된 실패 정보가 초기화되므로 호출하지 않습니다.
-                // 미초기화/중복 연결(InvalidOperationException), 폐기 후 호출(ObjectDisposedException)은
-                // 상태 이벤트 없이 전달될 수 있습니다. 자동 재시도보다 호출 순서/생명주기를 수정해야 합니다.
-                Debug.LogException(e);
+                _networkManager.Disconnect();
+                ShowHomeUI();
             }
         }
         #endregion
