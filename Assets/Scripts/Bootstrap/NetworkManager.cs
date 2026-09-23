@@ -25,8 +25,8 @@ namespace YuJanggi.BootStrap
 
         #endregion
         #region Properties
-        public bool IsConnected
-            => _client?.IsConnected ?? false;
+        public bool IsOnline
+            => _client?.IsOnline ?? false;
         public NetworkStatus Status { get; private set; }
             = new NetworkStatus(
                 NetworkState.Offline,
@@ -72,7 +72,7 @@ namespace YuJanggi.BootStrap
                 throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
 
             // 연결 시도의 중복 실행을 막습니다.
-            if (_connectingRequestCts is not null || IsConnected)
+            if (_connectingRequestCts is not null || IsOnline)
                 throw new InvalidOperationException("이미 연결 중이거나 서버에 연결되어 있습니다.");
 
             // 매니저 파괴 시 함께 취소되며, 메서드 종료 시 using이 CTS를 해제합니다.
@@ -96,8 +96,9 @@ namespace YuJanggi.BootStrap
         public void Disconnect()
         {
             // 진행 중인 작업을 취소한 뒤 실제 연결을 종료합니다.
-            CancelMatchMaking();
+            _matchingRequestCts?.Cancel();
             _connectingRequestCts?.Cancel();
+
             _client?.Disconnect();
         }
 
@@ -107,7 +108,7 @@ namespace YuJanggi.BootStrap
             if (_client is null || _lifetimeCts is null)
                 throw new InvalidOperationException(
                     "NetworkManager가 초기화되지 않았습니다.");
-            if (!IsConnected)
+            if (!IsOnline)
                 throw new InvalidOperationException(
                     "서버에 연결되어 있지 않습니다.");
             if (_matchingRequestCts is not null)
@@ -131,8 +132,17 @@ namespace YuJanggi.BootStrap
             }
         }
 
-        public void CancelMatchMaking()
+        public async UniTask CancelMatchMakingAsync()
         {
+            if (_client is null ||
+                _lifetimeCts is null)
+            {
+                throw new InvalidOperationException(
+                    "NetworkManager가 초기화되지 않았습니다.");
+            }
+
+            await _client.MatchCancelRequestAsync(
+                _lifetimeCts.Token);
         }
         #endregion
         #region Event Handlers

@@ -3273,7 +3273,7 @@ GameObject:
   - component: {fileID: 330477928}
   - component: {fileID: 330477927}
   m_Layer: 5
-  m_Name: MatchingStartButton
+  m_Name: MatchingButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3344,8 +3344,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.LobbyManager, Assembly-CSharp
-        m_MethodName: HandleStartMatchMaking
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
+        m_MethodName: HandleMatchMakingButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -8453,8 +8453,6 @@ MonoBehaviour:
   _networkPanel: {fileID: 1601440936}
   _aiPanel: {fileID: 5352754}
   _localPanel: {fileID: 1392650274}
-  _onlinePlayerName: Player
-  _tcpClientPrefab: {fileID: 3380247418818404715, guid: 79cdd2a0a91de1b489d230e4538805c7, type: 3}
 --- !u!1 &963847788
 GameObject:
   m_ObjectHideFlags: 0
@@ -17108,63 +17106,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2128608487}
   m_CullTransparentMesh: 1
---- !u!1001 &4226126219567273370
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 6183299713263454258, guid: 79cdd2a0a91de1b489d230e4538805c7, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -927.2961
-      objectReference: {fileID: 0}
-    - target: {fileID: 6183299713263454258, guid: 79cdd2a0a91de1b489d230e4538805c7, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 252.72455
-      objectReference: {fileID: 0}
-    - target: {fileID: 6183299713263454258, guid: 79cdd2a0a91de1b489d230e4538805c7, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 1358.9537
-      objectReference: {fileID: 0}
-    - target: {fileID: 6183299713263454258, guid: 79cdd2a0a91de1b489d230e4538805c7, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6183299713263454258, guid: 79cdd2a0a91de1b489d230e4538805c7, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6183299713263454258, guid: 79cdd2a0a91de1b489d230e4538805c7, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6183299713263454258, guid: 79cdd2a0a91de1b489d230e4538805c7, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6183299713263454258, guid: 79cdd2a0a91de1b489d230e4538805c7, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6183299713263454258, guid: 79cdd2a0a91de1b489d230e4538805c7, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6183299713263454258, guid: 79cdd2a0a91de1b489d230e4538805c7, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9033918778309179367, guid: 79cdd2a0a91de1b489d230e4538805c7, type: 3}
-      propertyPath: m_Name
-      value: NetworkClient
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 79cdd2a0a91de1b489d230e4538805c7, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -17174,4 +17115,3 @@ SceneRoots:
   - {fileID: 155725353}
   - {fileID: 947781669}
   - {fileID: 1144934030}
-  - {fileID: 4226126219567273370}

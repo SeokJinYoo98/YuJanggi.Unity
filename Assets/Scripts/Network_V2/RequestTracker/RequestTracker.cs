@@ -74,7 +74,33 @@ namespace YuJanggi.Network.V2
         {
             _pendingRequests.Clear();
         }
+        public void Complete(ServerMessage serverMsg)
+        {
+            if (string.IsNullOrWhiteSpace(serverMsg.RequestId))
+            {
+                throw new InvalidOperationException(
+                    "응답 메시지에 RequestId가 없습니다.");
+            }
 
+            if (!_pendingRequests.TryGetValue(
+                serverMsg.RequestId,
+                out var pendingRequest))
+            {
+                throw new InvalidOperationException(
+                    $"대기 중인 요청이 없습니다. RequestId: {serverMsg.RequestId}");
+            }
+
+            if (pendingRequest.ExpectedResponseType != serverMsg.Type)
+            {
+                throw new InvalidOperationException(
+                    $"응답 타입이 일치하지 않습니다. " +
+                    $"Expected: {pendingRequest.ExpectedResponseType}, " +
+                    $"Actual: {serverMsg.Type}");
+            }
+
+            pendingRequest.CompletionSource
+                .TrySetResult(serverMsg);
+        }
         private static void ValidateRequestId(string requestId)
         {
             if (string.IsNullOrWhiteSpace(requestId))

@@ -17,13 +17,13 @@ namespace YuJanggi.Network.V2
     public interface IOnlineGameClient_V2 : IDisposable
     {
         bool                        IsOnline { get; }
-        bool                        IsConnected { get; }
         ConnectionState             State { get; }
         ProtocolHandshakeResponse?  HandshakeResponse { get; }
         Exception?                  Failure { get; }
         event Action?               OnDataChanged;
         UniTask ConnectAsync(CancellationToken cancellationToken = default);
         UniTask MatchRequestAsync(CancellationToken cancellationToken = default);
+        UniTask MatchCancelRequestAsync(CancellationToken cancellationToken = default);
         void Disconnect();
     }
 
@@ -48,10 +48,8 @@ namespace YuJanggi.Network.V2
         public ProtocolHandshakeResponse? HandshakeResponse { get; private set; }
         public bool IsOnline =>
             State is ConnectionState.Connected or
+            ConnectionState.Matched or
             ConnectionState.Matching;
-        public bool IsConnected =>
-            State == ConnectionState.Connected &&
-            _tcpClient.IsConnected;
 
         public ConnectionState State { get; private set; }
             = ConnectionState.Disconnected;
@@ -75,6 +73,52 @@ namespace YuJanggi.Network.V2
 
         #region Public Methods
         // 외부에서 호출하는 기능
+        public async UniTask MatchCancelRequestAsync(
+            CancellationToken cancellationToken = default)
+        {
+            ThrowIfDisposed();
+            EnsureConnected();
+
+            var request =
+                new MatchingCancelRequest();
+
+            var requestMsg =
+                ClientMessageFactory.Create(
+                    ClientMessageType.MatchingCancelRequest,
+                    request);
+
+            string requestId =
+                requestMsg.RequestId!;
+
+            _pendingRequestTracker.Add(
+                requestId,
+                ServerMessageType.MatchingCancelResponse);
+
+            try
+            {
+                await _tcpClient.SendAsync(
+                    requestMsg,
+                    cancellationToken);
+
+                ServerMessage responseMsg =
+                    await _pendingRequestTracker.WaitAsync(
+                        requestId,
+                        cancellationToken);
+
+                var response =
+                    responseMsg.GetPayload<MatchingCancelResponse>();
+
+                if (response.Result == MatchingCancelResult.Cancelled)         
+                    ChangeState(ConnectionState.Connected);
+                
+                // 취소 성공 시
+
+            }
+            finally
+            {
+                _pendingRequestTracker.Remove(requestId);
+            }
+        }
         public async UniTask MatchRequestAsync(
             CancellationToken cancellationToken = default)
         {
@@ -110,8 +154,8 @@ namespace YuJanggi.Network.V2
                 var response =
                     responseMsg.GetPayload<MatchingResponse>();
 
-                // Accepted라면 상태 변경
-                ChangeState(ConnectionState.Matching);
+                if (response.Result == MatchingResult.Accepted)
+                    ChangeState(ConnectionState.Matching);
             }
             finally
             {
@@ -275,19 +319,22 @@ namespace YuJanggi.Network.V2
         }
         private void EnsureConnected()
         {
-            if (!IsConnected)
+            if (!IsOnline)
             {
                 throw new InvalidOperationException(
                     "서버에 연결되어 있지 않습니다.");
             }
         }
 
-        private void HandleMessage(ServerMessage serverMsg)
+        private void HandleMessage(
+            ServerMessage serverMsg)
         {
             switch (serverMsg.Type)
             {
                 case ServerMessageType.MatchingResponse:
-                    ChangeState(ConnectionState.Matching);
+                case ServerMessageType.MatchingCancelResponse:
+                    _pendingRequestTracker.Complete(
+                        serverMsg);
                     break;
             }
         }

@@ -153,14 +153,30 @@ namespace YuJanggi.Lobby
             ChangePanel(_networkPanel);
             ConnectNetworkAsync().Forget();
         }
-        public void HandleStartMatchMaking()
+        public void HandleMatchMakingButton()
         {
             _audioManager.PlayButton();
-            _networkManager.StartMatchMakingAsync().Forget();
+
+            var state =
+                _networkManager.Status.ConnectionState;
+
+            if (state == ConnectionState.Connected)
+                _networkManager
+                    .StartMatchMakingAsync()
+                    .Forget();
+            
+            else if (state == ConnectionState.Matching)
+                _networkManager
+                    .CancelMatchMakingAsync()
+                    .Forget();
+       
         }
         public void HandleCloseNetworkPanel()
         {
             _audioManager.PlayButton();
+            if (!_networkManager.IsOnline)
+                return;
+
             _networkManager.Disconnect();
             HandleClosePanel();
         }
