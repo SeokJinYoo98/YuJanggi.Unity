@@ -17,7 +17,7 @@ namespace YuJanggi.Lobby.Matching
         private readonly RequestDispatcher _requests;
         private readonly MatchingService _service;
         private MatchingFound? _deferredMatchingFound;
-        private GameReady? _deferredGameReady;
+        private GameReadyEvent? _deferredGameReady;
         private bool _disposed;
 
         private readonly Func<string?> _getMatchId;
@@ -150,13 +150,13 @@ namespace YuJanggi.Lobby.Matching
 
         private void HandleGameReady(ServerMessage message)
         {
-            var ready = message.GetPayload<GameReady>();
+            var ready = message.GetPayload<GameReadyEvent>();
             if (_service.HasDeliveredGameReady || _service.State != MatchingState.Matched ||
                 _getMatchId() != ready.MatchId)
                 return;
             // enum 필드 누락을 기본 포진(HEHE)으로 취급하지 않습니다.
-            if (!message.Payload!.Value.TryGetProperty(nameof(GameReady.ChoFormation), out _) ||
-                !message.Payload.Value.TryGetProperty(nameof(GameReady.HanFormation), out _))
+            if (!message.Payload!.Value.TryGetProperty(nameof(GameReadyEvent.ChoFormation), out _) ||
+                !message.Payload.Value.TryGetProperty(nameof(GameReadyEvent.HanFormation), out _))
                 throw new InvalidOperationException("게임 준비 포진이 누락되었습니다.");
             if (!_service.SubmittedFormation.HasValue && _service.IsFormationSubmitting)
             {
@@ -168,7 +168,7 @@ namespace YuJanggi.Lobby.Matching
                 ApplyGameReady(ready);
         }
 
-        private void ApplyGameReady(GameReady ready)
+        private void ApplyGameReady(GameReadyEvent ready)
         {
             if (ready.MatchId != _getMatchId())
                 return;

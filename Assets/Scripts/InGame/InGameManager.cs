@@ -99,6 +99,9 @@ namespace YuJanggi.InGame
                 case GameModeType.AI:
                     _inGameFlow = InGameFlowFactory.CreateLocal(_session);
                     break;
+                case GameModeType.Network:
+                    _inGameFlow = InGameFlowFactory.CreateNetwork(_session, _inGameHandler);
+                    break;
 
             }
         }

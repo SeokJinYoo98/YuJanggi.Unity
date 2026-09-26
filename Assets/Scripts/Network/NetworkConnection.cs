@@ -134,7 +134,7 @@ namespace YuJanggi.Network
                 YuJanggiProtocolVersion = ProtocolVersion.Current,
                 YuJanggiCoreVersion = CoreVersion.Current
             };
-            var requestMsg = ClientMessageFactory.Create(ClientMessageType.ProtocolHandshake, request);
+            var requestMsg = ClientMessageFactory.Create(ClientMessageType.HandshakeRequest, request);
             await _tcpClient.SendAsync(requestMsg, cancellationToken);
             var responseMsg = await _tcpClient.ReceiveAsync(cancellationToken);
             ValidateResponse(requestMsg, responseMsg, ServerMessageType.ProtocolHandshake);

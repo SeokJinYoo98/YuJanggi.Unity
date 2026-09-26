@@ -12,13 +12,11 @@ namespace YuJanggi.InGame.Flow
             GameSession session)
             => new LocalInGameFlow(session);
 
-        //public static IInGameFlow CreateNetwork(
-        //    GameSession session,
-        //    InGameHandler handler,
-        //    InGameService service)
-        //    => new NetworkInGameFlow(
-        //        session,
-        //        handler,
-        //        service);
+        public static IInGameFlow CreateNetwork(
+            GameSession session,
+            InGameHandler handler)
+            => new NetworkInGameFlow(
+                session,
+                handler);
     }
 }

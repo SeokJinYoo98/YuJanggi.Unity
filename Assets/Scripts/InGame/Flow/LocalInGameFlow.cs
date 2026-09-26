@@ -8,10 +8,9 @@ namespace YuJanggi.InGame.Flow
 {
     public sealed class LocalInGameFlow : InGameFlow
     {
-        private readonly GameSession _session;
         public LocalInGameFlow(GameSession session)
+            : base(session)
         {
-            _session = session;
         }
 
         /// <summary>
@@ -22,7 +21,7 @@ namespace YuJanggi.InGame.Flow
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            _session.StartGame();
+            Session.StartGame();
 
             return UniTask.CompletedTask;
         }

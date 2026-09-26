@@ -2,6 +2,7 @@
 
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using YuJanggi.InGame.Session;
 
 namespace YuJanggi.InGame.Flow
 {
@@ -22,8 +23,11 @@ namespace YuJanggi.InGame.Flow
     public abstract class InGameFlow : IInGameFlow
     {
         private bool _entered;
-
-
+        protected GameSession Session { get; }
+            protected InGameFlow(GameSession session)
+    {
+        Session = session;
+    }
         public async UniTask EnterAsync(
             CancellationToken cancellationToken)
         {
