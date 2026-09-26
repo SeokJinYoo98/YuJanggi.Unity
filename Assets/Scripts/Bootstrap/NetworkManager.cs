@@ -36,8 +36,6 @@ namespace YuJanggi.BootStrap
         public NetworkSessionInfo NetworkInfo => NetworkSessionStore.Current;
         public string? MatchId
             => string.IsNullOrEmpty(NetworkInfo.MatchId) ? null : NetworkInfo.MatchId;
-        public NetworkConnection Connection => _connection
-            ?? throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
         public MatchingHandler Matching => _matchingHandler
             ?? throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
         public bool IsMatched
