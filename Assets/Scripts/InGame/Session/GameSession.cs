@@ -26,15 +26,16 @@ namespace YuJanggi.InGame.Session
             _localInput   = localInput;
             _states       = CreateStates();
         }
+        public void InitGame()
+        {
+            _matchModel.InitGame(_sessionInfo.ChoFormation, _sessionInfo.HanFormation);
+            _matchView.InitMatchView(_matchModel.Board);
+        }
         public void StartGame()
         {
             _play = true;
             ChangeState(SessionState.LiveState);
-
-            _matchModel.InitGame(_sessionInfo.ChoFormation, _sessionInfo.HanFormation);
-            _matchView.StartGame(_matchModel.Board);
             _matchModel.StartGame();
-
             _playerCho.BeginTurn();
             _playerHan.EndTurn();
         }

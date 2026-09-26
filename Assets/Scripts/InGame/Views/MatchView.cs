@@ -122,9 +122,9 @@ namespace YuJanggi.InGame.Views
             _resultUI.Hide();
             _boardView.SyncBoardState(boardModel);
         }
-        public void StartGame(IBoardModel boardModel)
+        public void InitMatchView(IBoardModel boardModel)
         {
-            _boardView.StartGame(boardModel);
+            _boardView.InitPieces(boardModel);
         }
 
 

@@ -31,7 +31,7 @@ namespace YuJanggi.Runtime.Board
 
  
 
-        public void StartGame(IBoardModel model)
+        public void InitPieces(IBoardModel model)
         {
             _pieces.SpawnPieces(model);
         }

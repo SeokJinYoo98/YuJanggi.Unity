@@ -33,7 +33,8 @@ namespace YuJanggi.BootStrap
 
         #endregion
         #region Properties
-        public NetworkSessionInfo NetworkInfo => NetworkSessionStore.Current;
+        public NetworkSessionInfo NetworkInfo
+            => NetworkSessionStore.Current;
         public string? MatchId
             => string.IsNullOrEmpty(NetworkInfo.MatchId) ? null : NetworkInfo.MatchId;
         public MatchingHandler Matching => _matchingHandler

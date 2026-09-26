@@ -67,6 +67,7 @@ namespace YuJanggi.InGame
         }
         private void Start()
         {
+            _session.InitGame();
             if (GameMode != GameModeType.Network)
                 _session.StartGame();
         }
