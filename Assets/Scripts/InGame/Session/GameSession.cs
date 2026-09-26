@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 
-namespace YuJanggi.Runtime.GameSession
+namespace YuJanggi.InGame.Session
 {
     using Core.V2.Domain;
     using Core.V2.Match;
 
-    using Piece;
-
+    using InGame.Views;
     public class GameSession : ISessionTransition, IGameInputReceiver, IGameResultContext
     {
         #region public Field F
@@ -29,6 +28,7 @@ namespace YuJanggi.Runtime.GameSession
         }
         public void StartGame()
         {
+            _play = true;
             ChangeState(SessionState.LiveState);
 
             _matchModel.InitGame(_sessionInfo.ChoFormation, _sessionInfo.HanFormation);
@@ -70,7 +70,10 @@ namespace YuJanggi.Runtime.GameSession
         }
 
         public void Tick(float deltaTime)
-            => _matchModel.Tick(deltaTime);
+        {
+            if (_play)
+                _matchModel.Tick(deltaTime);
+        }
         #endregion
 
         #region private Field Member   
@@ -85,7 +88,7 @@ namespace YuJanggi.Runtime.GameSession
         private readonly ReplayView             _replayView;
         private readonly MatchView              _matchView;
         private readonly MatchModel             _matchModel;
-
+        private bool                            _play = false;
         public GameResultInfo? GameResult { get; private set; }
 
         #endregion

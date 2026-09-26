@@ -2,16 +2,15 @@ using System;
 using System.Collections;
 using UnityEngine;
 using TMPro;
-namespace YuJanggi.Runtime.GameSession
+namespace YuJanggi.InGame.Views
 {
+    using Audio;
     using BootStrap;
 
     using Core.V2.Match;
-
-
     using Core.V2.Domain;
-    using Audio;
-    using Board;
+
+    using Runtime.Board;
     using Runtime.Input;
     public enum ReplayResult
     {

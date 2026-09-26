@@ -9,9 +9,9 @@ namespace YuJanggi.Lobby
     using Core.V2.Domain;
     using Data.AI;
     using Network.Status;
-    using Matching;
+    using Lobby.Matching;
 
-    using Runtime.GameSession;
+    using InGame.Session;
     using Runtime.UI;
 
     public class LobbyManager : MonoBehaviour
@@ -32,10 +32,15 @@ namespace YuJanggi.Lobby
         private int _lastNetworkTimerSeconds = -1;
         private string _timerMatchId;
         private bool _isEnteringGame;
+        private string _formationSubmissionMatchId;
+        private string _formationFailure;
 
         private void Update()
         {
-            if (!_showNetworkTimer)
+            if (!_showNetworkTimer || _formationSubmissionMatchId != null)
+                return;
+            var snapshot = _networkManager.Matching.Snapshot;
+            if (snapshot.IsFormationSubmitting || snapshot.SubmittedFormation.HasValue)
                 return;
 
             int seconds = GetNetworkTimerSeconds();
@@ -45,7 +50,7 @@ namespace YuJanggi.Lobby
             _lastNetworkTimerSeconds = seconds;
             _networkPanel.UpdateTimer(_timerState, seconds);
             if (_timerState == MatchingState.Matched && seconds == 0)
-                HandleCreateSession();
+                SubmitSelectedFormationAsync().Forget();
         }
 
         private void Awake()
@@ -94,26 +99,10 @@ namespace YuJanggi.Lobby
                 return;
 
             GameSessionInfo info;
-            if (_timerState == MatchingState.Matched)
+            if (_networkManager.IsMatched)
             {
-                NetworkStatus status = _networkManager.Status;
-                if (!_showNetworkTimer || GetNetworkTimerSeconds() != 0 ||
-                    status.NetworkState != NetworkState.Online ||
-                    status.MatchingState != MatchingState.Matched ||
-                    (status.Error ?? NetworkError.None) != NetworkError.None ||
-                    status.CurrentMatch is null ||
-                    string.IsNullOrWhiteSpace(status.CurrentMatch.MatchId) ||
-                    status.CurrentMatch.MatchId != _timerMatchId ||
-                    status.Team is not (PlayerTeam.Cho or PlayerTeam.Han))
+                if (!TryCreateNetworkSessionInfo(out info))
                     return;
-
-                // TODO:
-                // 기존 로비는 카운트다운 종료 시 포진을 서버에 제출하지 않고 씬을 이동합니다.
-                // 현재 로컬 세션은 생성되지만 서버 GameRoom 생성·준비 완료를 보장하지 않습니다.
-                // GameSession / GameScene 준비 흐름에서 SubmitFormationAsync 호출과 서버 시작 이벤트 대기를
-                // 연결하고, 포진 거절·연결 종료 시 씬 진입을 어떻게 취소할지 결정해야 합니다.
-                info = GameSessionFactory.CreateNetworkSession(
-                    status.Team, (Formation)_networkPanel.Selected);
             }
             else if (_curr is LocalPanelView local)
             {
@@ -135,6 +124,30 @@ namespace YuJanggi.Lobby
                 return;
             }
 
+            EnterGameScene(info);
+        }
+
+        /// <summary>서버가 확정한 내 진영과 양측 포진으로 게임 씬에 전달할 정보를 조립합니다.</summary>
+        private bool TryCreateNetworkSessionInfo(out GameSessionInfo info)
+        {
+            info = default;
+            var matching = _networkManager.Matching.Snapshot;
+            if (!_networkManager.IsOnline || matching.State != MatchingState.Matched ||
+                !matching.IsGameReady || !matching.SubmittedFormation.HasValue ||
+                string.IsNullOrWhiteSpace(matching.MatchId) ||
+                !matching.ChoFormation.HasValue || !matching.HanFormation.HasValue ||
+                matching.Team is not (PlayerTeam.Cho or PlayerTeam.Han))
+                return false;
+
+            info = GameSessionFactory.CreateNetworkSession(
+                matching.Team, matching.ChoFormation.Value, matching.HanFormation.Value);
+            return true;
+        }
+
+        private void EnterGameScene(GameSessionInfo info)
+        {
+            if (_isEnteringGame)
+                return;
             _isEnteringGame = true;
             _showNetworkTimer = false;
             _audioManager?.PlayButton();
@@ -243,6 +256,17 @@ namespace YuJanggi.Lobby
                 return;
 
             NetworkStatus status = _networkManager.Status;
+            // 준비 완료 후에는 카운트다운이나 패널 갱신에 의존하지 않고 씬을 이동합니다.
+            if (TryCreateNetworkSessionInfo(out var sessionInfo))
+            {
+                EnterGameScene(sessionInfo);
+                return;
+            }
+            if (_formationSubmissionMatchId != status.CurrentMatch?.MatchId)
+            {
+                _formationSubmissionMatchId = null;
+                _formationFailure = null;
+            }
             UpdateNetworkTimerState(status);
 
             // 실패 사유는 패널에 남기고, 정상 연결 해제일 때만 홈으로 돌아갑니다.
@@ -256,9 +280,64 @@ namespace YuJanggi.Lobby
             _networkPanel.ChangeMessage(status, timerSeconds);
             _lastNetworkTimerSeconds = timerSeconds ?? -1;
 
-            if (_timerState == MatchingState.Matched && timerSeconds == 0)
-                HandleCreateSession();
+            var matching = _networkManager.Matching.Snapshot;
+            if (status.NetworkState == NetworkState.Online && matching.State == MatchingState.Matched)
+            {
+                if (_formationSubmissionMatchId != null || matching.IsFormationSubmitting ||
+                    matching.SubmittedFormation.HasValue)
+                {
+                    _networkPanel.ShowFormationProgress(_formationFailure ??
+                        (matching.SubmittedFormation.HasValue
+                            ? "포진 접수 완료 · 서버 준비 대기 중"
+                            : "포진 제출 중"));
+                }
+            }
 
+            if (_timerState == MatchingState.Matched && timerSeconds == 0)
+                SubmitSelectedFormationAsync().Forget();
+
+        }
+
+        private async UniTask SubmitSelectedFormationAsync()
+        {
+            var matching = _networkManager.Matching.Snapshot;
+            string matchId = matching.MatchId;
+            if (_isEnteringGame || !_networkManager.IsOnline || string.IsNullOrWhiteSpace(matchId) ||
+                matching.State != MatchingState.Matched || _formationSubmissionMatchId == matchId ||
+                matching.IsFormationSubmitting || matching.SubmittedFormation.HasValue)
+                return;
+
+            _formationSubmissionMatchId = matchId;
+            _formationFailure = null;
+            var formation = (Formation)_networkPanel.Selected;
+            _networkPanel.ShowFormationProgress("포진 제출 중");
+            try
+            {
+                bool accepted = await _networkManager.SubmitFormationAsync(formation);
+                if (this == null || _isEnteringGame || _networkManager.Matching.Snapshot.MatchId != matchId)
+                    return;
+                if (!accepted)
+                    _formationFailure = "포진 접수가 거절되었습니다.";
+            }
+            catch (OperationCanceledException)
+            {
+                if (this == null || _isEnteringGame || _networkManager.Matching.Snapshot.MatchId != matchId)
+                    return;
+                _formationFailure = "포진 제출이 취소되었습니다.";
+            }
+            catch (Exception exception)
+            {
+                if (this == null || _isEnteringGame || _networkManager.Matching.Snapshot.MatchId != matchId)
+                    return;
+                _formationFailure = "포진 제출에 실패했습니다.";
+                Debug.LogException(exception);
+            }
+            // TODO:
+            // 전송 실패 시 서버 접수 여부를 알 수 없어 현재 자동 재제출이나 씬 이동을 하지 않습니다.
+            // 실패 문구를 유지하며, MatchSession에서 접수 상태 재조회와 재시도 UI 정책을 정해야 합니다.
+            if (this != null && isActiveAndEnabled && !_isEnteringGame &&
+                _networkManager.Matching.Snapshot.MatchId == matchId)
+                HandleNetworkChanged();
         }
 
         private void UpdateNetworkTimerState(in NetworkStatus status)

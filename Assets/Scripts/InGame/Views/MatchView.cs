@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace YuJanggi.Runtime.GameSession
+namespace YuJanggi.InGame.Views
 {
     using BootStrap;
 
@@ -10,10 +10,12 @@ namespace YuJanggi.Runtime.GameSession
     using Core.V2.Domain;
     using Core.V2.Match;
 
-    using Particle;
+    using Runtime.UI;
+    using Runtime.Board;
+    using Runtime.Particle;
+
     using Audio;
-    using UI;
-    using Board;
+
     public class MatchView 
     {
         public MatchView(

@@ -1,10 +1,10 @@
 #nullable enable
 using System;
 using YuJanggi.Core.V2.Domain;
-using YuJanggi.Matching;
 
 namespace YuJanggi.Network.Status
 {
+    using Lobby.Matching;
     public readonly struct NetworkStatus
     {
         public NetworkState         NetworkState { get; }
@@ -22,7 +22,7 @@ namespace YuJanggi.Network.Status
             string?         message,
             MatchInfo?      currentMatch = null,
             PlayerTeam      team = PlayerTeam.None,
-            MatchingState matchingState = MatchingState.Idle)
+            MatchingState   matchingState = MatchingState.Idle)
         {
             NetworkState    = networkState;
             ConnectionState = connectionState;
@@ -39,7 +39,7 @@ namespace YuJanggi.Network.Status
     }
     public enum ConnectionState
     {
-        Disconnected, Connecting, Handshaking, Connected
+        Disconnected, Connecting, Handshaking, Connected,
     }
 
     [Flags]

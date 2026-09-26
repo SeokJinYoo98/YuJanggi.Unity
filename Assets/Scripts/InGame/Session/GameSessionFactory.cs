@@ -1,14 +1,15 @@
 using System;
 
-namespace YuJanggi.Runtime.GameSession
+namespace YuJanggi.InGame.Session
 {
     using Core.V2.Domain;
     using Core.V2.Match;
 
-    using Controller;
+    using Runtime.Controller;
 
     using Data.AI;
 
+    using InGame.Views;
     public static class GameSessionFactory
     {
         public static GameSession CreateSession(
@@ -106,6 +107,10 @@ namespace YuJanggi.Runtime.GameSession
         {
             if (localTeam is not (PlayerTeam.Cho or PlayerTeam.Han))
                 throw new ArgumentOutOfRangeException(nameof(localTeam));
+            if (!Enum.IsDefined(typeof(Formation), cho))
+                throw new ArgumentOutOfRangeException(nameof(cho));
+            if (!Enum.IsDefined(typeof(Formation), han))
+                throw new ArgumentOutOfRangeException(nameof(han));
 
             return new GameSessionInfo
             {

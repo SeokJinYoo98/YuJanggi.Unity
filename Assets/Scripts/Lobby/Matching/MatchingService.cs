@@ -2,22 +2,32 @@
 using System;
 using YuJanggi.Core.V2.Domain;
 
-namespace YuJanggi.Matching
+namespace YuJanggi.Lobby.Matching
 {
     /// <summary>매칭 상태, 참가자 정보와 포진 제출의 로컬 규칙을 관리합니다.</summary>
-    public sealed class MatchingService
+    internal sealed class MatchingService
     {
         private bool _requestInProgress;
         private bool _cancelInProgress;
-
-        public MatchingState State { get; private set; } = MatchingState.Idle;
         public MatchInfo? CurrentMatch { get; private set; }
         public string? MatchId => CurrentMatch?.MatchId;
+
+        public MatchingState State { get; private set; } = MatchingState.Idle;
+
         public PlayerTeam Team => CurrentMatch?.Team ?? PlayerTeam.None;
         public Formation? SelectedFormation { get; private set; }
         public Formation? SubmittedFormation { get; private set; }
         public bool IsFormationSubmitting { get; private set; }
+
+        public Formation? ChoFormation { get; private set; }
+        public Formation? HanFormation { get; private set; }
+
+        public bool IsGameReady { get; private set; }
+
         public event Action? OnDataChanged;
+        public MatchingSnapshot Snapshot => new(
+            State, CurrentMatch, SelectedFormation, SubmittedFormation,
+            ChoFormation, HanFormation, IsFormationSubmitting);
 
         public void BeginRequest()
         {
@@ -107,6 +117,21 @@ namespace YuJanggi.Matching
             OnDataChanged?.Invoke();
         }
 
+        public void ApplyGameReady(string matchId, Formation choFormation, Formation hanFormation)
+        {
+            if (State != MatchingState.Matched || MatchId != matchId ||
+                !SubmittedFormation.HasValue || IsGameReady)
+                return;
+            if (!Enum.IsDefined(typeof(Formation), choFormation) ||
+                !Enum.IsDefined(typeof(Formation), hanFormation))
+                throw new ArgumentException("잘못된 게임 준비 포진입니다.");
+
+            ChoFormation = choFormation;
+            HanFormation = hanFormation;
+            IsGameReady = true;
+            OnDataChanged?.Invoke();
+        }
+
         public void Reset()
         {
             _requestInProgress = false;
@@ -115,6 +140,9 @@ namespace YuJanggi.Matching
             CurrentMatch = null;
             SelectedFormation = null;
             SubmittedFormation = null;
+            ChoFormation = null;
+            HanFormation = null;
+            IsGameReady = false;
             ChangeState(MatchingState.Idle);
             // TODO:
             // 매칭 확정 직후 연결이 끊겨도 서버에는 매치가 남아 있을 수 있습니다.

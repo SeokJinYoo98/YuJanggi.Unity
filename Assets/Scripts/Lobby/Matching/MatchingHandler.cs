@@ -1,13 +1,14 @@
 #nullable enable
 using Cysharp.Threading.Tasks;
 using System;
+using System.Diagnostics;
 using System.Threading;
 using YuJanggi.Core.V2.Domain;
 using YuJanggi.Network;
 using YuJanggi.Protocol.V2.Matching;
 using YuJanggi.Protocol.V2.Messages;
 
-namespace YuJanggi.Matching
+namespace YuJanggi.Lobby.Matching
 {
     /// <summary>매칭 요청·응답과 서버 이벤트를 해석하여 로컬 매칭 상태에 전달합니다.</summary>
     public sealed class MatchingHandler : IDisposable
@@ -16,13 +17,22 @@ namespace YuJanggi.Matching
         private readonly RequestDispatcher _requests;
         private readonly MatchingService _service;
         private MatchingFound? _deferredMatchingFound;
+        private GameReady? _deferredGameReady;
         private bool _disposed;
 
-        public MatchingHandler(NetworkConnection connection, RequestDispatcher requests, MatchingService service)
+        public MatchingSnapshot Snapshot => _service.Snapshot;
+
+        public event Action? OnDataChanged
+        {
+            add => _service.OnDataChanged += value;
+            remove => _service.OnDataChanged -= value;
+        }
+
+        public MatchingHandler(NetworkConnection connection, RequestDispatcher requests)
         {
             _connection = connection;
             _requests = requests;
-            _service = service;
+            _service = new MatchingService();
             _connection.MessageReceived += HandleMessage;
             _connection.ConnectionClosed += HandleConnectionClosed;
         }
@@ -92,24 +102,34 @@ namespace YuJanggi.Matching
                 if (response.Result != FormationSubmitResult.Accepted)
                     return false;
                 _service.FormationAccepted();
+                if (_deferredGameReady is not null)
+                    ApplyGameReady(_deferredGameReady);
                 return true;
                 // TODO:
                 // 이전 제출의 응답을 놓친 뒤 재제출하면 AlreadySubmitted를 받을 수 있습니다.
                 // 현재 성공으로 간주하지 않으므로 로컬 SubmittedFormation은 비어 있을 수 있습니다.
                 // MatchSession에서 서버가 접수한 포진 조회 및 재시도 정책을 결정해야 합니다.
-                // 또한 RoomCreated는 양쪽에게 전달되는 시작 이벤트가 아니므로 여기서 게임을 시작하지 않습니다.
-                // GameSession / GameScene은 이후 서버 준비·시작 이벤트로 실제 대국 진입을 확정해야 합니다.
             }
             finally
             {
                 if (version == _connection.Version)
+                {
+                    _deferredGameReady = null;
                     _service.EndFormationSubmit();
+                }
             }
         }
 
         private void HandleMessage(ServerMessage message)
         {
-            if (message.RequestId is not null || message.Type != ServerMessageType.MatchingFound)
+            if (message.RequestId is not null)
+                return;
+            if (message.Type == ServerMessageType.GameReady)
+            {
+                HandleGameReady(message);
+                return;
+            }
+            if (message.Type != ServerMessageType.MatchingFound)
                 return;
             var found = message.GetPayload<MatchingFound>();
             if (_service.MatchId == found.MatchId)
@@ -121,6 +141,41 @@ namespace YuJanggi.Matching
             }
             ApplyMatchingFound(found);
         }
+
+        private void HandleGameReady(ServerMessage message)
+        {
+            var ready = message.GetPayload<GameReady>();
+            if (_service.State != MatchingState.Matched ||
+                _service.MatchId != ready.MatchId || _service.IsGameReady)
+                return;
+            // enum 필드 누락을 기본 포진(HEHE)으로 취급하지 않습니다.
+            if (!message.Payload!.Value.TryGetProperty(nameof(GameReady.ChoFormation), out _) ||
+                !message.Payload.Value.TryGetProperty(nameof(GameReady.HanFormation), out _))
+                throw new InvalidOperationException("게임 준비 포진이 누락되었습니다.");
+            if (!_service.SubmittedFormation.HasValue && _service.IsFormationSubmitting)
+            {
+                // 응답 continuation보다 이벤트 처리가 앞서도 Accepted 확인 후 적용합니다.
+                _deferredGameReady ??= ready;
+                return;
+            }
+            if (_service.SubmittedFormation.HasValue)
+                ApplyGameReady(ready);
+        }
+
+        private void ApplyGameReady(GameReady ready)
+        {
+            _service.ApplyGameReady(ready.MatchId,
+                ToCoreFormation(ready.ChoFormation), ToCoreFormation(ready.HanFormation));
+        }
+
+        private static Formation ToCoreFormation(ProtocolFormation formation) => formation switch
+        {
+            ProtocolFormation.HEHE => Formation.HEHE,
+            ProtocolFormation.EHEH => Formation.EHEH,
+            ProtocolFormation.EHHE => Formation.EHHE,
+            ProtocolFormation.HEEH => Formation.HEEH,
+            _ => throw new InvalidOperationException($"잘못된 게임 준비 포진입니다: {formation}")
+        };
 
         private void ApplyMatchingFound(MatchingFound found)
         {
@@ -155,6 +210,7 @@ namespace YuJanggi.Matching
         private void HandleConnectionClosed()
         {
             _deferredMatchingFound = null;
+            _deferredGameReady = null;
             _service.Reset();
         }
 

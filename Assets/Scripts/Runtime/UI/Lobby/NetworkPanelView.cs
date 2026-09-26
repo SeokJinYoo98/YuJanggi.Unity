@@ -3,9 +3,9 @@ using UnityEngine;
 namespace YuJanggi.Runtime.UI
 {
     using TMPro;
-    using YuJanggi.Core.V2.Domain;
-    using YuJanggi.Network.Status;
-    using YuJanggi.Matching;
+    using Core.V2.Domain;
+    using Network.Status;
+    using Lobby.Matching;
 
     public class NetworkPanelView : UIVisible
     {
@@ -26,6 +26,8 @@ namespace YuJanggi.Runtime.UI
             ClearText();
             NetworkError error = status.Error ?? NetworkError.None;
             bool failed = error != NetworkError.None;
+            _formationDropDown.interactable = !failed &&
+                status.NetworkState == NetworkState.Online && status.MatchingState == MatchingState.Matched;
 
             string title = !failed && status.NetworkState == NetworkState.Online
                 ? "Online" : "Offline";
@@ -53,6 +55,13 @@ namespace YuJanggi.Runtime.UI
         public void UpdateTimer(MatchingState state, int seconds)
         {
             _statusDetailText.SetText(GetTimerText(state, seconds));
+        }
+
+        /// <summary>로비에서 전달한 포진 제출·서버 준비 상태를 표시합니다.</summary>
+        public void ShowFormationProgress(string message)
+        {
+            _formationDropDown.interactable = false;
+            _statusDetailText.SetText(message);
         }
 
         private static string GetTimerText(MatchingState state, int seconds)

@@ -7,7 +7,7 @@ using UnityEngine;
 namespace YuJanggi.BootStrap
 {
     using Network;
-    using Matching;
+    using Lobby.Matching;
     using Core.V2.Domain;
     using Network.Status;
 
@@ -25,16 +25,15 @@ namespace YuJanggi.BootStrap
         private CancellationTokenSource? _matchingRequestCts;
         private NetworkConnection? _connection;
         private RequestDispatcher? _requests;
-        private MatchingService? _matchingService;
         private MatchingHandler? _matchingHandler;
 
         #endregion
         #region Properties
+        public string? MatchId
+            => _matchingHandler?.Snapshot.MatchId;
         public NetworkConnection Connection => _connection
             ?? throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
         public MatchingHandler Matching => _matchingHandler
-            ?? throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
-        public MatchingService MatchingService => _matchingService
             ?? throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
         public bool IsMatched
             => Status.MatchingState == MatchingState.Matched;
@@ -56,8 +55,8 @@ namespace YuJanggi.BootStrap
         {
             if (_connection is not null)
                 _connection.OnDataChanged -= HandleClientDataChanged;
-            if (_matchingService is not null)
-                _matchingService.OnDataChanged -= HandleClientDataChanged;
+            if (_matchingHandler is not null)
+                _matchingHandler.OnDataChanged -= HandleClientDataChanged;
 
             // 연결 종료가 Service 초기화와 pending 취소를 먼저 수행합니다.
             _connection?.Dispose();
@@ -67,7 +66,6 @@ namespace YuJanggi.BootStrap
             _connection = null;
             _requests = null;
             _matchingHandler = null;
-            _matchingService = null;
 
             _lifetimeCts?.Dispose();
             _lifetimeCts = null;
@@ -83,12 +81,11 @@ namespace YuJanggi.BootStrap
 
             _connection = new NetworkConnection(host, port);
             _requests = new RequestDispatcher(_connection);
-            _matchingService = new MatchingService();
-            _matchingHandler = new MatchingHandler(_connection, _requests, _matchingService);
+            _matchingHandler = new MatchingHandler(_connection, _requests);
             _lifetimeCts = new CancellationTokenSource();
 
             _connection.OnDataChanged += HandleClientDataChanged;
-            _matchingService.OnDataChanged += HandleClientDataChanged;
+            _matchingHandler.OnDataChanged += HandleClientDataChanged;
         }
         // Connection
         public async UniTask ConnectAsync()
@@ -152,17 +149,18 @@ namespace YuJanggi.BootStrap
         #region Event Handlers
         private void HandleClientDataChanged()
         {
-            if (_connection is null || _matchingService is null)
+            if (_connection is null || _matchingHandler is null)
                 return;
 
+            var snapshot = _matchingHandler.Snapshot;
             Status = new NetworkStatus(
                 _connection.IsOnline ? NetworkState.Online : NetworkState.Offline,
                 _connection.State,
                 _connection.Error,
                 _connection.Failure?.Message,
-                _matchingService.CurrentMatch,
-                _matchingService.Team,
-                _matchingService.State);
+                snapshot.CurrentMatch,
+                snapshot.Team,
+                snapshot.State);
 
             OnNetworkChanged?.Invoke();
         }
