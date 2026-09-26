@@ -4,31 +4,23 @@ using YuJanggi.Core.V2.Domain;
 
 namespace YuJanggi.Lobby.Matching
 {
-    /// <summary>매칭 상태, 참가자 정보와 포진 제출의 로컬 규칙을 관리합니다.</summary>
+    /// <summary>매칭 진행 상태와 포진 제출의 로컬 규칙을 관리합니다.</summary>
     internal sealed class MatchingService
     {
         private bool _requestInProgress;
         private bool _cancelInProgress;
-        public MatchInfo? CurrentMatch { get; private set; }
-        public string? MatchId => CurrentMatch?.MatchId;
 
         public MatchingState State { get; private set; } = MatchingState.Idle;
 
-        public PlayerTeam Team => CurrentMatch?.Team ?? PlayerTeam.None;
         public Formation? SelectedFormation { get; private set; }
         public Formation? SubmittedFormation { get; private set; }
         public bool IsFormationSubmitting { get; private set; }
 
-        public Formation? ChoFormation { get; private set; }
-        public Formation? HanFormation { get; private set; }
 
-        public bool IsGameReady { get; private set; }
+        private bool _gameReadyDelivered;
+        public bool HasDeliveredGameReady => _gameReadyDelivered;
 
         public event Action? OnDataChanged;
-        public MatchingSnapshot Snapshot => new(
-            State, CurrentMatch, SelectedFormation, SubmittedFormation,
-            ChoFormation, HanFormation, IsFormationSubmitting);
-
         public void BeginRequest()
         {
             EnsureOperationAllowed(MatchingState.Idle);
@@ -63,32 +55,15 @@ namespace YuJanggi.Lobby.Matching
             // MatchSession / GameSession에서 서버의 취소·확정 경쟁 정책에 맞춰 복구를 결정해야 합니다.
             if (State == MatchingState.Matched)
                 return;
-            CurrentMatch = null;
             ChangeState(MatchingState.Idle);
         }
 
         public void EndCancel() => _cancelInProgress = false;
 
-        public void ApplyMatchFound(MatchInfo match)
+        public void MatchingFound()
         {
-            if (CurrentMatch?.MatchId == match.MatchId)
-                return;
-            if (State != MatchingState.Matching)
-            {
-                // TODO:
-                // 취소 완료 뒤 늦은 확정이나 이미 매칭된 상태에서 다른 매치가 도착할 수 있습니다.
-                // 현재는 대기 중이 아니면 무시하여 기존 로컬 상태를 보존합니다.
-                // MatchSession / GameSession에서 서버 상태 재조회와 확정 우선순위를 결정해야 합니다.
-                return;
-            }
-            if (string.IsNullOrWhiteSpace(match.MatchId) ||
-                match.Team is not (PlayerTeam.Cho or PlayerTeam.Han) ||
-                match.OpponentTeam is not (PlayerTeam.Cho or PlayerTeam.Han) ||
-                match.Team == match.OpponentTeam)
-                throw new InvalidOperationException("잘못된 매칭 정보입니다.");
-
-            CurrentMatch = match;
-            ChangeState(MatchingState.Matched);
+            if (State == MatchingState.Matching)
+                ChangeState(MatchingState.Matched);
         }
 
         public void SelectFormation(Formation formation)
@@ -117,19 +92,13 @@ namespace YuJanggi.Lobby.Matching
             OnDataChanged?.Invoke();
         }
 
-        public void ApplyGameReady(string matchId, Formation choFormation, Formation hanFormation)
+        // 세션 데이터는 보관하지 않고 같은 준비 이벤트의 중복 전달만 방지합니다.
+        public bool TryAcceptGameReady()
         {
-            if (State != MatchingState.Matched || MatchId != matchId ||
-                !SubmittedFormation.HasValue || IsGameReady)
-                return;
-            if (!Enum.IsDefined(typeof(Formation), choFormation) ||
-                !Enum.IsDefined(typeof(Formation), hanFormation))
-                throw new ArgumentException("잘못된 게임 준비 포진입니다.");
-
-            ChoFormation = choFormation;
-            HanFormation = hanFormation;
-            IsGameReady = true;
-            OnDataChanged?.Invoke();
+            if (State != MatchingState.Matched || !SubmittedFormation.HasValue || _gameReadyDelivered)
+                return false;
+            _gameReadyDelivered = true;
+            return true;
         }
 
         public void Reset()
@@ -137,16 +106,13 @@ namespace YuJanggi.Lobby.Matching
             _requestInProgress = false;
             _cancelInProgress = false;
             IsFormationSubmitting = false;
-            CurrentMatch = null;
             SelectedFormation = null;
             SubmittedFormation = null;
-            ChoFormation = null;
-            HanFormation = null;
-            IsGameReady = false;
+            _gameReadyDelivered = false;
             ChangeState(MatchingState.Idle);
             // TODO:
             // 매칭 확정 직후 연결이 끊겨도 서버에는 매치가 남아 있을 수 있습니다.
-            // 현재 로컬 정보는 초기화하며 재연결 시 이전 매치를 복원하지 않습니다.
+            // 현재 매칭 진행 상태는 초기화하며 재연결 시 이전 매치를 복원하지 않습니다.
             // MatchSession / GameSession에서 재접속 복원과 이탈 정책을 결정해야 합니다.
         }
 

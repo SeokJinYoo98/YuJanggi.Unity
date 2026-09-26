@@ -82,25 +82,9 @@ namespace YuJanggi.InGame.Session
             return session;
         }
 
-        /// <summary>서버가 배정한 내 진영과 로비에서 선택한 포진으로 세션 정보를 구성합니다.</summary>
-        public static GameSessionInfo  CreateNetworkSession(PlayerTeam localTeam, Formation localFormation)
-        {
-            if (localTeam is not (PlayerTeam.Cho or PlayerTeam.Han))
-                throw new ArgumentOutOfRangeException(nameof(localTeam));
-            if (!Enum.IsDefined(typeof(Formation), localFormation))
-                throw new ArgumentOutOfRangeException(nameof(localFormation));
-
-            // TODO:
-            // MatchingFound에는 상대 포진이 없어 현재는 상대 포진을 EHHE로 임시 구성합니다.
-            // 그대로 대국을 시작하면 상대 및 서버의 실제 보드와 다를 수 있습니다.
-            // 게임 시작 프로토콜에서 양쪽 포진을 받아 이 정보를 확정한 뒤 보드를 초기화해야 합니다.
-            return CreateNetworkSession(
-                localTeam,
-                localTeam == PlayerTeam.Cho ? localFormation : Formation.EHHE,
-                localTeam == PlayerTeam.Han ? localFormation : Formation.EHHE);
-        }
 
         public static GameSessionInfo CreateNetworkSession(
+
             PlayerTeam localTeam,
             Formation cho,
             Formation han)

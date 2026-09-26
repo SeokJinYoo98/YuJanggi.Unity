@@ -20,21 +20,21 @@ namespace YuJanggi.Runtime.UI
             _statusText.SetText(string.Empty);
             _statusDetailText.SetText(string.Empty);
         }
-        public void ChangeMessage(in NetworkStatus status, int? timerSeconds = null)
+        public void ChangeMessage(in NetworkStatus status, PlayerTeam team, int? timerSeconds = null)
         {
 
             ClearText();
             NetworkError error = status.Error ?? NetworkError.None;
             bool failed = error != NetworkError.None;
             _formationDropDown.interactable = !failed &&
-                status.NetworkState == NetworkState.Online && status.MatchingState == MatchingState.Matched;
+                status.ConnectionState == ConnectionState.Connected && status.MatchingState == MatchingState.Matched;
 
-            string title = !failed && status.NetworkState == NetworkState.Online
+            string title = !failed && status.ConnectionState == ConnectionState.Connected
                 ? "Online" : "Offline";
-            if (!failed && status.NetworkState == NetworkState.Online &&
+            if (!failed && status.ConnectionState == ConnectionState.Connected &&
                 status.MatchingState == MatchingState.Matched)
-                title = status.Team is PlayerTeam.Cho or PlayerTeam.Han
-                    ? $"선택된 진영: {status.Team}"
+                title = team is PlayerTeam.Cho or PlayerTeam.Han
+                    ? $"선택된 진영: {team}"
                     : "선택된 진영: 확인 불가";
             string detail = failed
                 ? GetFailureReason(error)

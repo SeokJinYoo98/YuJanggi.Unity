@@ -10,6 +10,7 @@ namespace YuJanggi.BootStrap
     using Lobby.Matching;
     using Core.V2.Domain;
     using Network.Status;
+    using InGame.Handler;
 
 
     /// <summary>
@@ -23,14 +24,18 @@ namespace YuJanggi.BootStrap
         private CancellationTokenSource? _lifetimeCts;
         private CancellationTokenSource? _connectingRequestCts;
         private CancellationTokenSource? _matchingRequestCts;
+
         private NetworkConnection? _connection;
         private RequestDispatcher? _requests;
+
         private MatchingHandler? _matchingHandler;
+        private InGameHandler? _inGameHandler;
 
         #endregion
         #region Properties
+        public NetworkSessionInfo NetworkInfo => NetworkSessionStore.Current;
         public string? MatchId
-            => _matchingHandler?.Snapshot.MatchId;
+            => string.IsNullOrEmpty(NetworkInfo.MatchId) ? null : NetworkInfo.MatchId;
         public NetworkConnection Connection => _connection
             ?? throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
         public MatchingHandler Matching => _matchingHandler
@@ -41,31 +46,36 @@ namespace YuJanggi.BootStrap
             => _connection?.IsOnline ?? false;
         public NetworkStatus Status { get; private set; }
             = new NetworkStatus(
-                NetworkState.Offline,
                 ConnectionState.Disconnected,
                 null, null);
-
-
         #endregion
+
         #region Events
         public event Action? OnNetworkChanged;
         #endregion
+
         #region Unity Lifecycle
         private void OnDestroy()
         {
             if (_connection is not null)
                 _connection.OnDataChanged -= HandleClientDataChanged;
             if (_matchingHandler is not null)
+            {
                 _matchingHandler.OnDataChanged -= HandleClientDataChanged;
+                _matchingHandler.MatchFound -= HandleMatchFound;
+            }
+            NetworkSessionStore.Current = default;
 
             // 연결 종료가 Service 초기화와 pending 취소를 먼저 수행합니다.
             _connection?.Dispose();
             _lifetimeCts?.Cancel();
             _matchingHandler?.Dispose();
+            _inGameHandler?.Dispose();
             _requests?.Dispose();
             _connection = null;
             _requests = null;
             _matchingHandler = null;
+            _inGameHandler = null;
 
             _lifetimeCts?.Dispose();
             _lifetimeCts = null;
@@ -79,12 +89,15 @@ namespace YuJanggi.BootStrap
                 throw new InvalidOperationException(
                     "NetworkManager가 이미 초기화되었습니다.");
 
+            NetworkSessionStore.Current = default;
             _connection = new NetworkConnection(host, port);
             _requests = new RequestDispatcher(_connection);
-            _matchingHandler = new MatchingHandler(_connection, _requests);
+            _matchingHandler = new MatchingHandler(_connection, _requests, () => MatchId);
+            _inGameHandler = new InGameHandler(_connection, _requests);
             _lifetimeCts = new CancellationTokenSource();
 
             _connection.OnDataChanged += HandleClientDataChanged;
+            _matchingHandler.MatchFound += HandleMatchFound;
             _matchingHandler.OnDataChanged += HandleClientDataChanged;
         }
         // Connection
@@ -147,23 +160,33 @@ namespace YuJanggi.BootStrap
 
         #endregion
         #region Event Handlers
+        private void HandleMatchFound(MatchInfo match)
+        {
+            NetworkSessionStore.Current = new NetworkSessionInfo
+            {
+                MatchId = match.MatchId,
+                Team = match.Team,
+                OpponentId = match.OpponentPlayerId,
+                OpponentNickname = match.OpponentNickname
+            };
+        }
+
         private void HandleClientDataChanged()
         {
             if (_connection is null || _matchingHandler is null)
                 return;
 
-            var snapshot = _matchingHandler.Snapshot;
+            if (_connection.State == ConnectionState.Disconnected || _matchingHandler.State == MatchingState.Idle)
+                NetworkSessionStore.Current = default;
             Status = new NetworkStatus(
-                _connection.IsOnline ? NetworkState.Online : NetworkState.Offline,
                 _connection.State,
                 _connection.Error,
                 _connection.Failure?.Message,
-                snapshot.CurrentMatch,
-                snapshot.Team,
-                snapshot.State);
+                _matchingHandler.State);
 
             OnNetworkChanged?.Invoke();
         }
+
         #endregion
         #region Private Methods
         private async UniTask RunMatchingRequestAsync(

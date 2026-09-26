@@ -20,7 +20,12 @@ namespace YuJanggi.Lobby.Matching
         private GameReady? _deferredGameReady;
         private bool _disposed;
 
-        public MatchingSnapshot Snapshot => _service.Snapshot;
+        private readonly Func<string?> _getMatchId;
+        public MatchingState State => _service.State;
+        public bool IsFormationSubmitting => _service.IsFormationSubmitting;
+        public bool IsFormationSubmitted => _service.SubmittedFormation.HasValue;
+        public event Action<MatchInfo>? MatchFound;
+        public event Action<string, Formation, Formation>? GameReadyReceived;
 
         public event Action? OnDataChanged
         {
@@ -28,11 +33,12 @@ namespace YuJanggi.Lobby.Matching
             remove => _service.OnDataChanged -= value;
         }
 
-        public MatchingHandler(NetworkConnection connection, RequestDispatcher requests)
+        public MatchingHandler(NetworkConnection connection, RequestDispatcher requests, Func<string?> getMatchId)
         {
             _connection = connection;
             _requests = requests;
             _service = new MatchingService();
+            _getMatchId = getMatchId;
             _connection.MessageReceived += HandleMessage;
             _connection.ConnectionClosed += HandleConnectionClosed;
         }
@@ -90,7 +96,7 @@ namespace YuJanggi.Lobby.Matching
         public async UniTask<bool> SubmitFormationAsync(Formation formation, CancellationToken cancellationToken = default)
         {
             EnsureConnected(cancellationToken);
-            var payload = new FormationSubmit { Formation = ToProtocolFormation(formation) };
+            var payload = new FormationSubmitRequest { Formation = ToProtocolFormation(formation) };
             int version = _connection.Version;
             _service.BeginFormationSubmit(formation);
             try
@@ -132,7 +138,7 @@ namespace YuJanggi.Lobby.Matching
             if (message.Type != ServerMessageType.MatchingFound)
                 return;
             var found = message.GetPayload<MatchingFound>();
-            if (_service.MatchId == found.MatchId)
+            if (_getMatchId() == found.MatchId)
                 return;
             if (_service.State == MatchingState.Requesting)
             {
@@ -145,8 +151,8 @@ namespace YuJanggi.Lobby.Matching
         private void HandleGameReady(ServerMessage message)
         {
             var ready = message.GetPayload<GameReady>();
-            if (_service.State != MatchingState.Matched ||
-                _service.MatchId != ready.MatchId || _service.IsGameReady)
+            if (_service.HasDeliveredGameReady || _service.State != MatchingState.Matched ||
+                _getMatchId() != ready.MatchId)
                 return;
             // enum 필드 누락을 기본 포진(HEHE)으로 취급하지 않습니다.
             if (!message.Payload!.Value.TryGetProperty(nameof(GameReady.ChoFormation), out _) ||
@@ -164,8 +170,12 @@ namespace YuJanggi.Lobby.Matching
 
         private void ApplyGameReady(GameReady ready)
         {
-            _service.ApplyGameReady(ready.MatchId,
-                ToCoreFormation(ready.ChoFormation), ToCoreFormation(ready.HanFormation));
+            if (ready.MatchId != _getMatchId())
+                return;
+            var cho = ToCoreFormation(ready.ChoFormation);
+            var han = ToCoreFormation(ready.HanFormation);
+            if (_service.TryAcceptGameReady())
+                GameReadyReceived?.Invoke(ready.MatchId, cho, han);
         }
 
         private static Formation ToCoreFormation(ProtocolFormation formation) => formation switch
@@ -187,8 +197,15 @@ namespace YuJanggi.Lobby.Matching
                 return;
             if (found.Opponent is null)
                 throw new InvalidOperationException("매칭 상대 정보가 없습니다.");
-            _service.ApplyMatchFound(new MatchInfo(found.MatchId, ToPlayerTeam(found.MyTeam),
-                found.Opponent.PlayerId, found.Opponent.PlayerNickname, ToPlayerTeam(found.Opponent.PlayerTeam)));
+            var match = new MatchInfo(found.MatchId, ToPlayerTeam(found.MyTeam),
+                found.Opponent.PlayerId, found.Opponent.PlayerNickname, ToPlayerTeam(found.Opponent.PlayerTeam));
+            if (string.IsNullOrWhiteSpace(match.MatchId) || match.Team == match.OpponentTeam)
+                throw new InvalidOperationException("잘못된 매칭 정보입니다.");
+            // 세션 소유자가 저장한 뒤 Matched 알림을 발생시켜 UI가 새 세션을 조회하게 합니다.
+            int version = _connection.Version;
+            MatchFound?.Invoke(match);
+            if (version == _connection.Version)
+                _service.MatchingFound();
         }
 
         private static PlayerTeam ToPlayerTeam(ProtocolPlayerTeam team) => team switch
@@ -198,12 +215,12 @@ namespace YuJanggi.Lobby.Matching
             _ => throw new InvalidOperationException($"잘못된 매칭 진영입니다: {team}")
         };
 
-        private static MatchingFormation ToProtocolFormation(Formation formation) => formation switch
+        private static ProtocolFormation ToProtocolFormation(Formation formation) => formation switch
         {
-            Formation.HEHE => MatchingFormation.HEHE,
-            Formation.EHEH => MatchingFormation.EHEH,
-            Formation.EHHE => MatchingFormation.EHHE,
-            Formation.HEEH => MatchingFormation.HEEH,
+            Formation.HEHE => ProtocolFormation.HEHE,
+            Formation.EHEH => ProtocolFormation.EHEH,
+            Formation.EHHE => ProtocolFormation.EHHE,
+            Formation.HEEH => ProtocolFormation.HEEH,
             _ => throw new ArgumentOutOfRangeException(nameof(formation))
         };
 
