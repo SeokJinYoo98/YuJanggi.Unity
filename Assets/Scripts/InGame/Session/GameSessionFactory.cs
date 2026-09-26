@@ -5,7 +5,7 @@ namespace YuJanggi.InGame.Session
     using Core.V2.Domain;
     using Core.V2.Match;
 
-    using Runtime.Controller;
+    using Controller;
 
     using Data.AI;
 

@@ -2,12 +2,13 @@ using System;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 
-namespace YuJanggi.Runtime.Controller
+namespace YuJanggi.Controller
 {
     using Core.V2.Board;
     using Core.V2.Domain;
     using Core.V2.Rule;
 
+    using AI;
     public class AIController : IPlayerController, IAIController
     {
         public PlayerTeam Team { get; }

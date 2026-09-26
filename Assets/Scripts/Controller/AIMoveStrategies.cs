@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 
 
-namespace YuJanggi.Runtime.Controller
+namespace YuJanggi.Controller.AI
 {
     using Core.V2.Board;
     using Core.V2.Domain;

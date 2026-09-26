@@ -1,6 +1,6 @@
 using System;
 
-namespace YuJanggi.Runtime.Controller
+namespace YuJanggi.Controller
 {
     using Core.V2.Domain;
 
