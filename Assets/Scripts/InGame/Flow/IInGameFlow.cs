@@ -8,14 +8,14 @@ namespace YuJanggi.InGame.Flow
     public interface IInGameFlow
     {
         /// <summary>
-        /// 현재 게임 모드의 인게임 흐름에 진입합니다.
-        /// 필요한 이벤트 연결과 게임 시작 준비 절차를 수행합니다.
+        /// 인게임 흐름에 진입합니다.
+        /// 중복 진입을 방지하고 필요한 이벤트를 연결한 뒤,
+        /// 현재 게임 모드에 맞는 진입 절차를 수행합니다.
         /// </summary>
         UniTask EnterAsync(CancellationToken cancellationToken);
-
         /// <summary>
-        /// 현재 게임 모드의 인게임 흐름을 종료합니다.
-        /// 연결한 이벤트와 관련 리소스를 정리합니다.
+        /// 현재 인게임 흐름을 종료합니다.
+        /// 중복 종료를 방지하고 진입 시 연결한 이벤트를 해제합니다.
         /// </summary>
         void Exit();
     }
@@ -23,11 +23,7 @@ namespace YuJanggi.InGame.Flow
     {
         private bool _entered;
 
-        /// <summary>
-        /// 인게임 흐름에 진입합니다.
-        /// 중복 진입을 방지하고 필요한 이벤트를 연결한 뒤,
-        /// 현재 게임 모드에 맞는 진입 절차를 수행합니다.
-        /// </summary>
+
         public async UniTask EnterAsync(
             CancellationToken cancellationToken)
         {
@@ -50,10 +46,7 @@ namespace YuJanggi.InGame.Flow
             }
         }
 
-        /// <summary>
-        /// 현재 인게임 흐름을 종료합니다.
-        /// 중복 종료를 방지하고 진입 시 연결한 이벤트를 해제합니다.
-        /// </summary>
+
         public void Exit()
         {
             if (!_entered)

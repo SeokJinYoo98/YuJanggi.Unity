@@ -16,6 +16,7 @@ namespace YuJanggi.InGame
     using Runtime.Particle;
     using Runtime.UI;
     using System;
+    using YuJanggi.InGame.Flow;
     using YuJanggi.InGame.Handler;
 
     public class InGameManager : MonoBehaviour
@@ -41,7 +42,8 @@ namespace YuJanggi.InGame
         private GameSession     _session;
         private AudioManager    _audioManager;
         private InGameHandler   _inGameHandler;
- 
+
+        private IInGameFlow     _inGameFlow;
         #endregion
 
         #region Properties
@@ -57,7 +59,10 @@ namespace YuJanggi.InGame
         {
             PrepareBootStrap();
             PrepareSessionInfo();
+
             CreateInGameSession();
+            CreateInGameFlow();
+
             SetCamera();
         }
         private void OnEnable()
@@ -66,21 +71,37 @@ namespace YuJanggi.InGame
         }
         private void Start()
         {
-            _session.InitGame();
-            if (GameMode != GameModeType.Network)
-                _session.StartGame();
-        }
-        private void OnDisable()
-        {
-            _session?.UnBindEvents();
+            _inGameFlow
+             .EnterAsync(this.GetCancellationTokenOnDestroy()) // 
+             .Forget();
         }
         private void Update()
         {
             _session?.Tick(Time.deltaTime);
         }
+        private void OnDisable()
+        {
+            _session?.UnBindEvents();
+        }
+        private void OnDestroy()
+        {
+            _inGameFlow?.Exit();
+        }
+
         #endregion
 
         #region Private Methods
+        private void CreateInGameFlow()
+        {
+            switch (GameMode)
+            {
+                case GameModeType.Local:
+                case GameModeType.AI:
+                    _inGameFlow = InGameFlowFactory.CreateLocal(_session);
+                    break;
+
+            }
+        }
         private void PrepareBootStrap()
         {
             _audioManager =
@@ -120,6 +141,8 @@ namespace YuJanggi.InGame
                 matchModel,
                 replayView,
                 _localInput);
+
+            _session.InitGame();
         }
         private ReplayView CreateReplayView(
             Record record)
