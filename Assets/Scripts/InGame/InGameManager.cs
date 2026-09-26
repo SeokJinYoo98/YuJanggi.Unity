@@ -1,23 +1,22 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using TMPro;
 namespace YuJanggi.InGame
 {
     using BootStrap;
-
-    using InGame.Views;
-    using InGame.Session;
-
     using Core.V2.Board;
     using Core.V2.Domain;
     using Core.V2.Match;
     using Core.V2.Rule;
-
-    using Runtime.Input;
+    using Cysharp.Threading.Tasks;
+    using InGame.Session;
+    using InGame.Views;
     using Runtime.Board;
-    using Runtime.UI;
+    using Runtime.Input;
     using Runtime.Particle;
+    using Runtime.UI;
     using System;
+    using YuJanggi.InGame.Handler;
 
     public class InGameManager : MonoBehaviour
     {
@@ -41,14 +40,14 @@ namespace YuJanggi.InGame
 
         private GameSession     _session;
         private AudioManager    _audioManager;
-        private NetworkManager  _networkManager;
-        private GameSessionInfo _sessionInfo;
+        private InGameHandler   _inGameHandler;
+ 
         #endregion
 
         #region Properties
         // 상태를 조회하거나 변경하는 접근 속성
         public GameModeType GameMode
-            => _sessionInfo.Mode;
+            => GameSessionStore.Current.Mode;
 
         #endregion
 
@@ -87,30 +86,36 @@ namespace YuJanggi.InGame
             _audioManager =
                 YuJanggiBootStrap.Instance.AudioManager;
 
-            _networkManager =
-                YuJanggiBootStrap.Instance.NetworkManager;
+            _inGameHandler =
+                YuJanggiBootStrap.Instance.NetworkManager.InGame;
         }
         private void PrepareSessionInfo()
         {
-            _sessionInfo = GameSessionStore.Current;
-            if (_sessionInfo.Mode == GameModeType.Network)
-                Debug.Log($"MatchID: {_networkManager.MatchId}");
+            var sessionInfo = GameSessionStore.Current;
+   
+            if (sessionInfo.Mode == GameModeType.Network)
+            {
+                var networkInfo = NetworkSessionStore.Current;
+                Debug.Log($"MatchID: {networkInfo.MatchId}");
+            }
+               
             Debug.Log(
-                $"GameMode: {_sessionInfo.Mode}, " +
-                $"Cho: {_sessionInfo.Cho}, " +
-                $"ChoFormation: {_sessionInfo.ChoFormation}, " +
-                $"Han: {_sessionInfo.Han}, " +
-                $"HanFormation: {_sessionInfo.HanFormation}, " +
-                $"TurnTime: {_sessionInfo.TurnTime}");
+                $"GameMode: {sessionInfo.Mode}, " +
+                $"Cho: {sessionInfo.Cho}, " +
+                $"ChoFormation: {sessionInfo.ChoFormation}, " +
+                $"Han: {sessionInfo.Han}, " +
+                $"HanFormation: {sessionInfo.HanFormation}, " +
+                $"TurnTime: {sessionInfo.TurnTime}");
         }
         private void CreateInGameSession()
         {
+            var sessionInfo = GameSessionStore.Current;
             var matchView = CreateMatchView();
-            var matchModel = CreateMatchModel(_sessionInfo.TurnTime, out var record);
+            var matchModel = CreateMatchModel(sessionInfo.TurnTime, out var record);
             var replayView = CreateReplayView(record);
 
             _session = GameSessionFactory.CreateSession(
-                _sessionInfo,
+                sessionInfo,
                 matchView,
                 matchModel,
                 replayView,
@@ -136,11 +141,17 @@ namespace YuJanggi.InGame
                 _resultUI, _matchUI);
         private void SetCamera()
         {
-            if (_sessionInfo.Mode == GameModeType.Local) return;
-            if (_sessionInfo.Cho  == PlayerType.Local) return;
+            var sessionInfo = GameSessionStore.Current;
+            if (sessionInfo.Mode == GameModeType.Local) return;
+            if (sessionInfo.Cho  == PlayerType.Local) return;
 
             _boardView.SetDeathPosition(new Vector3(4, 0, 11));
             _localInput.RotateCamera(PlayerTeam.Han);
+        }
+
+        private async UniTask NotifyGameSceneReadyAsync()
+        {
+            await _inGameHandler.SendGameSceneReadyAsync();
         }
         #endregion
 

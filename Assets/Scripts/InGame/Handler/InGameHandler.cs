@@ -1,9 +1,13 @@
 #nullable enable
+using Cysharp.Threading.Tasks;
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Threading;
 using YuJanggi.Network;
+using YuJanggi.Protocol.V2.InGame;
 using YuJanggi.Protocol.V2.Messages;
+using YuJanggi.Protocol.V2.Messages.MessageFactory;
 
 namespace YuJanggi.InGame.Handler
 {
@@ -20,7 +24,19 @@ namespace YuJanggi.InGame.Handler
             _requests = requests;
             _connection.MessageReceived += HandleMessage;
         }
+        public async UniTask SendGameSceneReadyAsync(
+            CancellationToken cancellationToken = default)
+        {
+            var payload = new GameSceneReadyRequest();
 
+            var message = ClientMessageFactory.Create(
+                ClientMessageType.GameSceneReady,
+                payload);
+
+            await _connection.SendAsync(
+                message,
+                cancellationToken);
+        }
         private void HandleMessage(ServerMessage message)
         {
             if (_disposed || message.RequestId is not null)

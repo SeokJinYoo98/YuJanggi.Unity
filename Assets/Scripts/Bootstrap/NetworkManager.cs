@@ -37,8 +37,12 @@ namespace YuJanggi.BootStrap
             => NetworkSessionStore.Current;
         public string? MatchId
             => string.IsNullOrEmpty(NetworkInfo.MatchId) ? null : NetworkInfo.MatchId;
-        public MatchingHandler Matching => _matchingHandler
-            ?? throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
+        public MatchingHandler Matching
+            => _matchingHandler ?? throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
+
+        public InGameHandler InGame
+            => _inGameHandler ?? throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
+
         public bool IsMatched
             => Status.MatchingState == MatchingState.Matched;
         public bool IsOnline
@@ -140,7 +144,6 @@ namespace YuJanggi.BootStrap
         {
             return RunMatchingRequestAsync((handler, token) => handler.MatchRequestAsync(token));
         }
-
         public UniTask CancelMatchMakingAsync()
         {
             return RunMatchingRequestAsync((handler, token) => handler.MatchCancelRequestAsync(token));
