@@ -6,12 +6,12 @@ namespace YuJanggi.InGame.Session
     using Controller;
     using InGame.Views;
     using Store;
-
+    using Runtime.Input;
     public static class GameSessionFactory
     {
       
         public static GameSession CreateSession(
-            LiveView matchView,
+            LiveView liveView,
             ReplayView replayView,
             IInGameController cho,
             IInGameController han,
@@ -20,17 +20,9 @@ namespace YuJanggi.InGame.Session
             var option = JanggiOptionStore.Current;
             var choOption = option.PlayerCho;
 
-            IPlayerController cho = CreateController(
-                option.Cho,
-                PlayerTeam.Cho,
-                localInput);
-            IPlayerController han = CreateController(
-                option.Han,
-                PlayerTeam.Han,
-                localInput);
 
             return new GameSession(
-                matchView,
+                liveView,
                 replayView,
                 cho,
                 han,

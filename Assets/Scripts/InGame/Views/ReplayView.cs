@@ -6,12 +6,13 @@ namespace YuJanggi.InGame.Views
 {
     using Audio;
     using BootStrap;
-
-    using Engine.Match;
     using Engine.Domain;
 
     using Runtime.Board;
     using Runtime.Input;
+    using YuJanggi.Engine.JanggiRecord;
+
+
     public enum ReplayResult
     {
         RecordIsEmpty, IdxAtEnd, IdxAtStart,
@@ -23,7 +24,7 @@ namespace YuJanggi.InGame.Views
 
         private readonly ICoroutineRunner     _runner;
         private readonly IReplayBoardRenderer _board;
-        private readonly Record               _record;
+        private readonly IReadOnlyRecord      _record;
         private readonly AudioManager         _audio;
         private readonly TMP_Text             _displayModeText;
         private int                           _currIdx = 0;
@@ -31,12 +32,16 @@ namespace YuJanggi.InGame.Views
         private bool IsEmpty          => _record.Count == 0;
         private bool IsAtStart        => _currIdx == 0;
         private bool IsAtEnd          => _currIdx == _record.Count - 1;
-        public ReplayView(IReplayBoardRenderer board, Record record, ICoroutineRunner runner, AudioManager audio, TMP_Text displayMode)
+        public ReplayView(
+            IReplayBoardRenderer board,
+            IReadOnlyRecord record,
+            ICoroutineRunner runner,
+            TMP_Text displayMode)
         {
             _board       = board;
             _record      = record;
             _runner      = runner;
-            _audio       = audio;
+            _audio       = YuJanggiBootStrap.Instance.AudioManager;
             _displayModeText = displayMode;
         }
         private enum ReplayState { Live, Forward, Backward };
@@ -145,7 +150,6 @@ namespace YuJanggi.InGame.Views
         }
         public void EnterReplayView()
         {
-            _record.EnterReplay();
             _displayModeText.SetText("기보 보기");
 
             var nextState = ReplayState.Backward;
@@ -156,7 +160,6 @@ namespace YuJanggi.InGame.Views
         }
         public void ExitReplayView()
         {
-            _record.ExitReplay();
             ClearPrevState(ReplayState.Forward);
             UpdateState(ReplayState.Live, null, _record.Count - 1);
 

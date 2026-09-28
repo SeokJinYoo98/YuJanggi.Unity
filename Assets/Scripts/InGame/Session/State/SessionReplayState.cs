@@ -1,31 +1,33 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace YuJanggi.InGame.Session
 {
     using Engine.Domain;
-    using Engine.Match;
 
     using InGame.Views;
-    public sealed class SessionReplayState : SessionStateBase
+    using YuJanggi.Engine.JanggiEngine;
+    using YuJanggi.InGame.Controller;
+
+    internal sealed class SessionReplayState : SessionStateBase
     {
-        private readonly LiveView  _matchView;
+        private readonly LiveView   _liveView;
         private readonly ReplayView _replayView;
         public SessionReplayState(
             ISessionTransition      sessionFsm, 
-            ILiveMatch              matchModel, 
-            IPlayerController cho, IPlayerController han, 
+            ISessionEngine          engine, 
+            IInGameController cho, IInGameController han, 
             ReplayView replayView, 
             LiveView  matchView)
-            : base(sessionFsm, cho, han, matchModel)
+            : base(sessionFsm, cho, han, engine)
         {
-            _matchView   = matchView;
+            _liveView   = matchView;
             _replayView  = replayView;
         }
         // 리플레이 준비
         public override void Enter()
         {
             base.Enter();
+            _engine.ToReplayRecord();
             _replayView.EnterReplayView();
         }
         // 리플레이 정리
@@ -38,7 +40,7 @@ namespace YuJanggi.InGame.Session
         {
             base.OnTurnChanged(next);
             var nextPlayer = GetPlayer(next);
-            _matchView.OnTurnChanged(nextPlayer.IsLocal);
+            _liveView.OnTurnChanged(nextPlayer.IsLocal);
             BeginNextTurn(next);
         }
         // public override void OnPieceMoved(in MoveContext moveCtx) { }
@@ -55,7 +57,7 @@ namespace YuJanggi.InGame.Session
         public override void RequestMove(Pos from, Pos to)
         {
             base.RequestMove(from, to); 
-            _liveMatch.TryMove(from, to);
+            _engine.TryMove(from, to);
         }
         // public override void RequestUndo() { }
         // public override void RequestGiveUp() { }

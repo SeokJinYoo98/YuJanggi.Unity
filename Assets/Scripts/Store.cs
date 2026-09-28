@@ -5,10 +5,30 @@ namespace YuJanggi.Store
 {
     using Engine.Domain;
     using Engine.JanggiOption;
+    using YuJanggi.Lobby.Matching;
 
-    public static class NetworkSessionStore
+    public struct NetworkSessionInfo
     {
-        public static NetworkSessionInfo Current;
+        public string MatchId { get; }
+        public PlayerTeam Team { get; }
+        public string OpponentId { get; }
+        public string OpponentNickname { get; }
+
+        public NetworkSessionInfo(
+            string matchId,
+            PlayerTeam team,
+            string opponentId,
+            string opponentNickname)
+        {
+            MatchId = matchId;
+            Team = team;
+            OpponentId = opponentId;
+            OpponentNickname = opponentNickname;
+        }
+    }
+    public static class NetworkMatchInfoStore
+    {
+        public static MatchInfo Current;
     }
     public static class JanggiOptionStore
     {

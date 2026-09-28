@@ -8,31 +8,70 @@ namespace YuJanggi.InGame.Session
 
     using Controller;
     using Runtime.Input;
+    using YuJanggi.Engine.JanggiEngine;
+
+    public interface ISessionTransition
+    {
+        void ToLive();
+        void ToReplay();
+        void ToEnd();
+        void ToEndReplay();
+    }
     public class GameSession : ISessionTransition, IGameInputReceiver, IGameResultContext
     {
-        #region public Field F
+
+        #region Fields
+        // 내부 상태와 참조를 저장하는 변수
+        #endregion
+
+        #region Properties
+        // 상태를 조회하거나 변경하는 접근 속성
+        #endregion
+
+        #region Events
+        // 상태 변화나 특정 동작을 외부에 알리는 이벤트
+        #endregion
+
+        #region Constructors
+        // 순수 C#
         public GameSession(
-            LiveView          matchView,
-            ReplayView         replayView,
-            IInGameController  cho, IInGameController han,
-            IInputHandler      localInput)
+            LiveView matchView,
+            ReplayView replayView,
+            IInGameController cho, IInGameController han,
+            IInputHandler localInput)
         {
-            _matchView    = matchView;
-            _matchModel   = matchModel;
+            _liveView    = matchView;
+
             _replayView   = replayView;
             _playerCho    = cho;
             _playerHan    = han;
             _localInput   = localInput;
             _states       = CreateStates();
         }
+        #endregion
+
+        #region Public Methods
+        // 외부에서 호출하는 기능
+        #endregion
+
+        #region Event Handlers
+        // 구독한 이벤트가 발생했을 때 실행하는 처리 메서드
+        #endregion
+
+        #region Private Methods
+        // 클래스 내부에서 사용하는 보조 로직
+        #endregion
+        #region public Field F
+
         public void InitGame()
         {
-            _matchModel.InitGame(_sessionInfo.ChoFormation, _sessionInfo.HanFormation);
-            _matchView.InitMatchView(_matchModel.Board);
+            _engine.InitEngine();
+            _liveView.InitMatchView(_engine.Board);
         }
         public void StartGame()
         {
             _play = true;
+          
             ChangeState(SessionState.LiveState);
             _matchModel.StartGame();
             _playerCho.BeginTurn();
@@ -41,7 +80,7 @@ namespace YuJanggi.InGame.Session
         public void BindEvents()
         {
             _matchModel.BindEvents();
-            _matchView.BindUI(_matchModel);
+            _liveView.BindUI(_matchModel);
 
             var events = _matchModel.MatchEvent;
             events.OnPieceMoved    += OnPieceMoved;
@@ -55,10 +94,10 @@ namespace YuJanggi.InGame.Session
         }
         public void UnBindEvents()
         {
-            _matchModel.UnBindEvents();
-            _matchView.UnBindUI(_matchModel);
+            _engine.UnBindEvents();
+            _liveView.UnBindUI(_matchModel);
 
-            var events = _matchModel.MatchEvent;
+            var events = _engine.GameEvents;
             events.OnPieceMoved    -= OnPieceMoved;
             events.OnCheckOccurred -= OnCheckOccured;
             events.OnCheckReleased -= OnCheckReleased;
@@ -72,7 +111,7 @@ namespace YuJanggi.InGame.Session
         public void Tick(float deltaTime)
         {
             if (_play)
-                _matchModel.Tick(deltaTime);
+                _engine.Tick(deltaTime);
         }
         #endregion
 
@@ -80,12 +119,13 @@ namespace YuJanggi.InGame.Session
         private SessionState _currState = SessionState.BaseState;
         private readonly Dictionary<SessionState, ISessionState> _states;
 
+        private readonly IJanggiEngine          _engine;
         private readonly IInputHandler          _localInput;
-        private readonly IPlayerController      _playerCho;
-        private readonly IPlayerController      _playerHan;
+        private readonly IInGameController      _playerCho;
+        private readonly IInGameController      _playerHan;
 
         private readonly ReplayView             _replayView;
-        private readonly LiveView              _matchView;
+        private readonly LiveView               _liveView;
         private bool                            _play = false;
         public GameResultInfo? GameResult { get; private set; }
 
@@ -137,7 +177,13 @@ namespace YuJanggi.InGame.Session
         public void  ResetGame()
         {
             GameResult = null;
-            _states[_currState].RequestResetGame(Store.JanggiOptionStore.Current, _matchModel, _matchView, _replayView);
+            var board = _engine.Board;
+
+            _engine.InitEngine();
+            _replayView.ResetGame();
+            _liveView.ResetGame(_engine.Board);
+            _engine.StartEngine();
+            ToLive();
         }
         #endregion
 
@@ -145,9 +191,9 @@ namespace YuJanggi.InGame.Session
         private Dictionary<SessionState, ISessionState> CreateStates()
         {
             var states = new Dictionary<SessionState, ISessionState>();
-            states[SessionState.LiveState]   = new SessionLiveState(this, _matchModel, _playerCho, _playerHan, _matchView);
-            states[SessionState.ReplayState] = new SessionReplayState(this, _matchModel, _playerCho, _playerHan, _replayView, _matchView);
-            states[SessionState.EndState]    = new SessionEndState(this, this, _playerCho, _playerHan, _matchModel, _matchView);
+            states[SessionState.LiveState]   = new SessionLiveState(this, _matchModel, _playerCho, _playerHan, _liveView);
+            states[SessionState.ReplayState] = new SessionReplayState(this, _matchModel, _playerCho, _playerHan, _replayView, _liveView);
+            states[SessionState.EndState]    = new SessionEndState(this, this, _playerCho, _playerHan, _matchModel, _liveView);
             states[SessionState.EndReplayState] = new SessionEndReplayState(this, _playerCho, _playerHan, _matchModel, _replayView);
             return states;
         }
@@ -155,6 +201,7 @@ namespace YuJanggi.InGame.Session
         public void ToLive()
         {
             ChangeState(SessionState.LiveState);
+          
             _localInput.Activate();
         }
         public void ToReplay()

@@ -21,6 +21,7 @@ namespace YuJanggi.InGame
     using Handler;
     using Session;
     using Views;
+    using YuJanggi.Engine.JanggiRecord;
 
     public class InGameManager : MonoBehaviour
     {
@@ -122,7 +123,7 @@ namespace YuJanggi.InGame
    
             if (janggiOptions.GameMode == GameModeType.Network)
             {
-                var networkInfo = NetworkSessionStore.Current;
+                var networkInfo = NetworkMatchInfoStore.Current;
                 Debug.Log($"MatchID: {networkInfo.MatchId}");
             }
                
@@ -141,8 +142,7 @@ namespace YuJanggi.InGame
             var janggiEngine = JanggiEngineFactory.CreateEngine(janggiOptions);
 
             var matchView = CreateLiveView();
-            var matchModel = CreateMatchModel(janggiOptions.TurnTime, out var record);
-            var replayView = CreateReplayView(record);
+            var replayView = CreateReplayView(janggiEngine.Record);
 
             _session = GameSessionFactory.CreateSession(
                 sessionInfo,
@@ -154,8 +154,12 @@ namespace YuJanggi.InGame
             _session.InitGame();
         }
         private ReplayView CreateReplayView(
-            Record record)
-            => new (_boardView, record, _runner, _audioManager, _displayModeText);
+            IReadOnlyRecord record)
+            => new(_boardView,
+                    record,
+                    _runner,
+                    _displayModeText);
+
 
         private LiveView CreateLiveView()
             => new(

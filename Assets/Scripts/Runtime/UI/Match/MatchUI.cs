@@ -5,7 +5,6 @@ using UnityEngine;
 namespace YuJanggi.Runtime.UI
 {
     using Engine.Domain;
-    using Engine.Match;
 
     public class MatchUI : MonoBehaviour
     {
@@ -26,28 +25,8 @@ namespace YuJanggi.Runtime.UI
 
         int _totalTurn = 0;
         int _currTurn  = 0;
-        public void BindEvents(IMatchUIDatas match)
-        {
-            var turn        = match.Turn;
-            var record      = match.Record;
-            var score       = match.Score;
 
-            turn.OnTimeChanged         += UpdateTimer;
-            turn.OnTurnChanged         += UpdateTurn;
-            record.OnRecordChanged     += UpdateTotalTurn;
-            score.OnScoreChanged       += UpdateScore;
-        }
-        public void UnBindEvents(IMatchUIDatas match)
-        {
-            var turn    = match.Turn;
-            var record  = match.Record;
-            var score   = match.Score;
 
-            turn.OnTimeChanged         -= UpdateTimer;
-            turn.OnTurnChanged         -= UpdateTurn;
-            record.OnRecordChanged     -= UpdateTotalTurn;
-            score.OnScoreChanged       -= UpdateScore;
-        }
         public void Start()
         {
             _turnText.color = Color.green;

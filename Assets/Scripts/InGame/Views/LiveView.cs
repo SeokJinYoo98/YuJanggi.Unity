@@ -4,16 +4,15 @@ using UnityEngine;
 
 namespace YuJanggi.InGame.Views
 {
+    using Audio;
     using BootStrap;
-
-    using Engine.JanggiBoard;
     using Engine.Domain;
-
-    using Runtime.UI;
+    using Engine.JanggiBoard;
     using Runtime.Board;
     using Runtime.Particle;
-
-    using Audio;
+    using Runtime.UI;
+    using UnityEngine.SocialPlatforms.Impl;
+    using YuJanggi.Engine.JanggiEngine;
 
     public class LiveView 
     {
@@ -28,13 +27,13 @@ namespace YuJanggi.InGame.Views
             _moveGuideView  = moveGuideView;
             _boardView      = boardView;
             _resultUI       = resultUI;
-            _matchUI        = matchUI;
+            _liveUI        = matchUI;
             _audioManager   = YuJanggiBootStrap.Instance.AudioManager;
         }
         public void CheckOccured(PlayerTeam team)
         {
             _audioManager.PlaySfxOneShot(JanggiSfx.Check);
-            _matchUI.PlayJanggun(team);
+            _liveUI.PlayJanggun(team);
         }
         public void CheckReleased()
             => _audioManager.PlaySfxOneShot(JanggiSfx.UnCheck);
@@ -97,13 +96,19 @@ namespace YuJanggi.InGame.Views
             => _resultUI.Hide();
 
 
-        public void BindUI(IMatchUIDatas match)
+        public void BindUI(IReadOnlyGameStateEvents events)
         {
-            _matchUI.BindEvents(match);
+            events.OnRecordChanged  += _liveUI.UpdateTotalTurn;
+            events.OnTimeChanged    += _liveUI.UpdateTimer;
+            events.OnTurnChanged    += _liveUI.UpdateTurn;
+            events.OnScoreChanged   += _liveUI.UpdateScore;
         }
-        public void UnBindUI(IMatchUIDatas match)
+        public void UnBindUI(IReadOnlyGameStateEvents events)
         {
-            _matchUI.UnBindEvents(match);
+            events.OnRecordChanged  -= _liveUI.UpdateTotalTurn;
+            events.OnTimeChanged    -= _liveUI.UpdateTimer;
+            events.OnTurnChanged    -= _liveUI.UpdateTurn;
+            events.OnScoreChanged   -= _liveUI.UpdateScore;
         }
 
         public void OnTurnChanged(bool isLocal)
@@ -130,7 +135,7 @@ namespace YuJanggi.InGame.Views
         private readonly BoardView      _boardView;
 
         private readonly ResultUI       _resultUI;
-        private readonly MatchUI        _matchUI;
+        private readonly MatchUI        _liveUI;
         private readonly AudioManager   _audioManager;
     }
 }

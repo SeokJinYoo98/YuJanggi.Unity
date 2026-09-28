@@ -9,6 +9,7 @@ namespace YuJanggi.InGame.Session
 
     using InGame.Views;
     using YuJanggi.Engine.JanggiEngine;
+    using YuJanggi.InGame.Controller;
 
     public enum SessionState
     {
@@ -37,24 +38,27 @@ namespace YuJanggi.InGame.Session
         void RequestStepForward();
         void RequestStepBackward();
         // UI 입력
-        void RequestResetGame(IReadonlyEngine engine, LiveView matchView, ReplayView replayView);
+        void RequestResetGame(LiveView matchView, ReplayView replayView);
 
     }
 
-    public abstract class SessionStateBase : ISessionState
+    internal abstract class SessionStateBase : ISessionState
     {
         protected bool _debug = false;
-        protected SessionStateBase(ISessionTransition sessionFsm, IPlayerController cho, IPlayerController han, ILiveMatch liveMatch)
+        protected SessionStateBase(
+            ISessionTransition sessionFsm,
+            IInGameController cho, IInGameController han,
+            ISessionEngine engine)
         {
-            _liveMatch  =  liveMatch;
-            _transition = sessionFsm;
-            _cho        = cho;
-            _han        = han;
+            _engine      =  engine;
+            _transition  = sessionFsm;
+            _cho         = cho;
+            _han         = han;
         }
-        protected readonly ILiveMatch _liveMatch;
-        protected readonly ISessionTransition _transition;
-        protected readonly IPlayerController _cho;
-        protected readonly IPlayerController _han;
+        protected readonly ISessionEngine       _engine;
+        protected readonly ISessionTransition   _transition;
+        protected readonly IInGameController    _cho;
+        protected readonly IInGameController    _han;
 
         public virtual void Enter() { if (_debug) Debug.Log($"{StateName()}_Start"); }
         public virtual void Exit() { if (_debug) Debug.Log($"{StateName()}_End"); }
@@ -95,12 +99,12 @@ namespace YuJanggi.InGame.Session
 
         #region UIRequest
         // UI 입력
-        public void RequestResetGame(IReadonlyEngine engine, LiveView matchView, ReplayView replayView)
+        public void RequestResetGame(LiveView matchView, ReplayView replayView)
         {
             if (_debug)
                 Debug.Log($"{StateName()}_ResetGame");
             replayView.ResetGame();
-            engine.InitEngine();
+            _engine.
             matchView.ResetGame(matchModel.Board);
             engine.StartEngine();
             BeginNextTurn(matchModel.PlayerTurn);
@@ -108,7 +112,7 @@ namespace YuJanggi.InGame.Session
         }
         #endregion
 
-        protected virtual IPlayerController BeginNextTurn(PlayerTeam turn)
+        protected virtual IInGameController BeginNextTurn(PlayerTeam turn)
         {
             DisableAllControllers(); 
             if (_debug)
@@ -128,7 +132,7 @@ namespace YuJanggi.InGame.Session
                 Debug.Log($"{StateName()}_DisableAllControllers");
             _cho.EndTurn(); _han.EndTurn();
         }
-        protected IPlayerController GetPlayer(PlayerTeam team)
+        protected IInGameController GetPlayer(PlayerTeam team)
         {
             if (_debug)
                 Debug.Log($"{StateName()}_GetPlayer: {team}");

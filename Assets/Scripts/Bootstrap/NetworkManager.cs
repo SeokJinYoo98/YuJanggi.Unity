@@ -35,8 +35,8 @@ namespace YuJanggi.BootStrap
 
         #endregion
         #region Properties
-        public NetworkSessionInfo NetworkInfo
-            => NetworkSessionStore.Current;
+        public MatchInfo NetworkInfo
+            => NetworkMatchInfoStore.Current;
         public string? MatchId
             => string.IsNullOrEmpty(NetworkInfo.MatchId) ? null : NetworkInfo.MatchId;
         public MatchingHandler Matching
@@ -69,7 +69,7 @@ namespace YuJanggi.BootStrap
                 _matchingHandler.OnDataChanged -= HandleClientDataChanged;
                 _matchingHandler.MatchFound -= HandleMatchFound;
             }
-            NetworkSessionStore.Current = default;
+            NetworkMatchInfoStore.Current = default;
 
             // 연결 종료가 Service 초기화와 pending 취소를 먼저 수행합니다.
             _connection?.Dispose();
@@ -94,7 +94,7 @@ namespace YuJanggi.BootStrap
                 throw new InvalidOperationException(
                     "NetworkManager가 이미 초기화되었습니다.");
 
-            NetworkSessionStore.Current = default;
+            NetworkMatchInfoStore.Current = default;
             _connection = new NetworkConnection(host, port);
             _requests = new RequestDispatcher(_connection);
             _matchingHandler = new MatchingHandler(_connection, _requests, () => MatchId);
@@ -166,13 +166,7 @@ namespace YuJanggi.BootStrap
         #region Event Handlers
         private void HandleMatchFound(MatchInfo match)
         {
-            NetworkSessionStore.Current = new NetworkSessionInfo
-            {
-                MatchId = match.MatchId,
-                Team = match.Team,
-                OpponentId = match.OpponentPlayerId,
-                OpponentNickname = match.OpponentNickname
-            };
+            NetworkMatchInfoStore.Current = match;
         }
 
         private void HandleClientDataChanged()
@@ -181,7 +175,7 @@ namespace YuJanggi.BootStrap
                 return;
 
             if (_connection.State == ConnectionState.Disconnected || _matchingHandler.State == MatchingState.Idle)
-                NetworkSessionStore.Current = default;
+                NetworkMatchInfoStore.Current = default;
             Status = new NetworkStatus(
                 _connection.State,
                 _connection.Error,

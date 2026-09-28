@@ -5,25 +5,26 @@ using UnityEngine;
 namespace YuJanggi.InGame.Session
 {
     using Engine.Domain;
-    using Engine.Match;
-
     using InGame.Views;
-    public sealed class SessionEndReplayState : SessionStateBase
+    using YuJanggi.Engine.JanggiEngine;
+    using YuJanggi.InGame.Controller;
+
+    internal sealed class SessionEndReplayState : SessionStateBase
     {
         private readonly ReplayView _replayView;
         public SessionEndReplayState(
             ISessionTransition sessionFsm,
-            IPlayerController cho, IPlayerController han,
-            ILiveMatch liveMatch,
+            IInGameController cho, IInGameController han,
+            ISessionEngine engine,
             ReplayView replayView)
-                : base(sessionFsm, cho, han, liveMatch)
+                : base(sessionFsm, cho, han, engine)
         {
             _replayView = replayView;
         }
         public override void Enter()
         {
             base.Enter();
-            if (_liveMatch.RecordCnt == 0) 
+            if (_engine.Record.Count == 0) 
                 _transition.ToEnd();
             _replayView.EnterReplayView();
         }
@@ -53,38 +54,38 @@ namespace YuJanggi.InGame.Session
         }
         protected override SessionState StateName() => SessionState.EndReplayState;
     }
-    public sealed class SessionEndState : SessionStateBase
+    internal sealed class SessionEndState : SessionStateBase
     {
         private readonly IGameResultContext _resultCtx;
-        private readonly LiveView          _matchView;
+        private readonly LiveView          _liveView;
         public SessionEndState(
             ISessionTransition sessionFsm, 
             IGameResultContext sessionResult,
-            IPlayerController cho, IPlayerController han, 
-            ILiveMatch liveMatch,
-            LiveView matchView) 
-            : base(sessionFsm, cho, han, liveMatch)
+            IInGameController cho, IInGameController han, 
+            ISessionEngine engine,
+            LiveView liveView) 
+            : base(sessionFsm, cho, han, engine)
         {
             _resultCtx  = sessionResult;
-            _matchView  = matchView;
+            _liveView  = liveView;
         }
 
         public override void Enter()
         {
             base.Enter();
-            _matchView.SyncBoardState(_liveMatch);
+            _liveView.SyncBoardState(_engine.Board);
             if (!_resultCtx.GameResult.HasValue) _transition.ToLive();
             DisableAllControllers();
             var result          = _resultCtx.GameResult.Value;
             var isLocalLose     = GetPlayer(result.Loser).IsLocal;
 
-            _matchView.OnGameEnded(in result, isLocalLose);
-            _matchView.ShowResultUI();
+            _liveView.OnGameEnded(in result, isLocalLose);
+            _liveView.ShowResultUI();
         }
         public override void Exit()
         {
             base.Exit();
-            _matchView.HideResultUI();
+            _liveView.HideResultUI();
         }
         public override void RequestStepBackward()
         {
