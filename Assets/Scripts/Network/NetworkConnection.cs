@@ -130,7 +130,7 @@ namespace YuJanggi.Network
         {
             var request = new ProtocolHandshakeRequest
             {
-                YuJanggiProtocolVersion = YuJanggi.Protocol.Version.Current,
+                YuJanggiProtocolVersion = Protocol.Version.Version.Current,
                 YuJanggiCoreVersion = Engine.Version.Version.Current
             };
             var requestMsg = ClientMessageFactory.Create(ClientMessageType.HandshakeRequest, request);
