@@ -8,13 +8,13 @@
       "hash": "e5acc106ee196bc5a32fb14cdf2987b0f96d11e0"
     },
     "com.seokjinyoo.yujanggi.engine": {
-      "version": "file:D:/Git/YuJanggi.Engine/upm",
+      "version": "file:D:/Git/YuJanggi/YuJanggi.Engine/upm",
       "depth": 0,
       "source": "local",
       "dependencies": {}
     },
     "com.seokjinyoo.yujanggi.protocol": {
-      "version": "file:D:/Git/YuJanggi.Protocol/upm",
+      "version": "file:D:/Git/YuJanggi/YuJanggi.Protocol/upm",
       "depth": 0,
       "source": "local",
       "dependencies": {}
