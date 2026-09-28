@@ -9,14 +9,14 @@ namespace YuJanggi.InGame.Session
     using InGame.Views;
     public sealed class SessionReplayState : SessionStateBase
     {
-        private readonly MatchView  _matchView;
+        private readonly LiveView  _matchView;
         private readonly ReplayView _replayView;
         public SessionReplayState(
             ISessionTransition      sessionFsm, 
             ILiveMatch              matchModel, 
             IPlayerController cho, IPlayerController han, 
             ReplayView replayView, 
-            MatchView  matchView)
+            LiveView  matchView)
             : base(sessionFsm, cho, han, matchModel)
         {
             _matchView   = matchView;

@@ -3,22 +3,23 @@ using System;
 namespace YuJanggi.InGame.Session
 {
     using Engine.Domain;
-
     using Controller;
-
-    using Data.AI;
-
     using InGame.Views;
-
+    using Store;
 
     public static class GameSessionFactory
     {
+      
         public static GameSession CreateSession(
-            MatchView matchView,
+            LiveView matchView,
             ReplayView replayView,
+            IInGameController cho,
+            IInGameController han,
             IInputHandler localInput)
         {
             var option = JanggiOptionStore.Current;
+            var choOption = option.PlayerCho;
+
             IPlayerController cho = CreateController(
                 option.Cho,
                 PlayerTeam.Cho,
@@ -37,20 +38,6 @@ namespace YuJanggi.InGame.Session
         }
 
 
-        private static IPlayerController CreateController(
-            PlayerType type,
-            PlayerTeam team,
-            IInputHandler input,
-            MatchModel match)
-        {
-            return type switch
-            {
-                PlayerType.Local => new LocalController(match.Rule, match.Board, team, input),
-                PlayerType.AI => new AIController(match.Rule, match.Board, team, AISessionSettings.Strategy),
-                PlayerType.Network => new RemoteNetworkController(team),
-                _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
-            };
-        }
 
         private static int ConvertTurnTime(int value)
         {

@@ -3,18 +3,18 @@ using System.Collections.Generic;
 namespace YuJanggi.InGame.Session
 {
     using Engine.Domain;
-    using Engine;
 
     using InGame.Views;
-    using YuJanggi.Engine.JanggiEngine;
 
+    using Controller;
+    using Runtime.Input;
     public class GameSession : ISessionTransition, IGameInputReceiver, IGameResultContext
     {
         #region public Field F
         public GameSession(
-            MatchView          matchView,
+            LiveView          matchView,
             ReplayView         replayView,
-            IPlayerController  cho, IPlayerController  han,
+            IInGameController  cho, IInGameController han,
             IInputHandler      localInput)
         {
             _matchView    = matchView;
@@ -85,7 +85,7 @@ namespace YuJanggi.InGame.Session
         private readonly IPlayerController      _playerHan;
 
         private readonly ReplayView             _replayView;
-        private readonly MatchView              _matchView;
+        private readonly LiveView              _matchView;
         private bool                            _play = false;
         public GameResultInfo? GameResult { get; private set; }
 

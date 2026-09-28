@@ -7,7 +7,6 @@ using YuJanggi.Data.AI;
 namespace YuJanggi.InGame.Controller
 {
     using Runtime.Input;
-    using YuJanggi.BootStrap;
     using YuJanggi.Controller;
     using YuJanggi.Engine.JanggiEngine;
     using YuJanggi.InGame.Handler;

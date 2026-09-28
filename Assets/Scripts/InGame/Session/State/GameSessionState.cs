@@ -37,7 +37,7 @@ namespace YuJanggi.InGame.Session
         void RequestStepForward();
         void RequestStepBackward();
         // UI 입력
-        void RequestResetGame(IReadonlyEngine engine, MatchView matchView, ReplayView replayView);
+        void RequestResetGame(IReadonlyEngine engine, LiveView matchView, ReplayView replayView);
 
     }
 
@@ -95,7 +95,7 @@ namespace YuJanggi.InGame.Session
 
         #region UIRequest
         // UI 입력
-        public void RequestResetGame(IReadonlyEngine engine, MatchView matchView, ReplayView replayView)
+        public void RequestResetGame(IReadonlyEngine engine, LiveView matchView, ReplayView replayView)
         {
             if (_debug)
                 Debug.Log($"{StateName()}_ResetGame");

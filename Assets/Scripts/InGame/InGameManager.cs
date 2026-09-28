@@ -1,24 +1,26 @@
-using TMPro;
 using Cysharp.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 namespace YuJanggi.InGame
 {
-    using BootStrap;
-    using Store;
     using Engine.Domain;
+    using Engine.JanggiEngine;
+
+    using BootStrap;
 
 
-    using InGame.Session;
-    using InGame.Views;
     using Runtime.Board;
     using Runtime.Input;
     using Runtime.Particle;
     using Runtime.UI;
+    using Store;
 
-    using YuJanggi.InGame.Flow;
-    using YuJanggi.InGame.Handler;
 
+    using Flow;
+    using Handler;
+    using Session;
+    using Views;
 
     public class InGameManager : MonoBehaviour
     {
@@ -59,7 +61,7 @@ namespace YuJanggi.InGame
         private void Awake()
         {
             PrepareBootStrap();
-            PrepareSessionInfo();
+            ShowJanggiOption();
 
             CreateInGameSession();
             CreateInGameFlow();
@@ -114,29 +116,32 @@ namespace YuJanggi.InGame
             _inGameHandler =
                 YuJanggiBootStrap.Instance.NetworkManager.InGame;
         }
-        private void PrepareSessionInfo()
+        private void ShowJanggiOption()
         {
-            var sessionInfo = GameSessionStore.Current;
+            var janggiOptions = JanggiOptionStore.Current;
    
-            if (sessionInfo.Mode == GameModeType.Network)
+            if (janggiOptions.GameMode == GameModeType.Network)
             {
                 var networkInfo = NetworkSessionStore.Current;
                 Debug.Log($"MatchID: {networkInfo.MatchId}");
             }
                
             Debug.Log(
-                $"GameMode: {sessionInfo.Mode}, " +
-                $"Cho: {sessionInfo.Cho}, " +
-                $"ChoFormation: {sessionInfo.ChoFormation}, " +
-                $"Han: {sessionInfo.Han}, " +
-                $"HanFormation: {sessionInfo.HanFormation}, " +
-                $"TurnTime: {sessionInfo.TurnTime}");
+                $"GameMode: {janggiOptions.GameMode}, " +
+                $"Cho: {janggiOptions.PlayerCho}, " +
+                $"ChoFormation: {janggiOptions.ChoFormation}, " +
+                $"Han: {janggiOptions.PlayerHan}, " +
+                $"HanFormation: {janggiOptions.HanFormation}, " +
+                $"TurnTime: {janggiOptions.TurnTime}");
         }
         private void CreateInGameSession()
         {
-            var sessionInfo = GameSessionStore.Current;
-            var matchView = CreateMatchView();
-            var matchModel = CreateMatchModel(sessionInfo.TurnTime, out var record);
+            var janggiOptions = JanggiOptionStore.Current;
+
+            var janggiEngine = JanggiEngineFactory.CreateEngine(janggiOptions);
+
+            var matchView = CreateLiveView();
+            var matchModel = CreateMatchModel(janggiOptions.TurnTime, out var record);
             var replayView = CreateReplayView(record);
 
             _session = GameSessionFactory.CreateSession(
@@ -151,18 +156,8 @@ namespace YuJanggi.InGame
         private ReplayView CreateReplayView(
             Record record)
             => new (_boardView, record, _runner, _audioManager, _displayModeText);
-        private MatchModel CreateMatchModel(
-            float turnTime,
-            out Record record)
-        {
-            record         = new Record();
-            var turn = new Turn(turnTime);
-            var score = new Score();
-            var boardModel = new BoardModel();
-            var janggiRule = new JanggiRule();
-            return new MatchModel(turn, record, score, boardModel, janggiRule);
-        }
-        private MatchView CreateMatchView()
+
+        private LiveView CreateLiveView()
             => new(
                 _particleView, _moveGuideView, _boardView,
                 _resultUI, _matchUI);

@@ -8,7 +8,6 @@ namespace YuJanggi.InGame.Views
 
     using Engine.JanggiBoard;
     using Engine.Domain;
-    using Engine.Match;
 
     using Runtime.UI;
     using Runtime.Board;
@@ -16,9 +15,9 @@ namespace YuJanggi.InGame.Views
 
     using Audio;
 
-    public class MatchView 
+    public class LiveView 
     {
-        public MatchView(
+        public LiveView(
             ParticleView    particleView,
             MoveGuideView   moveGuideView,
             BoardView       boardView,
@@ -39,11 +38,9 @@ namespace YuJanggi.InGame.Views
         }
         public void CheckReleased()
             => _audioManager.PlaySfxOneShot(JanggiSfx.UnCheck);
-        public void SyncBoardState(ILiveMatch match)
-        {
-            var board = match.Board;
-            _boardView.SyncBoardState(board);
-        }
+        public void SyncBoardState(IReadOnlyBoard board)
+            => _boardView.SyncBoardState(board);
+
         public void HighlightPiece(int pieceId)
         {
             _audioManager.PlaySfxOneShot(JanggiSfx.Select);

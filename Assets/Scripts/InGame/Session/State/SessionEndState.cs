@@ -56,13 +56,13 @@ namespace YuJanggi.InGame.Session
     public sealed class SessionEndState : SessionStateBase
     {
         private readonly IGameResultContext _resultCtx;
-        private readonly MatchView          _matchView;
+        private readonly LiveView          _matchView;
         public SessionEndState(
             ISessionTransition sessionFsm, 
             IGameResultContext sessionResult,
             IPlayerController cho, IPlayerController han, 
             ILiveMatch liveMatch,
-            MatchView matchView) 
+            LiveView matchView) 
             : base(sessionFsm, cho, han, liveMatch)
         {
             _resultCtx  = sessionResult;

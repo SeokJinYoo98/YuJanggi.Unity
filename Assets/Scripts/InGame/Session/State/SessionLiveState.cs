@@ -8,12 +8,12 @@ namespace YuJanggi.InGame.Session
     using InGame.Views;
     public sealed class SessionLiveState : SessionStateBase
     {
-        private readonly MatchView  _matchView;
+        private readonly LiveView  _matchView;
         public SessionLiveState(
             ISessionTransition sessionFsm, 
             ILiveMatch         matchModel, 
             IPlayerController cho, IPlayerController han, 
-            MatchView matchView)
+            LiveView matchView)
             : base(sessionFsm, cho, han, matchModel)
         {
             _matchView = matchView;
