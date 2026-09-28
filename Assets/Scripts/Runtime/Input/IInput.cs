@@ -5,6 +5,15 @@ namespace YuJanggi.Runtime.Input
 {
     using Engine.Domain;
 
+    public interface IInputHandler
+    {
+        public event Action<Pos> OnBoardClicked;
+        public event Action OnEmptyClicked;
+        public void RotateCamera(PlayerTeam team);
+        public void Activate();
+        public void Deactivate();
+    }
+
     public abstract class InputHandlerBehaviour : MonoBehaviour, IInputHandler
     {
         public abstract event Action<Pos> OnBoardClicked;

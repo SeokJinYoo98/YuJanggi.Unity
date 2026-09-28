@@ -1,20 +1,19 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
-namespace YuJanggi.Controller
+namespace YuJanggi.InGame.Controller
 {
     using Engine.Domain;
-    using Engine.JanggiBoard;
     using YuJanggi.Engine.JanggiEngine;
-
-    public class LocalController : IPlayerController, ILocalPlayer
+    using Runtime.Input;
+    internal class InGameLocalController
+        : IInGameController, IInGameLocalController
     {
         #region Fields
         // 내부 상태와 참조를 저장하는 변수
         private readonly IInputHandler _input;
         private readonly IControllerQuery _query;
-        private readonly List<Pos> _legal = new(25);
+        private readonly List<Pos> _legal   = new(25);
         private readonly List<Pos> _illegal = new(25);
         private Pos _selectedPos
             = Pos.Invalid;
@@ -29,26 +28,20 @@ namespace YuJanggi.Controller
             => Team == _query.CurrentTurn;
         public bool IsLocal
             => true;
-
         private bool HasSelection
             => _selectedPos != Pos.Invalid;
+
         #endregion
 
         #region Events
         // 상태 변화나 특정 동작을 외부에 알리는 이벤트
-        internal event SelectionChangedHandler? OnSelectionChanged;
-        internal event MoveRequestHandler? OnMoveRequest;
+        public event SelectionChangedHandler  OnSelectionChanged;
+        public event MoveRequestHandler       OnMoveRequest;
         #endregion
-        #region Delgates
-        internal delegate void MoveRequestHandler(Pos from, Pos to);
-        internal delegate void SelectionChangedHandler(
-            int? pieceId,
-            IReadOnlyList<Pos> legalWays,
-            IReadOnlyList<Pos> illegalWays);
-        #endregion
+
         #region Constructors
         // 순수 C#
-        public LocalController(
+        public InGameLocalController(
             PlayerTeam team,
             IControllerQuery query,
             IInputHandler input)
@@ -57,6 +50,7 @@ namespace YuJanggi.Controller
             _input  = input;
             _query  = query;
         }
+
         #endregion
 
         #region Public Methods
@@ -97,14 +91,6 @@ namespace YuJanggi.Controller
         // 클래스 내부에서 사용하는 보조 로직
         #endregion
 
-
-
-
-
-
-
-
-
         private void HandleBoardClicked(Pos pos)
         {
             if (!IsMyTurn)
@@ -143,8 +129,8 @@ namespace YuJanggi.Controller
             if (!_legal.Contains(toPos))
                 return false;
 
-            OnMoveRequest?.Invoke(
-                )
+            OnMoveRequest(_selectedPos, toPos);
+
             ClearSelection();
             return true;
         }
@@ -187,8 +173,6 @@ namespace YuJanggi.Controller
                 _legal,
                 _illegal);
         }
-
-
     }
 }
 
