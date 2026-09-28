@@ -32,9 +32,8 @@ namespace YuJanggi.Store
     }
     public static class JanggiOptionStore
     {
-        public static JanggiOptions Current { get; private set; }
-        public static void SetJanggiOption(JanggiOptions options)
-            => Current = options;
+        public static JanggiOptions Current;
+
     
     }
 

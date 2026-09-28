@@ -38,7 +38,7 @@ namespace YuJanggi.InGame.Session
         {
             base.OnTurnChanged(next);
             var nextPlayer = GetPlayer(next);
-            _liveView.OnTurnChanged(nextPlayer.IsLocal);
+            _liveView.UpdateTurnInfo(next, nextPlayer.IsLocal);
             BeginNextTurn(next);
         }
 

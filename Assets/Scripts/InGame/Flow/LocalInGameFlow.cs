@@ -6,7 +6,7 @@ using YuJanggi.InGame.Session;
 
 namespace YuJanggi.InGame.Flow
 {
-    public sealed class LocalInGameFlow : InGameFlow
+    internal sealed class LocalInGameFlow : InGameFlow
     {
         public LocalInGameFlow(GameSession session)
             : base(session)

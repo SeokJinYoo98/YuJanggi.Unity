@@ -3,7 +3,7 @@ using TMPro;
 
 namespace YuJanggi.Runtime.UI
 {
-    using Controller.AI;
+    using InGame.Controller;
     public class AIPanelView : UIVisible
     {
         [SerializeField] private TMP_Dropdown _teamDropdown;

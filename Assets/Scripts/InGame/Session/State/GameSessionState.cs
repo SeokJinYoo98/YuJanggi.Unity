@@ -5,7 +5,6 @@ using UnityEngine;
 namespace YuJanggi.InGame.Session
 {
     using Engine.Domain;
-    using Engine.Match;
 
     using InGame.Views;
     using YuJanggi.Engine.JanggiEngine;
@@ -37,8 +36,7 @@ namespace YuJanggi.InGame.Session
         void RequestUndo();
         void RequestStepForward();
         void RequestStepBackward();
-        // UI 입력
-        void RequestResetGame(LiveView matchView, ReplayView replayView);
+
 
     }
 
@@ -55,6 +53,7 @@ namespace YuJanggi.InGame.Session
             _cho         = cho;
             _han         = han;
         }
+
         protected readonly ISessionEngine       _engine;
         protected readonly ISessionTransition   _transition;
         protected readonly IInGameController    _cho;
@@ -99,17 +98,7 @@ namespace YuJanggi.InGame.Session
 
         #region UIRequest
         // UI 입력
-        public void RequestResetGame(LiveView matchView, ReplayView replayView)
-        {
-            if (_debug)
-                Debug.Log($"{StateName()}_ResetGame");
-            replayView.ResetGame();
-            _engine.
-            matchView.ResetGame(matchModel.Board);
-            engine.StartEngine();
-            BeginNextTurn(matchModel.PlayerTurn);
-            _transition.ToLive();
-        }
+
         #endregion
 
         protected virtual IInGameController BeginNextTurn(PlayerTeam turn)

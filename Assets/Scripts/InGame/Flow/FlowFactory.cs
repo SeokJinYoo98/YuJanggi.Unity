@@ -6,13 +6,13 @@ namespace YuJanggi.InGame.Flow
     using YuJanggi.InGame.Service;
     using YuJanggi.InGame.Session;
 
-    public static class InGameFlowFactory
+    internal static class InGameFlowFactory
     {
-        public static IInGameFlow CreateLocal(
+        internal static IInGameFlow CreateLocal(
             GameSession session)
             => new LocalInGameFlow(session);
 
-        public static IInGameFlow CreateNetwork(
+        internal static IInGameFlow CreateNetwork(
             GameSession session,
             InGameHandler handler)
             => new NetworkInGameFlow(

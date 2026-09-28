@@ -7,28 +7,28 @@ namespace YuJanggi.InGame.Session
     using InGame.Views;
     using Store;
     using Runtime.Input;
-    public static class GameSessionFactory
+    using YuJanggi.Engine.JanggiEngine;
+
+    internal static class GameSessionFactory
     {
-      
-        public static GameSession CreateSession(
-            LiveView liveView,
-            ReplayView replayView,
-            IInGameController cho,
-            IInGameController han,
-            IInputHandler localInput)
+        internal static GameSession CreateSession(
+            IJanggiEngine engine,
+            IInputHandler inputHandler,
+            LiveView liveView, ReplayView replayView)
+
         {
-            var option = JanggiOptionStore.Current;
-            var choOption = option.PlayerCho;
+            var options = JanggiOptionStore.Current;
 
+            IInGameController cho = InGameControllerFactory.CreateController(
+                options.PlayerCho, PlayerTeam.Cho,
+                engine, inputHandler);
 
-            return new GameSession(
-                liveView,
-                replayView,
-                cho,
-                han,
-                localInput);
+            IInGameController han = InGameControllerFactory.CreateController(
+                options.PlayerHan, PlayerTeam.Han,
+                engine, inputHandler);
+
+            return new GameSession(engine, inputHandler, cho, han, liveView, replayView);
         }
-
 
 
         private static int ConvertTurnTime(int value)

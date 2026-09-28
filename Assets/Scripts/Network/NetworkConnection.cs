@@ -2,15 +2,14 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
-using YuJanggi.Engine;
-using YuJanggi.Protocol;
-using YuJanggi.Protocol.Connection;
-using YuJanggi.Protocol.Messages;
-using YuJanggi.Protocol.Messages.MessageFactory;
-using YuJanggi.Network.Status;
+
+
 
 namespace YuJanggi.Network
 {
+    using Protocol.Connection;
+    using Protocol.Messages;
+    using Network.Status;
     /// <summary>TCP 연결, Handshake 및 수신 루프의 수명주기를 관리합니다.</summary>
     public sealed class NetworkConnection : IDisposable
     {
@@ -131,8 +130,8 @@ namespace YuJanggi.Network
         {
             var request = new ProtocolHandshakeRequest
             {
-                YuJanggiProtocolVersion = ProtocolVersion.Current,
-                YuJanggiCoreVersion = CoreVersion.Current
+                YuJanggiProtocolVersion = YuJanggi.Protocol.Version.Current,
+                YuJanggiCoreVersion = Engine.Version.Version.Current
             };
             var requestMsg = ClientMessageFactory.Create(ClientMessageType.HandshakeRequest, request);
             await _tcpClient.SendAsync(requestMsg, cancellationToken);

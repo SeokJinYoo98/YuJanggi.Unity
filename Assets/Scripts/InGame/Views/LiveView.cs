@@ -100,24 +100,30 @@ namespace YuJanggi.InGame.Views
         {
             events.OnRecordChanged  += _liveUI.UpdateTotalTurn;
             events.OnTimeChanged    += _liveUI.UpdateTimer;
-            events.OnTurnChanged    += _liveUI.UpdateTurn;
             events.OnScoreChanged   += _liveUI.UpdateScore;
         }
         public void UnBindUI(IReadOnlyGameStateEvents events)
         {
             events.OnRecordChanged  -= _liveUI.UpdateTotalTurn;
             events.OnTimeChanged    -= _liveUI.UpdateTimer;
-            events.OnTurnChanged    -= _liveUI.UpdateTurn;
             events.OnScoreChanged   -= _liveUI.UpdateScore;
         }
 
-        public void OnTurnChanged(bool isLocal)
+        /// <summary>
+        /// 흠ㅁ,,,,,,
+        /// </summary>
+        /// <param name="isLocal"></param>
+        private void LocalTurnAlert(bool isLocal)
         {
             if (!isLocal) return;
-            // Debug.Log($"Turn UI Update:{isLocal}");
             _audioManager.PlaySfxOneShot(JanggiSfx.TurnAlert);
         }
+        public void UpdateTurnInfo(PlayerTeam next, bool isLocal)
+        {
+            LocalTurnAlert(isLocal);
 
+            _liveUI.UpdateTurn(next);
+        }
 
         public void ResetGame(IReadOnlyBoard boardModel)
         {

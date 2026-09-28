@@ -10,18 +10,30 @@ namespace YuJanggi.InGame.Session
     using Runtime.Input;
     using YuJanggi.Engine.JanggiEngine;
 
-    public interface ISessionTransition
+    internal interface ISessionTransition
     {
         void ToLive();
         void ToReplay();
         void ToEnd();
         void ToEndReplay();
     }
-    public class GameSession : ISessionTransition, IGameInputReceiver, IGameResultContext
+    internal class GameSession : ISessionTransition, IGameInputReceiver, IGameResultContext
     {
 
         #region Fields
         // 내부 상태와 참조를 저장하는 변수
+        private SessionState _currState = SessionState.BaseState;
+        private readonly Dictionary<SessionState, ISessionState> _states;
+
+        private readonly IJanggiEngine      _engine;
+        private readonly IInputHandler      _localInput;
+        private readonly IInGameController  _playerCho;
+        private readonly IInGameController  _playerHan;
+
+        private readonly LiveView   _liveView;
+        private readonly ReplayView _replayView;
+
+        private bool _play = false;
         #endregion
 
         #region Properties
@@ -35,19 +47,19 @@ namespace YuJanggi.InGame.Session
         #region Constructors
         // 순수 C#
         public GameSession(
-            LiveView matchView,
-            ReplayView replayView,
+            IJanggiEngine engine,
+            IInputHandler localInput,
             IInGameController cho, IInGameController han,
-            IInputHandler localInput)
+            LiveView liveView, ReplayView replayView)
         {
-            _liveView    = matchView;
-
-            _replayView   = replayView;
-            _playerCho    = cho;
-            _playerHan    = han;
-            _localInput   = localInput;
-            _states       = CreateStates();
+            _engine     = engine;
+            _localInput = localInput;
+            _playerCho  = cho;
+            _playerHan  = han;
+            _liveView = liveView; _replayView = replayView;
+            _states = CreateStates();
         }
+
         #endregion
 
         #region Public Methods
@@ -73,16 +85,16 @@ namespace YuJanggi.InGame.Session
             _play = true;
           
             ChangeState(SessionState.LiveState);
-            _matchModel.StartGame();
+            _engine.StartEngine();
             _playerCho.BeginTurn();
             _playerHan.EndTurn();
         }
         public void BindEvents()
         {
-            _matchModel.BindEvents();
-            _liveView.BindUI(_matchModel);
+            _engine.BindEvents();
+            _liveView.BindUI(_engine.GameStateEvents);
 
-            var events = _matchModel.MatchEvent;
+            var events = _engine.GameEvents;
             events.OnPieceMoved    += OnPieceMoved;
             events.OnCheckOccurred += OnCheckOccured;
             events.OnCheckReleased += OnCheckReleased;
@@ -95,7 +107,7 @@ namespace YuJanggi.InGame.Session
         public void UnBindEvents()
         {
             _engine.UnBindEvents();
-            _liveView.UnBindUI(_matchModel);
+            _liveView.UnBindUI(_engine.GameStateEvents);
 
             var events = _engine.GameEvents;
             events.OnPieceMoved    -= OnPieceMoved;
@@ -116,17 +128,7 @@ namespace YuJanggi.InGame.Session
         #endregion
 
         #region private Field Member   
-        private SessionState _currState = SessionState.BaseState;
-        private readonly Dictionary<SessionState, ISessionState> _states;
 
-        private readonly IJanggiEngine          _engine;
-        private readonly IInputHandler          _localInput;
-        private readonly IInGameController      _playerCho;
-        private readonly IInGameController      _playerHan;
-
-        private readonly ReplayView             _replayView;
-        private readonly LiveView               _liveView;
-        private bool                            _play = false;
         public GameResultInfo? GameResult { get; private set; }
 
         #endregion
@@ -191,10 +193,10 @@ namespace YuJanggi.InGame.Session
         private Dictionary<SessionState, ISessionState> CreateStates()
         {
             var states = new Dictionary<SessionState, ISessionState>();
-            states[SessionState.LiveState]   = new SessionLiveState(this, _matchModel, _playerCho, _playerHan, _liveView);
-            states[SessionState.ReplayState] = new SessionReplayState(this, _matchModel, _playerCho, _playerHan, _replayView, _liveView);
-            states[SessionState.EndState]    = new SessionEndState(this, this, _playerCho, _playerHan, _matchModel, _liveView);
-            states[SessionState.EndReplayState] = new SessionEndReplayState(this, _playerCho, _playerHan, _matchModel, _replayView);
+            states[SessionState.LiveState]   = new SessionLiveState(this, _engine, _playerCho, _playerHan, _liveView);
+            states[SessionState.ReplayState] = new SessionReplayState(this, _engine, _playerCho, _playerHan, _replayView, _liveView);
+            states[SessionState.EndState]    = new SessionEndState(this, this, _playerCho, _playerHan, _engine, _liveView);
+            states[SessionState.EndReplayState] = new SessionEndReplayState(this, _playerCho, _playerHan, _engine, _replayView);
             return states;
         }
 

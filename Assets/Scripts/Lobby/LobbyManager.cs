@@ -139,7 +139,7 @@ namespace YuJanggi.Lobby
                     HanFormation = (Formation)local.HanFormation,
                     TurnTime = ConvertTurnTime(local.TurnTime)
                 };
-                Store.JanggiOptionStore.SetJanggiOption(options);
+                Store.JanggiOptionStore.Current = options;
             }
             else if (_curr is AIPanelView ai)
             {

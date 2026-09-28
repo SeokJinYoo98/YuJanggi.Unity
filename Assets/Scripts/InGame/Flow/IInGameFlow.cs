@@ -20,7 +20,7 @@ namespace YuJanggi.InGame.Flow
         /// </summary>
         void Exit();
     }
-    public abstract class InGameFlow : IInGameFlow
+    internal abstract class InGameFlow : IInGameFlow
     {
         private bool _entered;
         protected GameSession Session { get; }

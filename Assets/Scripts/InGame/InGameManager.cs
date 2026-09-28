@@ -22,6 +22,7 @@ namespace YuJanggi.InGame
     using Session;
     using Views;
     using YuJanggi.Engine.JanggiRecord;
+    using YuJanggi.InGame.Controller;
 
     public class InGameManager : MonoBehaviour
     {
@@ -66,6 +67,8 @@ namespace YuJanggi.InGame
 
             CreateInGameSession();
             CreateInGameFlow();
+
+            InitInGameSession();
 
             SetCamera();
         }
@@ -137,39 +140,46 @@ namespace YuJanggi.InGame
         }
         private void CreateInGameSession()
         {
-            var janggiOptions = JanggiOptionStore.Current;
+            var options =
+                JanggiOptionStore.Current;
 
-            var janggiEngine = JanggiEngineFactory.CreateEngine(janggiOptions);
+            var engine =
+                JanggiEngineFactory.CreateEngine(
+                    options);
 
-            var matchView = CreateLiveView();
-            var replayView = CreateReplayView(janggiEngine.Record);
+            var liveView =
+                InGameViewFactory.CreateLiveView(
+                    _particleView,
+                    _moveGuideView,
+                    _boardView,
+                    _resultUI,
+                    _matchUI);
 
-            _session = GameSessionFactory.CreateSession(
-                sessionInfo,
-                matchView,
-                matchModel,
-                replayView,
-                _localInput);
-
-            _session.InitGame();
-        }
-        private ReplayView CreateReplayView(
-            IReadOnlyRecord record)
-            => new(_boardView,
-                    record,
+            var replayView =
+                InGameViewFactory.CreateReplayView(
+                    _boardView,
+                    engine.Record,
                     _runner,
                     _displayModeText);
 
+            _session = GameSessionFactory.CreateSession(
+                engine,
+                _localInput,
+                liveView,
+                replayView);
+        }
 
-        private LiveView CreateLiveView()
-            => new(
-                _particleView, _moveGuideView, _boardView,
-                _resultUI, _matchUI);
+        private void InitInGameSession()
+        {
+            _session.InitGame();
+        }
+
         private void SetCamera()
         {
-            var sessionInfo = GameSessionStore.Current;
-            if (sessionInfo.Mode == GameModeType.Local) return;
-            if (sessionInfo.Cho  == PlayerType.Local) return;
+            var option = JanggiOptionStore.Current;
+
+            if (option.GameMode == GameModeType.Local) return;
+            if (option.PlayerCho  == PlayerType.Local) return;
 
             _boardView.SetDeathPosition(new Vector3(4, 0, 11));
             _localInput.RotateCamera(PlayerTeam.Han);

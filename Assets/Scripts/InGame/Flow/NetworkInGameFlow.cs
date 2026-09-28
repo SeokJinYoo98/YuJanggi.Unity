@@ -8,10 +8,10 @@ using YuJanggi.InGame.Session;
 
 namespace YuJanggi.InGame.Flow
 {
-    public sealed class NetworkInGameFlow : InGameFlow
+    internal sealed class NetworkInGameFlow : InGameFlow
     {
         private readonly InGameHandler _handler;
-        public NetworkInGameFlow(GameSession session, InGameHandler handler)
+        internal NetworkInGameFlow(GameSession session, InGameHandler handler)
             : base(session)
         {
             _handler = handler;
