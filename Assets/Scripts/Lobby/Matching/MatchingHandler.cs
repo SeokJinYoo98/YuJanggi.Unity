@@ -4,6 +4,8 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using YuJanggi.Engine.Domain;
+using YuJanggi.Engine.JanggiOption;
+using YuJanggi.Store;
 using YuJanggi.Network;
 using YuJanggi.Protocol.Matching;
 using YuJanggi.Protocol.Messages;
@@ -24,6 +26,7 @@ namespace YuJanggi.Lobby.Matching
         public MatchingState State => _service.State;
         public bool IsFormationSubmitting => _service.IsFormationSubmitting;
         public bool IsFormationSubmitted => _service.SubmittedFormation.HasValue;
+        public bool IsGameReady => _service.HasDeliveredGameReady;
         public event Action<MatchInfo>? MatchFound;
         public event Action<string, Formation, Formation>? GameReadyReceived;
 
@@ -174,8 +177,26 @@ namespace YuJanggi.Lobby.Matching
                 return;
             var cho = ToCoreFormation(ready.ChoFormation);
             var han = ToCoreFormation(ready.HanFormation);
-            if (_service.TryAcceptGameReady())
-                GameReadyReceived?.Invoke(ready.MatchId, cho, han);
+            var match = NetworkMatchInfoStore.Current;
+            if (match is null || match.MatchId != ready.MatchId ||
+                match.Team is not (PlayerTeam.Cho or PlayerTeam.Han))
+                return;
+            if (!_service.TryAcceptGameReady())
+                return;
+
+            bool localIsCho = match.Team == PlayerTeam.Cho;
+            // 씬 전환 데이터는 Store만 소유합니다. GameReady 이전에는 생성하지 않습니다.
+            JanggiOptionStore.Current = new JanggiOptions
+            {
+                GameMode = GameModeType.Network,
+                PlayerCho = localIsCho ? PlayerType.Network : PlayerType.Remote,
+                PlayerHan = localIsCho ? PlayerType.Remote : PlayerType.Network,
+                ChoFormation = cho,
+                HanFormation = han,
+                // 기존 네트워크 기본값. 서버 TurnTime 계약이 생기면 확정값을 사용합니다.
+                TurnTime = 30
+            };
+            GameReadyReceived?.Invoke(ready.MatchId, cho, han);
         }
 
         private static Formation ToCoreFormation(ProtocolFormation formation) => formation switch
@@ -203,6 +224,7 @@ namespace YuJanggi.Lobby.Matching
                 throw new InvalidOperationException("잘못된 매칭 정보입니다.");
             // 세션 소유자가 저장한 뒤 Matched 알림을 발생시켜 UI가 새 세션을 조회하게 합니다.
             int version = _connection.Version;
+            ClearNetworkOptions();
             MatchFound?.Invoke(match);
             if (version == _connection.Version)
                 _service.MatchingFound();
@@ -228,7 +250,14 @@ namespace YuJanggi.Lobby.Matching
         {
             _deferredMatchingFound = null;
             _deferredGameReady = null;
+            ClearNetworkOptions();
             _service.Reset();
+        }
+
+        private static void ClearNetworkOptions()
+        {
+            if (JanggiOptionStore.Current?.GameMode == GameModeType.Network)
+                JanggiOptionStore.Current = null;
         }
 
         private void EnsureConnected(CancellationToken cancellationToken)

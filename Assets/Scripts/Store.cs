@@ -6,6 +6,7 @@ namespace YuJanggi.Store
     using Engine.Domain;
     using Engine.JanggiOption;
     using YuJanggi.Lobby.Matching;
+    using YuJanggi.Runtime.UI;
 
     public struct NetworkSessionInfo
     {
@@ -32,9 +33,35 @@ namespace YuJanggi.Store
     }
     public static class JanggiOptionStore
     {
-        public static JanggiOptions Current;
+        public static JanggiOptions Current { get; private set; }
 
-    
+        public static void SetLocalOptions(LocalPanelView local)
+        {
+            Current = new JanggiOptions
+            {
+                GameMode = GameModeType.Local,
+                PlayerCho = PlayerType.Local,
+                PlayerHan = PlayerType.Local,
+                ChoFormation = (Formation)local.ChoFormation,
+                HanFormation = (Formation)local.HanFormation,
+                TurnTime = ConvertTurnTime(local.TurnTime)
+            };
+        }
+       
+        private static int ConvertTurnTime(int value)
+        {
+            return value switch
+            {
+                0 => 0,
+                1 => 10,
+                2 => 20,
+                3 => 30,
+                4 => 40,
+                5 => 50,
+                6 => 60,
+                _ => 30
+            };
+        }
     }
 
     #region Fields

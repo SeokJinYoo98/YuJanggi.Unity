@@ -3,7 +3,6 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
 using YuJanggi.Protocol.Messages;
-using YuJanggi.Protocol.Messages.MessageFactory;
 using YuJanggi.Network.Status;
 
 namespace YuJanggi.Network

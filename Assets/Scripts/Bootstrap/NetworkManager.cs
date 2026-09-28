@@ -35,10 +35,16 @@ namespace YuJanggi.BootStrap
 
         #endregion
         #region Properties
-        public MatchInfo NetworkInfo
+        public MatchInfo? NetworkInfo
             => NetworkMatchInfoStore.Current;
         public string? MatchId
-            => string.IsNullOrEmpty(NetworkInfo.MatchId) ? null : NetworkInfo.MatchId;
+        {
+            get
+            {
+                var matchId = NetworkInfo?.MatchId;
+                return string.IsNullOrEmpty(matchId) ? null : matchId;
+            }
+        }
         public MatchingHandler Matching
             => _matchingHandler ?? throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
 
