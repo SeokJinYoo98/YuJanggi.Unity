@@ -10187,8 +10187,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.LobbyManager, Assembly-CSharp
-        m_MethodName: HandleCreateSession
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
+        m_MethodName: HandleGameStart
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -13079,8 +13079,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.LobbyManager, Assembly-CSharp
-        m_MethodName: HandleCreateSession
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
+        m_MethodName: HandleGameStart
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

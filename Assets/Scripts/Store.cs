@@ -5,6 +5,7 @@ namespace YuJanggi.Store
 {
     using Engine.Domain;
     using Engine.JanggiOption;
+    using System;
     using YuJanggi.Lobby.Matching;
     using YuJanggi.Runtime.UI;
 
@@ -47,7 +48,45 @@ namespace YuJanggi.Store
                 TurnTime = ConvertTurnTime(local.TurnTime)
             };
         }
-       
+        public static void SetAIOptions(AIPanelView ai)
+        {
+            bool localIsCho = (PlayerTeam)ai.LocalPlayer == PlayerTeam.Cho;
+            var localFormation = (Formation)ai.LocalPlayerFormation;
+            var aiFormation = (Formation)UnityEngine.Random.Range(0, Enum.GetValues(typeof(Formation)).Length);
+            Current =  new JanggiOptions
+            {
+                GameMode = GameModeType.AI,
+                PlayerCho = localIsCho ? PlayerType.Local : PlayerType.AI,
+                PlayerHan = localIsCho ? PlayerType.AI : PlayerType.Local,
+                ChoFormation = localIsCho ? localFormation : aiFormation,
+                HanFormation = localIsCho ? aiFormation : localFormation,
+                TurnTime = ConvertTurnTime(ai.TurnTime)
+            };
+        }
+        public static void SetNetworkOptions(PlayerTeam localTeam, Formation cho, Formation han)
+        {
+            if (localTeam is not (PlayerTeam.Cho or PlayerTeam.Han))
+                throw new ArgumentOutOfRangeException(nameof(localTeam));
+
+            bool localIsCho = localTeam == PlayerTeam.Cho;
+            Current = new JanggiOptions
+            {
+                GameMode = GameModeType.Network,
+                PlayerCho = localIsCho ? PlayerType.Network : PlayerType.Remote,
+                PlayerHan = localIsCho ? PlayerType.Remote : PlayerType.Network,
+                ChoFormation = cho,
+                HanFormation = han,
+                // 서버 TurnTime 계약이 생기기 전까지 기존 기본값을 유지합니다.
+                TurnTime = 30
+            };
+        }
+
+        public static void ClearNetworkOptions()
+        {
+            if (Current?.GameMode == GameModeType.Network)
+                Current = null;
+        }
+
         private static int ConvertTurnTime(int value)
         {
             return value switch

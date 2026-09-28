@@ -13,7 +13,6 @@ namespace YuJanggi.Lobby
 
     using Runtime.UI;
     using YuJanggi.Store;
-    using Engine.JanggiOption;
 
     public class LobbyManager : MonoBehaviour
     {
@@ -106,28 +105,34 @@ namespace YuJanggi.Lobby
         }
         public void HandleGameStart()
         {
-            if (_isEnteringGame || !TryPrepareOptions(out var options))
+            if (_isEnteringGame || !TryPrepareOptions())
                 return;
 
-            JanggiOptionStore.Current = options;
             EnterGameScene();
         }
 
-        private bool TryPrepareOptions(out JanggiOptions options)
+        private bool TryPrepareOptions()
         {
-            options = null;
-            // 매칭 중에는 Local/AI 선택이 남아 있어도 네트워크 준비 완료를 기다립니다.
-            if (_curr == _networkPanel || _networkManager.Matching.State != MatchingState.Idle)
-                return TryGetPreparedNetworkOptions(out options);
+            if (_curr is NetworkPanelView)
+            {
+                if (!CanPrepareNetworkOptions() ||
+                    !_networkManager.Matching.TryGetReadyFormations(out var cho, out var han))
+                    return false;
 
+                JanggiOptionStore.SetNetworkOptions(NetworkMatchInfoStore.Current.Team, cho, han);
+                return true;
+            }
+            // 진행 중인 매칭이 있으면 Local/AI 게임을 시작하지 않습니다.
+            if (_networkManager.Matching.State != MatchingState.Idle)
+                return false;
             if (_curr is LocalPanelView local)
             {
-                options = CreateLocalOptions(local);
+                JanggiOptionStore.SetLocalOptions(local);
                 return true;
             }
             if (_curr is AIPanelView ai)
             {
-                options = CreateAIOptions(ai);
+                JanggiOptionStore.SetAIOptions(ai);
                 AISessionSettings.Strategy = ai.Strategy;
                 return true;
             }
@@ -136,35 +141,14 @@ namespace YuJanggi.Lobby
 
      
 
-        private static JanggiOptions CreateAIOptions(AIPanelView ai)
-        {
-            bool localIsCho = (PlayerTeam)ai.LocalPlayer == PlayerTeam.Cho;
-            var localFormation = (Formation)ai.LocalPlayerFormation;
-            var aiFormation = (Formation)UnityEngine.Random.Range(0, Enum.GetValues(typeof(Formation)).Length);
-            return new JanggiOptions
-            {
-                GameMode = GameModeType.AI,
-                PlayerCho = localIsCho ? PlayerType.Local : PlayerType.AI,
-                PlayerHan = localIsCho ? PlayerType.AI : PlayerType.Local,
-                ChoFormation = localIsCho ? localFormation : aiFormation,
-                HanFormation = localIsCho ? aiFormation : localFormation,
-                TurnTime = ConvertTurnTime(ai.TurnTime)
-            };
-        }
 
-        private bool TryGetPreparedNetworkOptions(out JanggiOptions options)
+
+        private bool CanPrepareNetworkOptions()
         {
-            options = JanggiOptionStore.Current;
             var match = NetworkMatchInfoStore.Current;
-            if (!_networkManager.IsOnline || !_networkManager.Matching.IsGameReady ||
-                match == null || string.IsNullOrWhiteSpace(match.MatchId) ||
-                match.Team is not (PlayerTeam.Cho or PlayerTeam.Han) ||
-                options == null || options.GameMode != GameModeType.Network)
-                return false;
-
-            bool localIsCho = match.Team == PlayerTeam.Cho;
-            return options.PlayerCho == (localIsCho ? PlayerType.Network : PlayerType.Remote) &&
-                options.PlayerHan == (localIsCho ? PlayerType.Remote : PlayerType.Network);
+            return _networkManager.IsOnline && _networkManager.Matching.IsGameReady &&
+                match != null && !string.IsNullOrWhiteSpace(match.MatchId) &&
+                match.Team is PlayerTeam.Cho or PlayerTeam.Han;
         }
 
         private void HandleGameReady(string matchId, Formation cho, Formation han)
@@ -174,7 +158,10 @@ namespace YuJanggi.Lobby
                 return;
 
             if (isActiveAndEnabled)
+            {
+                ChangePanel(_networkPanel);
                 HandleGameStart();
+            }
         }
 
         private void EnterGameScene()
@@ -185,6 +172,7 @@ namespace YuJanggi.Lobby
             _showNetworkTimer = false;
             _audioManager?.PlayButton();
             _curr = null;
+            Debug.Log("왜 안돼?");
             SceneManager.LoadScene("JanggiScene");
         }
 
@@ -294,8 +282,9 @@ namespace YuJanggi.Lobby
                 _formationFailure = null;
                 _formationAttempted = false;
             }
-            if (TryGetPreparedNetworkOptions(out _))
+            if (CanPrepareNetworkOptions())
             {
+                ChangePanel(_networkPanel);
                 HandleGameStart();
                 return;
             }

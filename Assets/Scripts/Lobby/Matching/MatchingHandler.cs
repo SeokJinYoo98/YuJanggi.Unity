@@ -4,7 +4,6 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using YuJanggi.Engine.Domain;
-using YuJanggi.Engine.JanggiOption;
 using YuJanggi.Store;
 using YuJanggi.Network;
 using YuJanggi.Protocol.Matching;
@@ -20,6 +19,7 @@ namespace YuJanggi.Lobby.Matching
         private readonly MatchingService _service;
         private MatchingFound? _deferredMatchingFound;
         private GameReadyEvent? _deferredGameReady;
+        private (Formation Cho, Formation Han)? _readyFormations;
         private bool _disposed;
 
         private readonly Func<string?> _getMatchId;
@@ -184,19 +184,19 @@ namespace YuJanggi.Lobby.Matching
             if (!_service.TryAcceptGameReady())
                 return;
 
-            bool localIsCho = match.Team == PlayerTeam.Cho;
-            // 씬 전환 데이터는 Store만 소유합니다. GameReady 이전에는 생성하지 않습니다.
-            JanggiOptionStore.Current = new JanggiOptions
-            {
-                GameMode = GameModeType.Network,
-                PlayerCho = localIsCho ? PlayerType.Network : PlayerType.Remote,
-                PlayerHan = localIsCho ? PlayerType.Remote : PlayerType.Network,
-                ChoFormation = cho,
-                HanFormation = han,
-                // 기존 네트워크 기본값. 서버 TurnTime 계약이 생기면 확정값을 사용합니다.
-                TurnTime = 30
-            };
+            _readyFormations = (cho, han);
             GameReadyReceived?.Invoke(ready.MatchId, cho, han);
+        }
+
+        public bool TryGetReadyFormations(out Formation cho, out Formation han)
+        {
+            cho = default;
+            han = default;
+            if (!IsGameReady || !_readyFormations.HasValue)
+                return false;
+
+            (cho, han) = _readyFormations.Value;
+            return true;
         }
 
         private static Formation ToCoreFormation(ProtocolFormation formation) => formation switch
@@ -224,7 +224,8 @@ namespace YuJanggi.Lobby.Matching
                 throw new InvalidOperationException("잘못된 매칭 정보입니다.");
             // 세션 소유자가 저장한 뒤 Matched 알림을 발생시켜 UI가 새 세션을 조회하게 합니다.
             int version = _connection.Version;
-            ClearNetworkOptions();
+            _readyFormations = null;
+            JanggiOptionStore.ClearNetworkOptions();
             MatchFound?.Invoke(match);
             if (version == _connection.Version)
                 _service.MatchingFound();
@@ -250,14 +251,9 @@ namespace YuJanggi.Lobby.Matching
         {
             _deferredMatchingFound = null;
             _deferredGameReady = null;
-            ClearNetworkOptions();
+            _readyFormations = null;
+            JanggiOptionStore.ClearNetworkOptions();
             _service.Reset();
-        }
-
-        private static void ClearNetworkOptions()
-        {
-            if (JanggiOptionStore.Current?.GameMode == GameModeType.Network)
-                JanggiOptionStore.Current = null;
         }
 
         private void EnsureConnected(CancellationToken cancellationToken)
