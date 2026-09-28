@@ -27,6 +27,9 @@ namespace YuJanggi.Runtime.UI
                 return (AIMoveStrategyType)_strategyDropdown.value;
             }
         }
+    
     }
 
 }
+
+

@@ -6,3 +6,5 @@ namespace YuJanggi.Data.AI
         public static AIMoveStrategyType Strategy { get; set; } = AIMoveStrategyType.Random;
     }
 }
+
+

@@ -1,0 +1,6 @@
+
+
+namespace YuJanggi.Controller.InGame
+{
+
+}

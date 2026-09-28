@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace YuJanggi.Runtime.UI
 {
-    using Core.V2.Domain;
-    using Core.V2.Match;
+    using Engine.Domain;
+    using Engine.Match;
 
     public class MatchUI : MonoBehaviour
     {
@@ -126,3 +126,5 @@ namespace YuJanggi.Runtime.UI
 
     }
 }
+
+

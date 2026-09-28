@@ -7,8 +7,8 @@ namespace YuJanggi.InGame.Views
     using Audio;
     using BootStrap;
 
-    using Core.V2.Match;
-    using Core.V2.Domain;
+    using Engine.Match;
+    using Engine.Domain;
 
     using Runtime.Board;
     using Runtime.Input;
@@ -193,3 +193,5 @@ namespace YuJanggi.InGame.Views
         }
     }
 }
+
+

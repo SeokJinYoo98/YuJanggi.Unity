@@ -3,7 +3,7 @@ using UnityEngine;
 namespace YuJanggi.Runtime.UI
 {
     using TMPro;
-    using Core.V2.Domain;
+    using Engine.Domain;
     using Network.Status;
     using Lobby.Matching;
 
@@ -114,3 +114,5 @@ namespace YuJanggi.Runtime.UI
         }
     }
 }
+
+

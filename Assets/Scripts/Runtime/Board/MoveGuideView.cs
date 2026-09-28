@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace YuJanggi.Runtime.Board
 { 
-    using Core.V2.Domain;
+    using Engine.Domain;
     using System.Collections.Generic;
     using UnityEngine.Pool;
 
@@ -50,3 +50,5 @@ namespace YuJanggi.Runtime.Board
 
     }
 }
+
+

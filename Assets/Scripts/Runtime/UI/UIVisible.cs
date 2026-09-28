@@ -16,3 +16,5 @@ namespace YuJanggi.Runtime.UI
             => gameObject.SetActive(false);
     }
 }
+
+

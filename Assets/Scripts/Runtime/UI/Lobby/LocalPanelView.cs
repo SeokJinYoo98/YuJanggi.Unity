@@ -11,8 +11,12 @@ namespace YuJanggi.Runtime.UI
         [SerializeField] private TMP_Dropdown _hanFormationDropdown;
         [SerializeField] private TMP_Dropdown _timeDropdown;
         public int ChoFormation => _choFormationDropdown.value;
-        public int HanFormation => _hanFormationDropdown.value; 
-        public int TurnTime     => _timeDropdown.value;
+        public int HanFormation => _hanFormationDropdown.value;
+        public int TurnTime => _timeDropdown.value;
+
+
     }
 
 }
+
+

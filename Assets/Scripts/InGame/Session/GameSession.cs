@@ -2,23 +2,22 @@ using System.Collections.Generic;
 
 namespace YuJanggi.InGame.Session
 {
-    using Core.V2.Domain;
-    using Core.V2.Match;
+    using Engine.Domain;
+    using Engine;
 
     using InGame.Views;
+    using YuJanggi.Engine.JanggiEngine;
+
     public class GameSession : ISessionTransition, IGameInputReceiver, IGameResultContext
     {
         #region public Field F
         public GameSession(
-            GameSessionInfo    sessionInfo,
             MatchView          matchView,
-            MatchModel         matchModel,
             ReplayView         replayView,
             IPlayerController  cho, IPlayerController  han,
             IInputHandler      localInput)
         {
             _matchView    = matchView;
-            _sessionInfo  = sessionInfo;
             _matchModel   = matchModel;
             _replayView   = replayView;
             _playerCho    = cho;
@@ -81,14 +80,12 @@ namespace YuJanggi.InGame.Session
         private SessionState _currState = SessionState.BaseState;
         private readonly Dictionary<SessionState, ISessionState> _states;
 
-        private readonly GameSessionInfo        _sessionInfo;
         private readonly IInputHandler          _localInput;
         private readonly IPlayerController      _playerCho;
         private readonly IPlayerController      _playerHan;
 
         private readonly ReplayView             _replayView;
         private readonly MatchView              _matchView;
-        private readonly MatchModel             _matchModel;
         private bool                            _play = false;
         public GameResultInfo? GameResult { get; private set; }
 
@@ -140,7 +137,7 @@ namespace YuJanggi.InGame.Session
         public void  ResetGame()
         {
             GameResult = null;
-            _states[_currState].RequestResetGame(_sessionInfo, _matchModel, _matchView, _replayView);
+            _states[_currState].RequestResetGame(Store.JanggiOptionStore.Current, _matchModel, _matchView, _replayView);
         }
         #endregion
 
@@ -175,3 +172,5 @@ namespace YuJanggi.InGame.Session
         #endregion
     }
 }
+
+

@@ -1,23 +1,24 @@
 using TMPro;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 namespace YuJanggi.InGame
 {
     using BootStrap;
-    using Core.V2.Board;
-    using Core.V2.Domain;
-    using Core.V2.Match;
-    using Core.V2.Rule;
-    using Cysharp.Threading.Tasks;
+    using Store;
+    using Engine.Domain;
+
+
     using InGame.Session;
     using InGame.Views;
     using Runtime.Board;
     using Runtime.Input;
     using Runtime.Particle;
     using Runtime.UI;
-    using System;
+
     using YuJanggi.InGame.Flow;
     using YuJanggi.InGame.Handler;
+
 
     public class InGameManager : MonoBehaviour
     {
@@ -49,7 +50,7 @@ namespace YuJanggi.InGame
         #region Properties
         // 상태를 조회하거나 변경하는 접근 속성
         public GameModeType GameMode
-            => GameSessionStore.Current.Mode;
+            => JanggiOptionStore.Current.GameMode;
 
         #endregion
 
@@ -230,3 +231,5 @@ namespace YuJanggi.InGame
         #endregion
     }
 }
+
+

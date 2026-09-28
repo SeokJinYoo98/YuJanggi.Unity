@@ -3,10 +3,10 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Diagnostics;
 using System.Threading;
-using YuJanggi.Core.V2.Domain;
+using YuJanggi.Engine.Domain;
 using YuJanggi.Network;
-using YuJanggi.Protocol.V2.Matching;
-using YuJanggi.Protocol.V2.Messages;
+using YuJanggi.Protocol.Matching;
+using YuJanggi.Protocol.Messages;
 
 namespace YuJanggi.Lobby.Matching
 {
@@ -249,3 +249,5 @@ namespace YuJanggi.Lobby.Matching
         }
     }
 }
+
+

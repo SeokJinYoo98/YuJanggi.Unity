@@ -2,7 +2,7 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using YuJanggi.Protocol.V2.Messages;
+using YuJanggi.Protocol.Messages;
 
 namespace YuJanggi.Network
 {
@@ -114,3 +114,5 @@ namespace YuJanggi.Network
         }
     }
 }
+
+

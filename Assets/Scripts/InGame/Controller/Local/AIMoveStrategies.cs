@@ -5,9 +5,10 @@ using System.Diagnostics;
 
 namespace YuJanggi.Controller.AI
 {
-    using Core.V2.Board;
-    using Core.V2.Domain;
-    using Core.V2.Rule;
+
+    using Engine.JanggiRule;
+    using Engine.JanggiBoard;
+    using Engine.Domain;
     public enum AIMoveStrategyType
     {
         Random,
@@ -29,7 +30,7 @@ namespace YuJanggi.Controller.AI
 
     public interface IAIMoveStrategy
     {
-        bool TrySelectMove(IBoardModel board, IJanggiRule rule, PlayerTeam team, out AIMove move);
+        bool TrySelectMove(IReadOnlyBoard board, IJanggiRule rule, PlayerTeam team, out AIMove move);
     }
 
     public static class AIMoveStrategyFactory
@@ -49,7 +50,7 @@ namespace YuJanggi.Controller.AI
     {
         private readonly Random _random = new();
 
-        public bool TrySelectMove(IBoardModel board, IJanggiRule rule, PlayerTeam team, out AIMove move)
+        public bool TrySelectMove(IReadOnlyBoard board, IJanggiRule rule, PlayerTeam team, out AIMove move)
         {
             var moves = AIMoveGenerator.Generate(board, rule, team);
             if (moves.Count == 0)
@@ -67,7 +68,7 @@ namespace YuJanggi.Controller.AI
     {
         private readonly Random _random = new();
 
-        public bool TrySelectMove(IBoardModel board, IJanggiRule rule, PlayerTeam team, out AIMove move)
+        public bool TrySelectMove(IReadOnlyBoard board, IJanggiRule rule, PlayerTeam team, out AIMove move)
         {
             var moves = AIMoveGenerator.Generate(board, rule, team);
             if (moves.Count == 0)
@@ -116,7 +117,7 @@ namespace YuJanggi.Controller.AI
             _timeLimitMilliseconds = Math.Max(50, timeLimitMilliseconds);
         }
 
-        public bool TrySelectMove(IBoardModel board, IJanggiRule rule, PlayerTeam team, out AIMove move)
+        public bool TrySelectMove(IReadOnlyBoard board, IJanggiRule rule, PlayerTeam team, out AIMove move)
         {
             var simulation = new AISimulationBoard(board);
             var moves = OrderMoves(simulation, rule, team);
@@ -178,7 +179,7 @@ namespace YuJanggi.Controller.AI
             return true;
         }
 
-        private int Search(IBoardModel board, IJanggiRule rule, PlayerTeam currentTeam, int depth, int alpha, int beta)
+        private int Search(IReadOnlyBoard board, IJanggiRule rule, PlayerTeam currentTeam, int depth, int alpha, int beta)
         {
             ThrowIfTimedOut();
 
@@ -235,7 +236,7 @@ namespace YuJanggi.Controller.AI
         }
 
         private int QuiescenceSearch(
-            IBoardModel board,
+            IReadOnlyBoard board,
             IJanggiRule rule,
             PlayerTeam currentTeam,
             int alpha,
@@ -308,7 +309,7 @@ namespace YuJanggi.Controller.AI
             return maximizing ? alpha : beta;
         }
 
-        private int EvaluateTerminal(IBoardModel board, IJanggiRule rule, PlayerTeam teamWithoutMove)
+        private int EvaluateTerminal(IReadOnlyBoard board, IJanggiRule rule, PlayerTeam teamWithoutMove)
         {
             if (rule is not JanggiRule janggiRule || !janggiRule.IsKingInCheck(board, teamWithoutMove))
                 return Evaluate(board, rule);
@@ -316,7 +317,7 @@ namespace YuJanggi.Controller.AI
             return teamWithoutMove == _maximizingTeam ? -MateScore : MateScore;
         }
 
-        private int Evaluate(IBoardModel board, IJanggiRule rule)
+        private int Evaluate(IReadOnlyBoard board, IJanggiRule rule)
         {
             int score = 0;
             for (int x = 0; x < board.WIDTH; ++x)
@@ -342,7 +343,7 @@ namespace YuJanggi.Controller.AI
             return score;
         }
 
-        private static int GetPositionalValue(IBoardModel board, Pos pos, PieceModel piece)
+        private static int GetPositionalValue(IReadOnlyBoard board, Pos pos, PieceModel piece)
         {
             int value = 0;
             if (piece.Type == PieceType.Soldier)
@@ -364,14 +365,14 @@ namespace YuJanggi.Controller.AI
             return value;
         }
 
-        private static List<AIMove> OrderMoves(IBoardModel board, IJanggiRule rule, PlayerTeam team)
+        private static List<AIMove> OrderMoves(IReadOnlyBoard board, IJanggiRule rule, PlayerTeam team)
         {
             var moves = AIMoveGenerator.Generate(board, rule, team);
             moves.Sort((left, right) => ScoreMove(board, right).CompareTo(ScoreMove(board, left)));
             return moves;
         }
 
-        private static int ScoreMove(IBoardModel board, AIMove move)
+        private static int ScoreMove(IReadOnlyBoard board, AIMove move)
         {
             if (!board.HasPiece(move.To))
                 return 0;
@@ -381,7 +382,7 @@ namespace YuJanggi.Controller.AI
             return (AIPieceValue.Get(captured.Type) * 16) - AIPieceValue.Get(moved.Type);
         }
 
-        private static bool IsKingInCheck(IBoardModel board, IJanggiRule rule, PlayerTeam team)
+        private static bool IsKingInCheck(IReadOnlyBoard board, IJanggiRule rule, PlayerTeam team)
             => rule is JanggiRule janggiRule && janggiRule.IsKingInCheck(board, team);
 
         private void ThrowIfTimedOut()
@@ -390,7 +391,7 @@ namespace YuJanggi.Controller.AI
                 throw new SearchTimeoutException();
         }
 
-        private static ulong CalculatePositionKey(IBoardModel board, PlayerTeam currentTeam)
+        private static ulong CalculatePositionKey(IReadOnlyBoard board, PlayerTeam currentTeam)
         {
             const ulong offsetBasis = 14_695_981_039_346_656_037UL;
             const ulong prime = 1_099_511_628_211UL;
@@ -431,27 +432,27 @@ namespace YuJanggi.Controller.AI
 
     internal static class AIMoveGenerator
     {
-        public static List<AIMove> Generate(IBoardModel board, IJanggiRule rule, PlayerTeam team)
+        public static List<AIMove> Generate(IReadOnlyBoard board, IJanggiRule rule, PlayerTeam team)
         {
-            var moves = new List<AIMove>();
-            var selection = new Selection();
-            for (int x = 0; x < board.WIDTH; ++x)
-            {
-                for (int z = 0; z < board.HEIGHT; ++z)
-                {
-                    var from = new Pos(x, z);
-                    if (!board.HasPiece(from) || board.GetPiece(from).Team != team)
-                        continue;
+            //var moves = new List<AIMove>();
+            //var selection = new Selection();
+            //for (int x = 0; x < board.WIDTH; ++x)
+            //{
+            //    for (int z = 0; z < board.HEIGHT; ++z)
+            //    {
+            //        var from = new Pos(x, z);
+            //        if (!board.HasPiece(from) || board.GetPiece(from).Team != team)
+            //            continue;
 
-                    selection.Clear();
-                    selection.FromPos = from;
-                    rule.FindWays(board, selection);
-                    foreach (var to in selection.LegalCells)
-                        moves.Add(new AIMove(from, to));
-                }
-            }
+            //        selection.Clear();
+            //        selection.FromPos = from;
+            //        rule.FindWays(board, selection);
+            //        foreach (var to in selection.LegalCells)
+            //            moves.Add(new AIMove(from, to));
+            //    }
+            //}
 
-            return moves;
+            //return moves;
         }
     }
 
@@ -473,14 +474,14 @@ namespace YuJanggi.Controller.AI
         }
     }
 
-    internal sealed class AISimulationBoard : IBoardModel
+    internal sealed class AISimulationBoard : IReadOnlyBoard
     {
         private readonly PieceModel[,] _pieces;
         private readonly bool[,] _palaces;
         private Pos _choKingPos;
         private Pos _hanKingPos;
 
-        public AISimulationBoard(IBoardModel source)
+        public AISimulationBoard(IReadOnlyBoard source)
         {
             WIDTH = source.WIDTH;
             HEIGHT = source.HEIGHT;
@@ -551,3 +552,5 @@ namespace YuJanggi.Controller.AI
             => team == PlayerTeam.Cho ? PlayerTeam.Han : PlayerTeam.Cho;
     }
 }
+
+

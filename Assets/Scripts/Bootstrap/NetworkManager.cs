@@ -6,9 +6,11 @@ using UnityEngine;
 
 namespace YuJanggi.BootStrap
 {
+    using Engine.Domain;
+    using Store;
+
     using Network;
     using Lobby.Matching;
-    using Core.V2.Domain;
     using Network.Status;
     using InGame.Handler;
 
@@ -216,3 +218,5 @@ namespace YuJanggi.BootStrap
         #endregion
     }
 }
+
+

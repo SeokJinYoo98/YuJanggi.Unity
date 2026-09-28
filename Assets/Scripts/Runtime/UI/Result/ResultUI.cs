@@ -3,7 +3,7 @@ using TMPro;
 
 namespace YuJanggi.Runtime.UI
 {
-    using Core.V2.Domain;
+    using Engine.Domain;
 
     public class ResultUI : UIVisible
     {
@@ -49,3 +49,5 @@ namespace YuJanggi.Runtime.UI
             => _cnt.SetText("{0}", moveCnt);
     }
 }
+
+

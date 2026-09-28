@@ -6,9 +6,9 @@ namespace YuJanggi.InGame.Views
 {
     using BootStrap;
 
-    using Core.V2.Board;
-    using Core.V2.Domain;
-    using Core.V2.Match;
+    using Engine.JanggiBoard;
+    using Engine.Domain;
+    using Engine.Match;
 
     using Runtime.UI;
     using Runtime.Board;
@@ -117,12 +117,12 @@ namespace YuJanggi.InGame.Views
         }
 
 
-        public void ResetGame(IBoardModel boardModel)
+        public void ResetGame(IReadOnlyBoard boardModel)
         {
             _resultUI.Hide();
             _boardView.SyncBoardState(boardModel);
         }
-        public void InitMatchView(IBoardModel boardModel)
+        public void InitMatchView(IReadOnlyBoard boardModel)
         {
             _boardView.InitPieces(boardModel);
         }
@@ -137,3 +137,5 @@ namespace YuJanggi.InGame.Views
         private readonly AudioManager   _audioManager;
     }
 }
+
+

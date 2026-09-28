@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace YuJanggi.Runtime.Input
 {
-    using Core.V2.Domain;
+    using Engine.Domain;
 
     public abstract class InputHandlerBehaviour : MonoBehaviour, IInputHandler
     {
@@ -20,3 +20,5 @@ namespace YuJanggi.Runtime.Input
         public Pos BoardPos { get; }
     }
 }
+
+

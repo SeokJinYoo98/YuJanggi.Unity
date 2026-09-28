@@ -2,8 +2,8 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
-using YuJanggi.Protocol.V2.Messages;
-using YuJanggi.Protocol.V2.Messages.MessageFactory;
+using YuJanggi.Protocol.Messages;
+using YuJanggi.Protocol.Messages.MessageFactory;
 using YuJanggi.Network.Status;
 
 namespace YuJanggi.Network
@@ -81,3 +81,5 @@ namespace YuJanggi.Network
         }
     }
 }
+
+

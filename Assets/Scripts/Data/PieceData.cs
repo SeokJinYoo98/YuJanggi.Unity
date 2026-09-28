@@ -1,5 +1,5 @@
 using UnityEngine;
-using YuJanggi.Core.V2.Domain;
+using YuJanggi.Engine.Domain;
 namespace YuJanggi.Data.Board
 {
 
@@ -14,3 +14,5 @@ namespace YuJanggi.Data.Board
         public PieceType    Type        => _pieceType;
     }
 }
+
+

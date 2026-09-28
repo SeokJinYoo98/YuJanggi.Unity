@@ -4,10 +4,12 @@ using UnityEngine;
 
 namespace YuJanggi.InGame.Session
 {
-    using Core.V2.Domain;
-    using Core.V2.Match;
+    using Engine.Domain;
+    using Engine.Match;
 
     using InGame.Views;
+    using YuJanggi.Engine.JanggiEngine;
+
     public enum SessionState
     {
         BaseState,
@@ -35,7 +37,7 @@ namespace YuJanggi.InGame.Session
         void RequestStepForward();
         void RequestStepBackward();
         // UI 입력
-        void RequestResetGame(GameSessionInfo info, MatchModel matchModel, MatchView matchView, ReplayView replayView);
+        void RequestResetGame(IReadonlyEngine engine, MatchView matchView, ReplayView replayView);
 
     }
 
@@ -93,14 +95,14 @@ namespace YuJanggi.InGame.Session
 
         #region UIRequest
         // UI 입력
-        public void RequestResetGame(GameSessionInfo info, MatchModel matchModel, MatchView matchView, ReplayView replayView)
+        public void RequestResetGame(IReadonlyEngine engine, MatchView matchView, ReplayView replayView)
         {
             if (_debug)
                 Debug.Log($"{StateName()}_ResetGame");
             replayView.ResetGame();
-            matchModel.InitGame(info.ChoFormation, info.HanFormation);
+            engine.InitEngine();
             matchView.ResetGame(matchModel.Board);
-            matchModel.StartGame();
+            engine.StartEngine();
             BeginNextTurn(matchModel.PlayerTurn);
             _transition.ToLive();
         }
@@ -136,3 +138,5 @@ namespace YuJanggi.InGame.Session
         protected virtual SessionState StateName() => SessionState.BaseState;
     }
 }
+
+

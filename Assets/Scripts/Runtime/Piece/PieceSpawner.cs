@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace YuJanggi.Runtime.Piece
 {
-    using Core.V2.Board;
-    using Core.V2.Domain;
+    using Engine.JanggiBoard;
+    using Engine.Domain;
     using Data.Board;
 
     public class PieceSpawner : MonoBehaviour
@@ -28,3 +28,5 @@ namespace YuJanggi.Runtime.Piece
         }
     }
 }
+
+

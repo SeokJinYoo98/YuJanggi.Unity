@@ -5,8 +5,8 @@ using UnityEngine;
 
 namespace YuJanggi.Runtime.Piece
 {
-    using Core.V2.Board;
-    using Core.V2.Domain;
+    using Engine.JanggiBoard;
+    using Engine.Domain;
     public class PieceManager : MonoBehaviour
     {
         private PieceSpawner _pieceSpawner;
@@ -43,7 +43,7 @@ namespace YuJanggi.Runtime.Piece
             _currPiece = -1;
         }
 
-        public void ResetViews(IBoardModel boardModel)
+        public void ResetViews(IReadOnlyBoard boardModel)
         {
             int width = boardModel.WIDTH;
             int height = boardModel.HEIGHT;
@@ -62,7 +62,7 @@ namespace YuJanggi.Runtime.Piece
                 }
             }
         }
-        public void SpawnPieces(IBoardModel boardModel)
+        public void SpawnPieces(IReadOnlyBoard boardModel)
         {
             int width  = boardModel.WIDTH;
             int height = boardModel.HEIGHT;
@@ -98,3 +98,5 @@ namespace YuJanggi.Runtime.Piece
             => _views[id].MoveTo(to);
     }
 }
+
+

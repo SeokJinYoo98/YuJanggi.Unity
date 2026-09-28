@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace YuJanggi.Runtime.Board
 {
-    using Core.V2.Board;
-    using Core.V2.Domain;
+    using Engine.JanggiBoard;
+    using Engine.Domain;
 
     using Piece;
 
@@ -31,7 +31,7 @@ namespace YuJanggi.Runtime.Board
 
  
 
-        public void InitPieces(IBoardModel model)
+        public void InitPieces(IReadOnlyBoard model)
         {
             _pieces.SpawnPieces(model);
         }
@@ -65,14 +65,14 @@ namespace YuJanggi.Runtime.Board
             _isHighlighted = false;
         }
         
-        public void  ResetGame(IBoardModel model)
+        public void  ResetGame(IReadOnlyBoard model)
         {
             UnHighlight();
             _pieces.ResetViews(model);
             _deathPos = new Vector3(4, 0, -2);
             _deathCnt = 0;
         }
-        public void SyncBoardState(IBoardModel boardModel)
+        public void SyncBoardState(IReadOnlyBoard boardModel)
         {
             _pieces.ResetViews(boardModel);
         }
@@ -83,3 +83,5 @@ namespace YuJanggi.Runtime.Board
         }
     }
 }
+
+

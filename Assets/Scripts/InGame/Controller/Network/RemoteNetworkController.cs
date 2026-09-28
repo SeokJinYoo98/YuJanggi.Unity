@@ -2,11 +2,12 @@ using System;
 
 namespace YuJanggi.Controller
 {
-    using Core.V2.Domain;
+    using Engine.Domain;
 
-    public sealed class NetworkController : IPlayerController
+    public sealed class RemoteNetworkController : IPlayerController
     {
-        public NetworkController(PlayerTeam team)
+        public bool IsLocal => false;
+        public RemoteNetworkController(PlayerTeam team)
         {
             Team = team;
         }
@@ -15,10 +16,7 @@ namespace YuJanggi.Controller
 
         public PlayerTeam Team { get; }
 
-        public bool IsLocal()
-        {
-            return false;
-        }
+
 
         public void BeginTurn()
         {
@@ -37,3 +35,5 @@ namespace YuJanggi.Controller
         }
     }
 }
+
+

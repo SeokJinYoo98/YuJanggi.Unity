@@ -9,9 +9,9 @@ using System.Threading;
 
 namespace YuJanggi.InGame.Handler
 {
-    using Protocol.V2.InGame;
-    using Protocol.V2.Messages;
-    using Protocol.V2.Messages.MessageFactory;
+    using Protocol.InGame;
+    using Protocol.Messages;
+
     using Network;
     using Service;
 
@@ -140,3 +140,5 @@ namespace YuJanggi.InGame.Handler
         #endregion
     }
 }
+
+

@@ -4,25 +4,25 @@ using System.Threading;
 
 namespace YuJanggi.Controller
 {
-    using Core.V2.Board;
-    using Core.V2.Domain;
-    using Core.V2.Rule;
+    using Engine.JanggiBoard;
+    using Engine.Domain;
+    using Engine.Rule;
 
     using AI;
     public class AIController : IPlayerController, IAIController
     {
         public PlayerTeam Team { get; }
         public event Action<Pos, Pos> OnMoveRequest;
-        public bool IsLocal() => false;
+        public bool IsLocal => false;
 
         private readonly IJanggiRule _rule;
-        private readonly IBoardModel _boardModel;
+        private readonly IReadOnlyBoard _boardModel;
         private readonly IAIMoveStrategy _strategy;
 
         private AIMove _selectedMove;
         private bool _hasSelectedMove;
 
-        public AIController(IJanggiRule rule, IBoardModel board, PlayerTeam team, AIMoveStrategyType strategyType)
+        public AIController(IJanggiRule rule, IReadOnlyBoard board, PlayerTeam team, AIMoveStrategyType strategyType)
         {
             Team                = team;
             _rule               = rule;
@@ -108,7 +108,7 @@ namespace YuJanggi.Controller
             }
         }
 
-        private bool TrySelectMove(IBoardModel board, IJanggiRule rule, PlayerTeam team, out AIMove move)
+        private bool TrySelectMove(IReadOnlyBoard board, IJanggiRule rule, PlayerTeam team, out AIMove move)
         {
             // A cancelled worker can take a short time to return.  Serialising
             // access prevents a replacement turn from sharing mutable strategy
@@ -118,3 +118,5 @@ namespace YuJanggi.Controller
         }
     }
 }
+
+

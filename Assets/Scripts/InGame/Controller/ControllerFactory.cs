@@ -1,11 +1,7 @@
 
 
 using System;
-using YuJanggi.Controller.AI;
-using YuJanggi.Core.V2.Board;
-using YuJanggi.Core.V2.Domain;
-using YuJanggi.Core.V2.Match;
-using YuJanggi.Core.V2.Rule;
+using YuJanggi.Engine.Domain;
 using YuJanggi.Data.AI;
 
 namespace YuJanggi.Controller
@@ -22,7 +18,7 @@ namespace YuJanggi.Controller
             {
                 PlayerType.Local => new LocalController(match.Rule, match.Board, team, input),
                 PlayerType.AI => new AIController(match.Rule, match.Board, team, AISessionSettings.Strategy),
-                PlayerType.Network => new NetworkController(team),
+                PlayerType.Network => new RemoteNetworkController(team),
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
             };
         }
@@ -45,3 +41,5 @@ namespace YuJanggi.Controller
 
     }
 }
+
+

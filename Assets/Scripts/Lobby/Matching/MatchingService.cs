@@ -1,6 +1,6 @@
 #nullable enable
 using System;
-using YuJanggi.Core.V2.Domain;
+using YuJanggi.Engine.Domain;
 
 namespace YuJanggi.Lobby.Matching
 {
@@ -131,3 +131,5 @@ namespace YuJanggi.Lobby.Matching
         }
     }
 }
+
+

@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace YuJanggi.InGame.Session
 {
-    using Core.V2.Domain;
-    using Core.V2.Match;
+    using Engine.Domain;
+    using Engine.Match;
 
     using InGame.Views;
     public sealed class SessionEndReplayState : SessionStateBase
@@ -76,7 +76,7 @@ namespace YuJanggi.InGame.Session
             if (!_resultCtx.GameResult.HasValue) _transition.ToLive();
             DisableAllControllers();
             var result          = _resultCtx.GameResult.Value;
-            var isLocalLose     = GetPlayer(result.Loser).IsLocal();
+            var isLocalLose     = GetPlayer(result.Loser).IsLocal;
 
             _matchView.OnGameEnded(in result, isLocalLose);
             _matchView.ShowResultUI();
@@ -94,3 +94,5 @@ namespace YuJanggi.InGame.Session
         protected override SessionState StateName() => SessionState.EndState;
     }
 }
+
+

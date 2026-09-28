@@ -2,8 +2,8 @@ using System.Collections.Generic;
 
 namespace YuJanggi.InGame.Session
 {
-    using Core.V2.Domain;
-    using Core.V2.Match;
+    using Engine.Domain;
+    using Engine.Match;
 
     using InGame.Views;
     public sealed class SessionLiveState : SessionStateBase
@@ -36,7 +36,7 @@ namespace YuJanggi.InGame.Session
         {
             base.OnTurnChanged(next);
             var nextPlayer = GetPlayer(next);
-            _matchView.OnTurnChanged(nextPlayer.IsLocal());
+            _matchView.OnTurnChanged(nextPlayer.IsLocal);
             BeginNextTurn(next);
         }
 
@@ -111,3 +111,5 @@ namespace YuJanggi.InGame.Session
         protected override SessionState StateName() => SessionState.LiveState;
     }
 }
+
+

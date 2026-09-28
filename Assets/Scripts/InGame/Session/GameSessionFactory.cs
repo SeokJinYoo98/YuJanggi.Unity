@@ -2,110 +2,41 @@ using System;
 
 namespace YuJanggi.InGame.Session
 {
-    using Core.V2.Domain;
-    using Core.V2.Match;
+    using Engine.Domain;
 
     using Controller;
 
     using Data.AI;
 
     using InGame.Views;
+
+
     public static class GameSessionFactory
     {
         public static GameSession CreateSession(
-            GameSessionInfo sessionInfo,
             MatchView matchView,
-            MatchModel matchModel,
             ReplayView replayView,
             IInputHandler localInput)
         {
+            var option = JanggiOptionStore.Current;
             IPlayerController cho = CreateController(
-                sessionInfo.Cho,
+                option.Cho,
                 PlayerTeam.Cho,
-                localInput,
-                matchModel);
+                localInput);
             IPlayerController han = CreateController(
-                sessionInfo.Han,
+                option.Han,
                 PlayerTeam.Han,
-                localInput,
-                matchModel);
+                localInput);
 
             return new GameSession(
-                sessionInfo,
                 matchView,
-                matchModel,
                 replayView,
                 cho,
                 han,
                 localInput);
         }
-        public static GameSessionInfo CreateClientSession(
-            Formation choFormation,
-            Formation hanFormation,
-            int turnTimeSelection)
-        {
-            return new GameSessionInfo
-            {
-                Mode = GameModeType.Local,
-                Cho = PlayerType.Local,
-                Han = PlayerType.Local,
-                ChoFormation = choFormation,
-                HanFormation = hanFormation,
-                TurnTime = ConvertTurnTime(turnTimeSelection)
-            };
-        }
-
-        public static GameSessionInfo CreateAISession(
-            PlayerTeam localTeam,
-            Formation localFormation,
-            int turnTimeSelection)
-        {
-            GameSessionInfo session = new()
-            {
-                Mode = GameModeType.AI,
-                TurnTime = ConvertTurnTime(turnTimeSelection)
-            };
-
-            if (localTeam == PlayerTeam.Cho)
-            {
-                session.Cho = PlayerType.Local;
-                session.ChoFormation = localFormation;
-                session.Han = PlayerType.AI;
-                session.HanFormation = GetRandomFormation();
-                return session;
-            }
-
-            session.Cho = PlayerType.AI;
-            session.ChoFormation = GetRandomFormation();
-            session.Han = PlayerType.Local;
-            session.HanFormation = localFormation;
-            return session;
-        }
 
 
-        public static GameSessionInfo CreateNetworkSession(
-
-            PlayerTeam localTeam,
-            Formation cho,
-            Formation han)
-        {
-            if (localTeam is not (PlayerTeam.Cho or PlayerTeam.Han))
-                throw new ArgumentOutOfRangeException(nameof(localTeam));
-            if (!Enum.IsDefined(typeof(Formation), cho))
-                throw new ArgumentOutOfRangeException(nameof(cho));
-            if (!Enum.IsDefined(typeof(Formation), han))
-                throw new ArgumentOutOfRangeException(nameof(han));
-
-            return new GameSessionInfo
-            {
-                Mode = GameModeType.Network,
-                Cho = localTeam == PlayerTeam.Cho ? PlayerType.Local : PlayerType.Network,
-                Han = localTeam == PlayerTeam.Han ? PlayerType.Local : PlayerType.Network,
-                ChoFormation = cho,
-                HanFormation = han,
-                TurnTime = 30
-            };
-        }
         private static IPlayerController CreateController(
             PlayerType type,
             PlayerTeam team,
@@ -116,7 +47,7 @@ namespace YuJanggi.InGame.Session
             {
                 PlayerType.Local => new LocalController(match.Rule, match.Board, team, input),
                 PlayerType.AI => new AIController(match.Rule, match.Board, team, AISessionSettings.Strategy),
-                PlayerType.Network => new NetworkController(team),
+                PlayerType.Network => new RemoteNetworkController(team),
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
             };
         }
@@ -144,3 +75,5 @@ namespace YuJanggi.InGame.Session
     }
 
 }
+
+

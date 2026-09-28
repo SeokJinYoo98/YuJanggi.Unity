@@ -6,13 +6,15 @@ using UnityEngine.Serialization;
 namespace YuJanggi.Lobby
 {
     using BootStrap;
-    using Core.V2.Domain;
+    using Engine.Domain;
     using Data.AI;
     using Network.Status;
     using Lobby.Matching;
 
     using InGame.Session;
     using Runtime.UI;
+    using YuJanggi.Store;
+    using Engine.JanggiOption;
 
     public class LobbyManager : MonoBehaviour
     {
@@ -34,7 +36,21 @@ namespace YuJanggi.Lobby
         private bool _isEnteringGame;
         private string _formationSubmissionMatchId;
         private string _formationFailure;
-        private GameSessionInfo? _preparedGameSession;
+        // 누구책임일까?
+        private static int ConvertTurnTime(int value)
+        {
+            return value switch
+            {
+                0 => 0,
+                1 => 10,
+                2 => 20,
+                3 => 30,
+                4 => 40,
+                5 => 50,
+                6 => 60,
+                _ => 30
+            };
+        }
 
         private void Update()
         {
@@ -102,35 +118,50 @@ namespace YuJanggi.Lobby
             _curr = _localPanel;
             _curr.Show();
         }
-        public void HandleCreateSession()
+        public void HandleGameStart()
         {
             if (_isEnteringGame)
                 return;
 
-            GameSessionInfo info;
             if (_networkManager.IsMatched)
             {
-                if (!TryGetPreparedGameSession(out info))
+                if (!_networkManager.IsOnline || !_networkManager.IsMatched)
                     return;
             }
             else if (_curr is LocalPanelView local)
             {
-                info = GameSessionFactory.CreateClientSession(
-                    (Formation)local.ChoFormation,
-                    (Formation)local.HanFormation,
-                    local.TurnTime);
+                var options = new JanggiOptions()
+                {
+                    GameMode = GameModeType.Local,
+                    PlayerCho = PlayerType.Local,
+                    ChoFormation = (Formation)local.ChoFormation,
+                    PlayerHan = PlayerType.Local,
+                    HanFormation = (Formation)local.HanFormation,
+                    TurnTime = ConvertTurnTime(local.TurnTime)
+                };
+                Store.JanggiOptionStore.SetJanggiOption(options);
             }
             else if (_curr is AIPanelView ai)
             {
-                info = GameSessionFactory.CreateAISession(
-                    (PlayerTeam)ai.LocalPlayer,
-                    (Formation)ai.LocalPlayerFormation,
-                    ai.TurnTime);
-                AISessionSettings.Strategy = ai.Strategy;
+                //var playerIsCho = (PlayerTeam)ai.LocalPlayer == PlayerTeam.Cho;
+                //var options = new JanggiOptions()
+                //{
+                //    GameMode = GameModeType.AI,
+                //    PlayerCho = playerIsCho ? PlayerType.Local : PlayerType.AI,
+                //    ChoFormation = playerIsCho ? Formation.
+                //    PlayerHan = PlayerType.Local,
+                //    HanFormation = (Formation)ai.HanFormation,
+                //    TurnTime = ConvertTurnTime(ai.TurnTime)
+                //};
+                //options = GameSessionFactory.CreateAISession(
+                //    (PlayerTeam)ai.LocalPlayer,
+                //    (Formation)ai.LocalPlayerFormation,
+                //    ai.TurnTime);
+                //AISessionSettings.Strategy = ai.Strategy;
             }
-            else
+            else if (_curr is NetworkPanelView network)
             {
-                return;
+
             }
 
             EnterGameScene(info);
@@ -145,29 +176,22 @@ namespace YuJanggi.Lobby
 
             // 확정 포진은 게임 구성에만 저장하고 Matching 계층에는 남기지 않습니다.
             _formationSubmissionMatchId = matchId;
-            _preparedGameSession = GameSessionFactory.CreateNetworkSession(session.Team, cho, han);
+            _janggiOption = GameSessionFactory.CreateNetworkSession(session.Team, cho, han);
             if (isActiveAndEnabled)
-                HandleCreateSession();
+                HandleGameStart();
         }
 
-        private bool TryGetPreparedGameSession(out GameSessionInfo info)
-        {
-            info = default;
-            if (!_networkManager.IsOnline || !_networkManager.IsMatched || !_preparedGameSession.HasValue)
-                return false;
-            info = _preparedGameSession.Value;
-            return true;
-        }
 
-        private void EnterGameScene(GameSessionInfo info)
+
+        private void EnterGameScene(JanggiOptions options)
         {
             if (_isEnteringGame)
                 return;
             _isEnteringGame = true;
             _showNetworkTimer = false;
             _audioManager?.PlayButton();
-            GameSessionStore.Current = info;
-            _preparedGameSession = null;
+            JanggiOptionStore.Current = options;
+            _janggiOption = null;
             _curr = null;
             SceneManager.LoadScene("JanggiScene");
         }
@@ -276,7 +300,7 @@ namespace YuJanggi.Lobby
             {
                 _formationSubmissionMatchId = null;
                 _formationFailure = null;
-                _preparedGameSession = null;
+                _janggiOption = null;
             }
             if (TryGetPreparedGameSession(out var sessionInfo))
             {
@@ -388,4 +412,6 @@ namespace YuJanggi.Lobby
     }
 
 }
+
+
 
