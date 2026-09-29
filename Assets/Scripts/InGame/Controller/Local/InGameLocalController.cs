@@ -11,11 +11,11 @@ namespace YuJanggi.InGame.Controller
     {
         #region Fields
         // 내부 상태와 참조를 저장하는 변수
-        private readonly IInputHandler _input;
-        private readonly IControllerQuery _query;
-        private readonly List<Pos> _legal   = new(25);
-        private readonly List<Pos> _illegal = new(25);
-        private Pos _selectedPos
+        protected readonly IInputHandler _input;
+        protected readonly IControllerQuery _query;
+        protected readonly List<Pos> _legal   = new(25);
+        protected readonly List<Pos> _illegal = new(25);
+        protected Pos _selectedPos
             = Pos.Invalid;
         #endregion
 
@@ -55,14 +55,14 @@ namespace YuJanggi.InGame.Controller
 
         #region Public Methods
         // 외부에서 호출하는 기능
-        public void BindEvents(IGameInputReceiver receiver)
+        public virtual void BindEvents(IGameInputReceiver receiver)
         {
             _input.OnBoardClicked += HandleBoardClicked;
             _input.OnEmptyClicked += HandleEmptyClicked;
             OnSelectionChanged    += receiver.ChangeSelection;
             OnMoveRequest         += receiver.RequestMove;
         }
-        public void UnBindEvents(IGameInputReceiver receiver)
+        public virtual void UnBindEvents(IGameInputReceiver receiver)
         {
             if (_input != null)
             {
@@ -89,9 +89,7 @@ namespace YuJanggi.InGame.Controller
 
         #region Private Methods
         // 클래스 내부에서 사용하는 보조 로직
-        #endregion
-
-        private void HandleBoardClicked(Pos pos)
+        protected void HandleBoardClicked(Pos pos)
         {
             if (!IsMyTurn)
                 return;
@@ -102,15 +100,14 @@ namespace YuJanggi.InGame.Controller
                 return;
             }
 
-            if (TryMovePiece(pos))
+            if (TryRequestMove(pos))
                 return;
-            
-            
+
+
             if (TryReselectPiece(pos))
                 return;
 
             ClearSelection();
-
         }
         private void HandleEmptyClicked()
         {
@@ -120,11 +117,11 @@ namespace YuJanggi.InGame.Controller
         {
             if (!_query.IsValidPiece(Team, pos, out int id))
                 return false;
-           
+
             Select(id, pos);
             return true;
         }
-        private bool TryMovePiece(Pos toPos)
+        protected virtual bool TryRequestMove(Pos toPos)
         {
             if (!_legal.Contains(toPos))
                 return false;
@@ -146,7 +143,6 @@ namespace YuJanggi.InGame.Controller
 
             return true;
         }
-
         private void ClearSelection()
         {
             _selectedPos = Pos.Invalid;
@@ -173,6 +169,7 @@ namespace YuJanggi.InGame.Controller
                 _legal,
                 _illegal);
         }
+        #endregion
     }
 }
 

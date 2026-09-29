@@ -36,7 +36,7 @@ LobbyManager → JanggiOptionStore → InGameManager
                                     └─ LocalInGameFlow / NetworkInGameFlow
 
 NetworkManager → NetworkConnection → TcpTransport
-               └─ MatchingHandler / RequestDispatcher
+               └─ LobbyNetworkHandler / RequestDispatcher
 ```
 
 ## 주요 코드
@@ -46,7 +46,7 @@ NetworkManager → NetworkConnection → TcpTransport
 | [`LobbyManager`](Assets/Scripts/Lobby/LobbyManager.cs) | 대국 옵션 선택과 씬 진입 |
 | [`NetworkManager`](Assets/Scripts/Bootstrap/NetworkManager.cs) | 연결·매칭 상태 관리 |
 | [`NetworkConnection`](Assets/Scripts/Network/NetworkConnection.cs) | TCP 연결, Handshake 및 수신 루프 |
-| [`MatchingHandler`](Assets/Scripts/Lobby/Matching/MatchingHandler.cs) | 매칭 메시지와 `GameReady` 처리 |
+| [`LobbyNetworkHandler`](Assets/Scripts/Lobby/LobbyNetwork/LobbyNetworkHandler.cs) | 매칭 요청·서버 이벤트와 `GameReady` 처리 |
 | [`InGameManager`](Assets/Scripts/InGame/InGameManager.cs) | 엔진·세션·화면 구성 |
 | [`GameSession`](Assets/Scripts/InGame/Session/GameSession.cs) | 대국 상태와 입력 흐름 관리 |
 
