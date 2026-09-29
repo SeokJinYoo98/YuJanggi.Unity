@@ -9,6 +9,7 @@ namespace YuJanggi.InGame.Controller
     using Runtime.Input;
     using YuJanggi.BootStrap;
     using YuJanggi.Controller;
+    using YuJanggi.Controller.AI;
     using YuJanggi.Engine.JanggiEngine;
     using YuJanggi.Engine.JanggiOption;
     using YuJanggi.InGame.Handler;
@@ -19,6 +20,7 @@ namespace YuJanggi.InGame.Controller
             PlayerType type,
             PlayerTeam team,
             IControllerQuery query,
+            IAIPositionSource aiPositions,
             IInputHandler inputHandler)
               => type switch
               {
@@ -27,7 +29,7 @@ namespace YuJanggi.InGame.Controller
                       team, query, inputHandler),
 
                   PlayerType.AI => CreateAIController(
-                      team, query),
+                      team, query, aiPositions),
 
                   PlayerType.Network => CreateNetworkController(
                       team, query, inputHandler,
@@ -48,11 +50,13 @@ namespace YuJanggi.InGame.Controller
             => new InGameLocalController(team, query, inputHandler);
         private static IInGameController CreateAIController(
                 PlayerTeam team,
-                IControllerQuery query)
+                IControllerQuery query,
+                IAIPositionSource aiPositions)
             => new InGameAIController(
                 team,
                 query,
-                AISessionSettings.Strategy);
+                new AIMoveService(aiPositions,
+                    AIMoveStrategyFactory.Create(AISessionSettings.Strategy)));
         private static IInGameController CreateNetworkController(
                 PlayerTeam team,
                 IControllerQuery query,
