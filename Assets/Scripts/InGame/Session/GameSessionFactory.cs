@@ -21,11 +21,11 @@ namespace YuJanggi.InGame.Session
 
             IInGameController cho = InGameControllerFactory.CreateController(
                 options.PlayerCho, PlayerTeam.Cho,
-                engine, inputHandler);
+                engine, engine, inputHandler);
 
             IInGameController han = InGameControllerFactory.CreateController(
                 options.PlayerHan, PlayerTeam.Han,
-                engine, inputHandler);
+                engine, engine, inputHandler);
 
             return new GameSession(engine, inputHandler, cho, han, liveView, replayView);
         }

@@ -1,9 +1,8 @@
-using System;
-
 namespace YuJanggi.InGame.Controller
 {
     using YuJanggi.Engine.JanggiEngine;
     using Engine.Domain;
+    using YuJanggi.Controller.AI;
 
     public enum AIMoveStrategyType
     {
@@ -14,42 +13,46 @@ namespace YuJanggi.InGame.Controller
 
     internal class InGameAIController : IInGameController
     {
-        private readonly IControllerQuery _query;
-        private readonly AIMoveStrategyType _aiStrategy;
+        private readonly IControllerQuery   _query;
+        private readonly IAIMoveService _moves;
+        public PlayerTeam Team { get; }
+
+        public event MoveRequestHandler OnMoveRequest;
         public InGameAIController(
             PlayerTeam team,
             IControllerQuery query,
-            AIMoveStrategyType strategy)
+            IAIMoveService moves)
         {
             Team = team;
             _query = query;
-            _aiStrategy = strategy;
+            _moves = moves;
         }
-        public PlayerTeam Team { get; }
 
 
-        public bool IsLocal => throw new NotImplementedException();
+        public bool IsLocal => false;
 
-        public event MoveRequestHandler OnMoveRequest;
+
 
         public void BeginTurn()
         {
-            throw new NotImplementedException();
+            if (_query.CurrentTurn != Team)
+                return;
+            if (_moves.TrySelectMove(Team, out var move))
+                OnMoveRequest?.Invoke(move.From, move.To);
         }
 
         public void BindEvents(IGameInputReceiver receiver)
         {
-            throw new NotImplementedException();
+            OnMoveRequest += receiver.RequestMove;
         }
 
         public void EndTurn()
         {
-            throw new NotImplementedException();
         }
 
         public void UnBindEvents(IGameInputReceiver receiver)
         {
-            throw new NotImplementedException();
+            OnMoveRequest -= receiver.RequestMove;
         }
     }
 }
