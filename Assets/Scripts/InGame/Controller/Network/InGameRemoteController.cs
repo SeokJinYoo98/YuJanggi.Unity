@@ -1,12 +1,10 @@
 using System;
 
-namespace YuJanggi.Controller
+namespace YuJanggi.InGame.Controller
 {
     using Engine.Domain;
-    using YuJanggi.Engine.JanggiEngine;
-    using YuJanggi.InGame.Controller;
-    using YuJanggi.InGame.Handler;
-    using YuJanggi.Runtime.Input;
+    using Engine.JanggiEngine;
+    using InGame.Handler;
 
     internal sealed class InGameRemoteController : IInGameController
     {

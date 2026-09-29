@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using YuJanggi.Engine.Domain;
-using YuJanggi.Engine.JanggiEngine;
 
-namespace YuJanggi.Controller.AI
+
+namespace YuJanggi.InGame.Controller.AI
 {
+    using Engine.Domain;
+    using Engine.JanggiEngine;
+    using Unity.Profiling;
+
     internal sealed class MinimaxSearch
     {
         private const int MaxQuiescenceDepth = 4;
@@ -24,9 +27,11 @@ namespace YuJanggi.Controller.AI
             _timeLimitMilliseconds = Math.Max(50, timeLimitMilliseconds);
             _evaluator = new PositionEvaluator(team);
         }
-
+        private static readonly ProfilerMarker SearchMarker =
+            new("AI.MinimaxSearch");
         public bool TrySelectMove(IAIPosition position, out AIMove move)
         {
+            using var _ = SearchMarker.Auto();
             var moves = MoveOrdering.GetOrderedMoves(position, _maximizingTeam);
             if (moves.Count == 0)
             {
@@ -81,6 +86,7 @@ namespace YuJanggi.Controller.AI
             move = bestMove;
             return true;
         }
+
 
         private int Search(IAIPosition position, PlayerTeam currentTeam, int depth, int alpha, int beta)
         {
