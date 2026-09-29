@@ -2,11 +2,15 @@ using System;
 
 namespace YuJanggi.InGame.Controller
 {
+    using Engine.JanggiBoard;
     using Engine.Domain;
 
-    using Runtime.Input;
-    using Engine.JanggiEngine;
+    using BootStrap;
+
     using Handler;
+
+    using Runtime.Input;
+    using YuJanggi.Engine.JanggiEngine;
 
     internal sealed class InGameNetworkController : IInGameController, IInGameLocalController
     {

@@ -32,7 +32,6 @@ namespace YuJanggi.InGame.Session
         public override  void Exit() 
         {
             base.Exit();
-            DisableAllControllers();
             _liveView.UnHighlight();
         }
         public override void OnTurnChanged(PlayerTeam next)

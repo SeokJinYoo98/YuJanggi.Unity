@@ -1,13 +1,8 @@
-using System;
-using System.Threading;
-using Cysharp.Threading.Tasks;
-
 namespace YuJanggi.InGame.Controller
 {
-    using Engine.JanggiEngine;
+    using YuJanggi.Engine.JanggiEngine;
     using Engine.Domain;
-    using AI;
-    using Unity.Profiling;
+    using YuJanggi.Controller.AI;
 
     public enum AIMoveStrategyType
     {
@@ -18,15 +13,8 @@ namespace YuJanggi.InGame.Controller
 
     internal class InGameAIController : IInGameController
     {
-        private static readonly ProfilerMarker ApplyMoveMarker =
-            new("AI.ApplyMove");
-
         private readonly IControllerQuery   _query;
         private readonly IAIMoveService _moves;
-        private CancellationTokenSource _turnCancellation;
-        private bool _bound;
-        private bool _searchRunning;
-        private bool _restartWhenFinished;
         public PlayerTeam Team { get; }
 
         public event MoveRequestHandler OnMoveRequest;
@@ -47,75 +35,23 @@ namespace YuJanggi.InGame.Controller
 
         public void BeginTurn()
         {
-            if (!_bound || _query.CurrentTurn != Team)
+            if (_query.CurrentTurn != Team)
                 return;
-
-            if (_searchRunning)
-            {
-                _restartWhenFinished = true;
-                return;
-            }
-
-            var cancellation = new CancellationTokenSource();
-            _turnCancellation = cancellation;
-            _searchRunning = true;
-            SelectAndApplyMoveAsync(cancellation).Forget();
-        }
-
-        private async UniTask SelectAndApplyMoveAsync(CancellationTokenSource cancellation)
-        {
-            try
-            {
-                var selected = await _moves.SelectMoveAsync(Team, cancellation.Token);
-                await UniTask.SwitchToMainThread();
-
-                if (!selected.HasValue || !_bound ||
-                    !ReferenceEquals(_turnCancellation, cancellation) ||
-                    cancellation.IsCancellationRequested ||
-                    _query.CurrentTurn != Team)
-                    return;
-
-                var move = selected.Value;
-                using var _ = ApplyMoveMarker.Auto();
+            if (_moves.TrySelectMove(Team, out var move))
                 OnMoveRequest?.Invoke(move.From, move.To);
-            }
-            catch (OperationCanceledException)
-            {
-                // EndTurn or event unbinding invalidated this search.
-            }
-            finally
-            {
-                await UniTask.SwitchToMainThread();
-                if (ReferenceEquals(_turnCancellation, cancellation))
-                    _turnCancellation = null;
-                cancellation.Dispose();
-                _searchRunning = false;
-                if (_restartWhenFinished)
-                {
-                    _restartWhenFinished = false;
-                    BeginTurn();
-                }
-            }
         }
 
         public void BindEvents(IGameInputReceiver receiver)
         {
             OnMoveRequest += receiver.RequestMove;
-            _bound = true;
         }
 
         public void EndTurn()
         {
-            _restartWhenFinished = false;
-            var cancellation = _turnCancellation;
-            _turnCancellation = null;
-            cancellation?.Cancel();
         }
 
         public void UnBindEvents(IGameInputReceiver receiver)
         {
-            _bound = false;
-            EndTurn();
             OnMoveRequest -= receiver.RequestMove;
         }
     }

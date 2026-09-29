@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
+using YuJanggi.Engine.Domain;
+using YuJanggi.Engine.JanggiEngine;
+using YuJanggi.InGame.Controller;
 
-
-namespace YuJanggi.InGame.Controller.AI
+namespace YuJanggi.Controller.AI
 {
-    using Engine.Domain;
-    using Engine.JanggiEngine;
-
     public interface IAIMoveStrategy
     {
         bool TrySelectMove(IAIPosition position, PlayerTeam team, out AIMove move);

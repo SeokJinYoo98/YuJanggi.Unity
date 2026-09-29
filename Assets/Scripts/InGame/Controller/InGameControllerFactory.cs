@@ -6,13 +6,13 @@ using YuJanggi.Data.AI;
 
 namespace YuJanggi.InGame.Controller
 {
-    using Engine.JanggiEngine;
     using Runtime.Input;
-    using BootStrap;
-    using Network;
-    using AI;
-
-    using Handler;
+    using YuJanggi.BootStrap;
+    using YuJanggi.Controller;
+    using YuJanggi.Controller.AI;
+    using YuJanggi.Engine.JanggiEngine;
+    using YuJanggi.Engine.JanggiOption;
+    using YuJanggi.InGame.Handler;
 
     internal static class InGameControllerFactory
     {
