@@ -1,9 +1,10 @@
 using System.Collections.Generic;
-using YuJanggi.Engine.Domain;
-using YuJanggi.Engine.JanggiEngine;
 
-namespace YuJanggi.Controller.AI
+namespace YuJanggi.InGame.Controller.AI
 {
+    using Engine.Domain;
+    using Engine.JanggiEngine;
+
     internal sealed class TranspositionTable
     {
         private readonly Dictionary<ulong, Entry> _entries = new();

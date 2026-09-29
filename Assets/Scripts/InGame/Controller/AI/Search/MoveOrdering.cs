@@ -1,8 +1,9 @@
 using System.Collections.Generic;
-using YuJanggi.Engine.JanggiEngine;
 
-namespace YuJanggi.Controller.AI
+
+namespace YuJanggi.InGame.Controller.AI
 {
+    using Engine.JanggiEngine;
     internal static class MoveOrdering
     {
         public static List<AIMove> GetOrderedMoves(IAIPosition position, YuJanggi.Engine.Domain.PlayerTeam team)

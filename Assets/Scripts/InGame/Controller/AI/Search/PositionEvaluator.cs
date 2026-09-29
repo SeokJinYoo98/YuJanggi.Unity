@@ -1,8 +1,9 @@
-using YuJanggi.Engine.Domain;
-using YuJanggi.Engine.JanggiEngine;
 
-namespace YuJanggi.Controller.AI
+
+namespace YuJanggi.InGame.Controller.AI
 {
+    using Engine.Domain;
+    using Engine.JanggiEngine;
     internal sealed class PositionEvaluator
     {
         private const int MateScore = 100_000;
