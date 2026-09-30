@@ -11,16 +11,7 @@ namespace YuJanggi.InGame.Flow
 {
     public interface IInGameFlow : IGameInputReceiver
     {
-        /// <summary>
-        /// 인게임 흐름에 진입합니다.
-        /// 중복 진입을 방지하고 필요한 이벤트를 연결한 뒤,
-        /// 현재 게임 모드에 맞는 진입 절차를 수행합니다.
-        /// </summary>
         UniTask EnterAsync(CancellationToken cancellationToken);
-        /// <summary>
-        /// 현재 인게임 흐름을 종료합니다.
-        /// 중복 종료를 방지하고 진입 시 연결한 이벤트를 해제합니다.
-        /// </summary>
         void Exit();
     }
     internal abstract class InGameFlow : IInGameFlow
@@ -28,10 +19,10 @@ namespace YuJanggi.InGame.Flow
         private bool _entered;
         private CancellationToken _entryToken;
         protected GameSession Session { get; }
-            protected InGameFlow(GameSession session)
-    {
-        Session = session;
-    }
+        protected InGameFlow(GameSession session)
+        {
+            Session = session;
+        }
         public async UniTask EnterAsync(
             CancellationToken cancellationToken)
         {
@@ -55,8 +46,6 @@ namespace YuJanggi.InGame.Flow
                 throw;
             }
         }
-
-
         public void Exit()
         {
             if (!_entered)
@@ -69,7 +58,10 @@ namespace YuJanggi.InGame.Flow
 
         public abstract void RequestMove(Pos from, Pos to);
 
-        public void ChangeSelection(int? pieceId, IReadOnlyList<Pos> legal, IReadOnlyList<Pos> illegal)
+        public void ChangeSelection(
+            int? pieceId,
+            IReadOnlyList<Pos> legal,
+            IReadOnlyList<Pos> illegal)
             => Session.ChangeSelection(pieceId, legal, illegal);
 
         /// <summary>

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 namespace YuJanggi.Runtime.UI
 {
@@ -15,6 +16,16 @@ namespace YuJanggi.Runtime.UI
 
         public int Selected
             => _formationDropDown.value;
+
+        public event Action ConnectRequested;
+        public event Action MatchingRequested;
+        public event Action CloseRequested;
+        public event Action StartRequested;
+
+        public void RequestConnect() => ConnectRequested?.Invoke();
+        public void RequestMatching() => MatchingRequested?.Invoke();
+        public void RequestClose() => CloseRequested?.Invoke();
+        public void RequestStart() => StartRequested?.Invoke();
         private void ClearText()
         {
             _statusText.SetText(string.Empty);

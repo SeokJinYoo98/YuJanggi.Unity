@@ -1,5 +1,6 @@
 
 using TMPro;
+using System;
 
 using UnityEngine;
 
@@ -13,6 +14,9 @@ namespace YuJanggi.Runtime.UI
         public int ChoFormation => _choFormationDropdown.value;
         public int HanFormation => _hanFormationDropdown.value;
         public int TurnTime => _timeDropdown.value;
+
+        public event Action StartRequested;
+        public void RequestStart() => StartRequested?.Invoke();
 
 
     }

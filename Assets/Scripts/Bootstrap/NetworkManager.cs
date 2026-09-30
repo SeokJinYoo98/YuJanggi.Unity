@@ -73,7 +73,7 @@ namespace YuJanggi.BootStrap
         #endregion
         #region Properties
         public MatchInfo? NetworkInfo
-            => NetworkMatchInfoStore.Current;
+            => _lobbyNetworkHandler?.Match;
         public string? MatchId
         {
             get
@@ -104,13 +104,12 @@ namespace YuJanggi.BootStrap
 
 
 
-            _lobbyNetworkHandler = new LobbyNetworkHandler(_connection, _requests, () => MatchId);
+            _lobbyNetworkHandler = new LobbyNetworkHandler(_connection, _requests);
             _inGameHandler = new InGameHandler(_connection, _requests);
 
             _connection.MessageReceived += HandleMessage;
 
             _connection.OnDataChanged += HandleClientDataChanged;
-            _lobbyNetworkHandler.MatchFound += HandleMatchFound;
             _lobbyNetworkHandler.OnDataChanged += HandleClientDataChanged;
         }
         #region Events
@@ -130,7 +129,6 @@ namespace YuJanggi.BootStrap
             if (_lobbyNetworkHandler is not null)
             {
                 _lobbyNetworkHandler.OnDataChanged -= HandleClientDataChanged;
-                _lobbyNetworkHandler.MatchFound    -= HandleMatchFound;
             }
             NetworkMatchInfoStore.Current = default;
 
@@ -150,12 +148,12 @@ namespace YuJanggi.BootStrap
         // Init
 
         // Connection
-        public UniTask ConnectAsync()
+        public UniTask ConnectAsync(CancellationToken cancellationToken = default)
         {
             if (_connection is null)
                 throw new InvalidOperationException(
                     "NetworkManager가 초기화되지 않았습니다.");
-            return _connection.ConnectAsync();
+            return _connection.ConnectAsync(cancellationToken);
         }
         public void Disconnect()
         {
@@ -180,11 +178,6 @@ namespace YuJanggi.BootStrap
 
         #endregion
         #region Event Handlers
-        private void HandleMatchFound(MatchInfo match)
-        {
-            NetworkMatchInfoStore.Current = match;
-        }
-
         private void HandleClientDataChanged()
         {
             if (_connection is null || _lobbyNetworkHandler is null)
