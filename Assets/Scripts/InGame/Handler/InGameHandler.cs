@@ -14,6 +14,7 @@ namespace YuJanggi.InGame.Handler
     using Protocol.Matching;
     using Protocol.Messages;
     using Service;
+    using System.Threading.Tasks;
     using YuJanggi.Engine.Domain;
     using YuJanggi.Network.Handler;
 
@@ -64,24 +65,28 @@ namespace YuJanggi.InGame.Handler
                 cancellationToken);
         }
 
-        public UniTask SendMoveAsync(
+        public async Task<MovePieceResponse> SendMoveRequestAsync(
             PlayerTeam team, Pos from, Pos to,
             CancellationToken cancellationToken = default)
         {
             if (!IsBoardPosition(from) || !IsBoardPosition(to))
                 throw new ArgumentOutOfRangeException(nameof(from), "잘못된 이동 좌표입니다.");
 
-            return SendAsync(
+            var requst = new MovePieceRequest
+            {
+                Team = ToProtocolTeam(team),
+                FromX = (byte)from.X,
+                FromZ = (byte)from.Z,
+                ToX = (byte)to.X,
+                ToZ = (byte)to.Z
+            };
+
+            var message = await SendRequestAsync(
                 ClientMessageType.MovePieceRequest,
-                new MovePieceRequest
-                {
-                    Team = ToProtocolTeam(team),
-                    FromX = (byte)from.X,
-                    FromZ = (byte)from.Z,
-                    ToX = (byte)to.X,
-                    ToZ = (byte)to.Z
-                },
-                cancellationToken);
+                requst,
+                ServerMessageType.MovePieceResponse);
+
+            return message.GetPayload<MovePieceResponse>();
         }
         #endregion
 
