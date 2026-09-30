@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace YuJanggi.InGame.Controller
 {
@@ -32,11 +33,31 @@ namespace YuJanggi.InGame.Controller
 
         #region Constructors
         // 순수 C#
+
+        /*
+         Service
+        - MovePieceEvent 같은 Protocol DTO를 직접 받음
+        - DTO를 클라이언트에서 쓰기 좋은 값으로 변환
+        - 상태 저장이 필요하면 저장
+        - 예: ProtocolPlayerTeam → PlayerTeam, 좌표 → Pos
+
+        Handler
+        - Service에서 올라온 결과를 보고
+        - 어떤 게임 이벤트인지 분배
+        - OnPieceMoved, OnGameStarted 같은 이벤트 발생
+        - Request 전송 흐름도 조정
+
+        Controller
+        - Handler 이벤트 구독
+        - NetworkController / RemoteController 역할에 따라 자기 것이 맞는지 판단
+        - 최종적으로 Engine 쪽 이벤트 호출
+        */
         internal InGameRemoteController(
-                        PlayerTeam team,
+            PlayerTeam team,
             IControllerQuery query,
             InGameHandler networkHandler)
         {
+            Debug.Log("InGameRemoteController 생성");
             Team = team;
             _query = query;
             _networkHandler = networkHandler;

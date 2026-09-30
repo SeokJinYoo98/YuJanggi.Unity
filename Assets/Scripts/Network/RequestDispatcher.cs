@@ -7,8 +7,16 @@ using YuJanggi.Network.Status;
 
 namespace YuJanggi.Network
 {
+    internal interface ISendOnlyRequestDispatcher : IDisposable
+    {
+        UniTask<ServerMessage> SendRequestAsync<TPayload>(
+            ClientMessageType requestType,
+            TPayload payload,
+            ServerMessageType expectedResponseType,
+            CancellationToken cancellationToken = default);
+    }
     /// <summary>RequestId로 응답을 연결하고 요청 대기와 취소를 관리합니다.</summary>
-    public sealed class RequestDispatcher : IDisposable
+    public sealed class RequestDispatcher : ISendOnlyRequestDispatcher
     {
         private readonly NetworkConnection _connection;
         private readonly PendingRequestTracker _pendingRequestTracker = new();
@@ -17,67 +25,121 @@ namespace YuJanggi.Network
         public RequestDispatcher(NetworkConnection connection)
         {
             _connection = connection;
-            _connection.MessageReceived += HandleMessage;
-            // ConnectionClosed에서 도메인 초기화가 끝난 뒤 pending을 정리합니다.
             _connection.OnDataChanged += HandleConnectionChanged;
         }
 
-        public async UniTask<ServerMessage> SendAsync<TPayload>(
-            ClientMessageType requestType, TPayload payload, ServerMessageType expectedResponseType,
+        public void HandleMessage(ServerMessage message)
+        {
+            if (message.RequestId is not null)
+                _pendingRequestTracker.Complete(message);
+        }
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _connection.OnDataChanged -= HandleConnectionChanged;
+            _pendingRequestTracker.Clear();
+        }
+        public async UniTask<ServerMessage> SendRequestAsync<TPayload>(
+            ClientMessageType requestType,
+            TPayload payload,
+            ServerMessageType expectedResponseType,
             CancellationToken cancellationToken = default)
         {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(RequestDispatcher));
-            _connection.EnsureOnline();
+            EnsureAvailable(cancellationToken);
+
+            var request = CreateRequest(requestType, payload);
+            string requestId = GetRequestId(request);
             int version = _connection.Version;
-            var request = ClientMessageFactory.Create(requestType, payload);
-            string requestId = request.RequestId!;
-            using var requestCts = CancellationTokenSource.CreateLinkedTokenSource(
-                cancellationToken, _connection.LifetimeToken);
+
+            using var requestCts = CreateRequestCts(cancellationToken);
             var requestToken = requestCts.Token;
+
             _pendingRequestTracker.Add(requestId, expectedResponseType);
 
             try
             {
-                requestToken.ThrowIfCancellationRequested();
-                await _connection.SendAsync(request, requestToken);
-                requestToken.ThrowIfCancellationRequested();
-                _connection.EnsureCurrentConnection(version);
-                var response = await _pendingRequestTracker.WaitAsync(requestId, requestToken);
-                requestToken.ThrowIfCancellationRequested();
-                _connection.EnsureCurrentConnection(version);
-                return response;
+                await SendAsync(request, version, requestToken);
+
+                return await WaitResponseAsync(
+                    requestId,
+                    version,
+                    requestToken);
             }
             finally
             {
                 _pendingRequestTracker.Remove(requestId);
             }
-            // TODO:
-            // 전송 후 호출자 토큰만 취소되면 서버가 처리했어도 로컬 응답 대기는 끝납니다.
-            // 현재 늦은 응답은 무시되므로 서버와 로컬 상태가 달라질 수 있습니다.
-            // MatchSession / GameSession에서 상태 재조회 또는 서버 취소 정책을 결정해야 합니다.
         }
 
-        private void HandleMessage(ServerMessage message)
+        private void EnsureAvailable(CancellationToken cancellationToken)
         {
-            if (message.RequestId is not null)
-                _pendingRequestTracker.Complete(message);
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(RequestDispatcher));
+
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
+        private static ClientMessage CreateRequest<TPayload>(
+            ClientMessageType requestType,
+            TPayload payload)
+        {
+            return ClientMessageFactory.CreateRequest(
+                requestType,
+                payload);
+        }
+
+        private static string GetRequestId(ClientMessage request)
+        {
+            return request.RequestId
+                ?? throw new InvalidOperationException(
+                    "RequestId가 생성되지 않았습니다.");
+        }
+
+        private CancellationTokenSource CreateRequestCts(
+            CancellationToken cancellationToken)
+        {
+            return CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken,
+                _connection.LifetimeToken);
+        }
+
+        private async UniTask SendAsync(
+            ClientMessage request,
+            int version,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            await _connection.SendAsync(
+                request,
+                cancellationToken);
+
+            cancellationToken.ThrowIfCancellationRequested();
+            _connection.EnsureCurrentConnection(version);
+        }
+
+        private async UniTask<ServerMessage> WaitResponseAsync(
+            string requestId,
+            int version,
+            CancellationToken cancellationToken)
+        {
+            var response =
+                await _pendingRequestTracker.WaitAsync(
+                    requestId,
+                    cancellationToken);
+
+            cancellationToken.ThrowIfCancellationRequested();
+            _connection.EnsureCurrentConnection(version);
+
+            return response;
+        }
         private void HandleConnectionChanged()
         {
             if (_connection.State == ConnectionState.Disconnected)
                 _pendingRequestTracker.Clear();
         }
 
-        public void Dispose()
-        {
-            if (_disposed) return;
-            _disposed = true;
-            _connection.MessageReceived -= HandleMessage;
-            _connection.OnDataChanged -= HandleConnectionChanged;
-            _pendingRequestTracker.Clear();
-        }
     }
 }
 

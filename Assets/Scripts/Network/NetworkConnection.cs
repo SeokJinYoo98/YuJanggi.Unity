@@ -10,6 +10,11 @@ namespace YuJanggi.Network
     using Protocol.Connection;
     using Protocol.Messages;
     using Network.Status;
+
+    internal interface ISendOnlyConnection : IDisposable
+    {
+
+    }
     /// <summary>TCP 연결, Handshake 및 수신 루프의 수명주기를 관리합니다.</summary>
     public sealed class NetworkConnection : IDisposable
     {
@@ -136,7 +141,7 @@ namespace YuJanggi.Network
             var requestMsg = ClientMessageFactory.Create(ClientMessageType.HandshakeRequest, request);
             await _tcpClient.SendAsync(requestMsg, cancellationToken);
             var responseMsg = await _tcpClient.ReceiveAsync(cancellationToken);
-            ValidateResponse(requestMsg, responseMsg, ServerMessageType.ProtocolHandshake);
+            ValidateResponse(requestMsg, responseMsg, ServerMessageType.HandshakeResponse);
             return responseMsg.GetPayload<ProtocolHandshakeResponse>();
         }
 

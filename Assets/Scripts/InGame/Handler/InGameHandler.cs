@@ -9,17 +9,19 @@ using System.Threading;
 
 namespace YuJanggi.InGame.Handler
 {
+    using Network;
     using Protocol.InGame;
     using Protocol.Messages;
-
-    using Network;
     using Service;
+    using YuJanggi.Engine.Domain;
+    using YuJanggi.Network.Handler;
 
     /// <summary>인게임 서버 이벤트의 검증·해석 경계입니다. 게임 상태나 화면은 소유하지 않습니다.</summary>
-    public sealed class InGameHandler : IDisposable
+    public sealed class InGameHandler
     {
         private readonly NetworkConnection _connection;
         private readonly RequestDispatcher _requests;
+
         private readonly InGameService _service;
         private bool _disposed;
 
@@ -33,6 +35,7 @@ namespace YuJanggi.InGame.Handler
 
         #region Events
         // 상태 변화나 특정 동작을 외부에 알리는 이벤트
+        public event Action<PlayerTeam, Pos, Pos>? MoveResponse;
         #endregion
 
         #region Constructors
@@ -44,13 +47,26 @@ namespace YuJanggi.InGame.Handler
             _connection = connection;
             _requests = requests;
             _service = new InGameService();
-            _connection.MessageReceived += HandleMessage;
             _connection.ConnectionClosed += HandleConnectionClosed;
         }
         #endregion
 
         #region Public Methods
         // 외부에서 호출하는 기능
+        public void HandleMessage(ServerMessage message)
+        {
+            if (_disposed || message.RequestId is not null)
+                return;
+
+            switch (message.Type)
+            {
+                case ServerMessageType.GameStartEvent:
+                    HandleGameStart(message);
+                    break;
+                default:
+                    break;
+            }
+        }
         public UniTask WaitUntilGameStartedAsync(
             CancellationToken cancellationToken = default)
         {
@@ -83,7 +99,6 @@ namespace YuJanggi.InGame.Handler
             if (_disposed)
                 return;
             _disposed = true;
-            _connection.MessageReceived -= HandleMessage;
             _connection.ConnectionClosed -= HandleConnectionClosed;
             _service.Reset();
         }
@@ -95,25 +110,13 @@ namespace YuJanggi.InGame.Handler
 
         #region Private Methods
         // 클래스 내부에서 사용하는 보조 로직
-        private void HandleMessage(ServerMessage message)
-        {
-            if (_disposed || message.RequestId is not null)
-                return;
 
-            switch (message.Type)
-            {
-                case ServerMessageType.GameStartEvent:
-                    HandleGameStart(message);
-                    break;
-                default:
-                    break;
-            }
 
             // TODO:
             // MoveApplied / TurnChanged / GameEnded 계약이 추가되면 이곳에서 각각 분기합니다.
             // 현재는 해당 이벤트를 처리하지 않으며, 결과 반영은 InGameSession 등 인게임 계층에 연결해야 합니다.
             // 향후 요청 송신은 _requests를 사용하고 응답 대기는 RequestDispatcher에 맡깁니다.
-        }
+        
         private void HandleGameStart(ServerMessage message)
         {
             if (_service.IsGameStarted)

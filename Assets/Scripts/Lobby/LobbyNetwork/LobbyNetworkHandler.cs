@@ -1,73 +1,79 @@
 #nullable enable
 using Cysharp.Threading.Tasks;
 using System;
-using System.Diagnostics;
 using System.Threading;
 using YuJanggi.Engine.Domain;
-using YuJanggi.Store;
+using YuJanggi.Lobby.Matching;
 using YuJanggi.Network;
+using YuJanggi.Network.Handler;
 using YuJanggi.Protocol.Matching;
 using YuJanggi.Protocol.Messages;
+using YuJanggi.Store;
 
-namespace YuJanggi.Lobby.Matching
+namespace YuJanggi.Lobby.Network
 {
-    /// <summary>매칭 요청·응답과 서버 이벤트를 해석하여 로컬 매칭 상태에 전달합니다.</summary>
-    public sealed class MatchingHandler : IDisposable
+    internal interface ILobbyNetwork
     {
-        private readonly NetworkConnection _connection;
-        private readonly RequestDispatcher _requests;
-        private readonly MatchingService _service;
-        private MatchingFound? _deferredMatchingFound;
+        MatchingState State { get; }
+        bool IsFormationSubmitting { get; }
+        bool IsFormationSubmitted { get; }
+        bool IsGameReady { get; }
+        event Action<MatchInfo>? MatchFound;
+        event Action<string, Formation, Formation>? GameReadyReceived;
+        event Action? OnDataChanged;
+        bool TryGetReadyFormations(out Formation cho, out Formation han);
+        UniTask MatchingStartRequestAsync(CancellationToken cancellationToken = default);
+        UniTask MatchingCancelRequestAsync(CancellationToken cancellationToken = default);
+        UniTask SubmitFormationAsync(Formation formation, CancellationToken cancellationToken = default);
+    }
+
+    internal sealed class LobbyNetworkHandler : NetworkHandler, ILobbyNetwork
+    {
+        private readonly LobbyNetworkService _service = new();
+        private readonly Func<string?> _getMatchId;
+        private MatchingFoundEvent? _deferredMatchingFound;
         private GameReadyEvent? _deferredGameReady;
         private (Formation Cho, Formation Han)? _readyFormations;
-        private bool _disposed;
 
-        private readonly Func<string?> _getMatchId;
         public MatchingState State => _service.State;
         public bool IsFormationSubmitting => _service.IsFormationSubmitting;
         public bool IsFormationSubmitted => _service.SubmittedFormation.HasValue;
         public bool IsGameReady => _service.HasDeliveredGameReady;
         public event Action<MatchInfo>? MatchFound;
         public event Action<string, Formation, Formation>? GameReadyReceived;
-
         public event Action? OnDataChanged
         {
             add => _service.OnDataChanged += value;
             remove => _service.OnDataChanged -= value;
         }
 
-        public MatchingHandler(NetworkConnection connection, RequestDispatcher requests, Func<string?> getMatchId)
+        public LobbyNetworkHandler(NetworkConnection connection, RequestDispatcher requests,
+            Func<string?> getMatchId) : base(connection, requests)
         {
-            _connection = connection;
-            _requests = requests;
-            _service = new MatchingService();
             _getMatchId = getMatchId;
-            _connection.MessageReceived += HandleMessage;
-            _connection.ConnectionClosed += HandleConnectionClosed;
+            Connection.ConnectionClosed += HandleConnectionClosed;
         }
 
-        public async UniTask MatchRequestAsync(CancellationToken cancellationToken = default)
+        public async UniTask MatchingStartRequestAsync(CancellationToken cancellationToken = default)
         {
             EnsureConnected(cancellationToken);
-            int version = _connection.Version;
+            int version = Connection.Version;
             _service.BeginRequest();
             try
             {
-                _connection.EnsureCurrentConnection(version);
-                var message = await _requests.SendAsync(ClientMessageType.MatchingRequest,
-                    new MatchingRequest(), ServerMessageType.MatchingResponse, cancellationToken);
-                _connection.EnsureCurrentConnection(version);
-                if (message.GetPayload<MatchingResponse>().Result != MatchingResult.Accepted)
+                Connection.EnsureCurrentConnection(version);
+                var message = await SendRequestAsync(ClientMessageType.MatchingStartRequest,
+                    new MatchingStartRequest(), ServerMessageType.MatchingStartResponse, cancellationToken);
+                Connection.EnsureCurrentConnection(version);
+                if (message.GetPayload<MatchingStartResponse>().Result != MatchingResult.Accepted)
                     return;
-
                 _service.MatchingAccepted();
-                // Accepted로 상태를 바꾼 후 미리 수신한 이벤트만 적용합니다. 이벤트를 기다리지 않습니다.
-                if (version == _connection.Version && _deferredMatchingFound is not null)
+                if (version == Connection.Version && _deferredMatchingFound is not null)
                     ApplyMatchingFound(_deferredMatchingFound);
             }
             finally
             {
-                if (version == _connection.Version)
+                if (version == Connection.Version)
                 {
                     _deferredMatchingFound = null;
                     _service.EndRequest();
@@ -75,53 +81,51 @@ namespace YuJanggi.Lobby.Matching
             }
         }
 
-        public async UniTask MatchCancelRequestAsync(CancellationToken cancellationToken = default)
+        public async UniTask MatchingCancelRequestAsync(CancellationToken cancellationToken = default)
         {
             EnsureConnected(cancellationToken);
-            int version = _connection.Version;
+            int version = Connection.Version;
             _service.BeginCancel();
             try
             {
-                var message = await _requests.SendAsync(ClientMessageType.MatchingCancelRequest,
+                var message = await SendRequestAsync(ClientMessageType.MatchingCancelRequest,
                     new MatchingCancelRequest(), ServerMessageType.MatchingCancelResponse, cancellationToken);
-                _connection.EnsureCurrentConnection(version);
+                Connection.EnsureCurrentConnection(version);
                 if (message.GetPayload<MatchingCancelResponse>().Result == MatchingCancelResult.Cancelled)
                     _service.MatchingCancelled();
             }
             finally
             {
-                if (version == _connection.Version)
+                if (version == Connection.Version)
                     _service.EndCancel();
             }
         }
 
-        /// <summary>선택한 포진의 접수 성공 여부를 반환합니다. 게임 시작을 기다리지 않습니다.</summary>
-        public async UniTask<bool> SubmitFormationAsync(Formation formation, CancellationToken cancellationToken = default)
+        public async UniTask SubmitFormationAsync(Formation formation,
+            CancellationToken cancellationToken = default)
         {
             EnsureConnected(cancellationToken);
-            var payload = new FormationSubmitRequest { Formation = ToProtocolFormation(formation) };
-            int version = _connection.Version;
+            string? matchId = _getMatchId();
+            if (string.IsNullOrWhiteSpace(matchId))
+                throw new InvalidOperationException("포진을 제출할 매칭 정보가 없습니다.");
+            var payload = new FormationSubmit
+            {
+                MatchId = matchId,
+                Formation = ToProtocolFormation(formation)
+            };
+            int version = Connection.Version;
             _service.BeginFormationSubmit(formation);
             try
             {
-                var message = await _requests.SendAsync(ClientMessageType.FormationSubmit,
-                    payload, ServerMessageType.FormationSubmitResponse, cancellationToken);
-                _connection.EnsureCurrentConnection(version);
-                var response = message.GetPayload<FormationSubmitResponse>();
-                if (response.Result != FormationSubmitResult.Accepted)
-                    return false;
-                _service.FormationAccepted();
+                await SendAsync(ClientMessageType.FormationSubmit, payload, cancellationToken);
+                Connection.EnsureCurrentConnection(version);
+                _service.FormationSent();
                 if (_deferredGameReady is not null)
                     ApplyGameReady(_deferredGameReady);
-                return true;
-                // TODO:
-                // 이전 제출의 응답을 놓친 뒤 재제출하면 AlreadySubmitted를 받을 수 있습니다.
-                // 현재 성공으로 간주하지 않으므로 로컬 SubmittedFormation은 비어 있을 수 있습니다.
-                // MatchSession에서 서버가 접수한 포진 조회 및 재시도 정책을 결정해야 합니다.
             }
             finally
             {
-                if (version == _connection.Version)
+                if (version == Connection.Version)
                 {
                     _deferredGameReady = null;
                     _service.EndFormationSubmit();
@@ -129,26 +133,27 @@ namespace YuJanggi.Lobby.Matching
             }
         }
 
-        private void HandleMessage(ServerMessage message)
+        protected override void OnHandleMessage(ServerMessage message)
         {
             if (message.RequestId is not null)
                 return;
-            if (message.Type == ServerMessageType.GameReady)
+            switch (message.Type)
             {
-                HandleGameReady(message);
-                return;
+                case ServerMessageType.MatchingFoundEvent:
+                    var found = message.GetPayload<MatchingFoundEvent>();
+                    if (_getMatchId() == found.MatchId)
+                        return;
+                    if (_service.State == MatchingState.Requesting)
+                    {
+                        _deferredMatchingFound ??= found;
+                        return;
+                    }
+                    ApplyMatchingFound(found);
+                    break;
+                case ServerMessageType.GameReadyEvent:
+                    HandleGameReady(message);
+                    break;
             }
-            if (message.Type != ServerMessageType.MatchingFound)
-                return;
-            var found = message.GetPayload<MatchingFound>();
-            if (_getMatchId() == found.MatchId)
-                return;
-            if (_service.State == MatchingState.Requesting)
-            {
-                _deferredMatchingFound ??= found;
-                return;
-            }
-            ApplyMatchingFound(found);
         }
 
         private void HandleGameReady(ServerMessage message)
@@ -157,13 +162,11 @@ namespace YuJanggi.Lobby.Matching
             if (_service.HasDeliveredGameReady || _service.State != MatchingState.Matched ||
                 _getMatchId() != ready.MatchId)
                 return;
-            // enum 필드 누락을 기본 포진(HEHE)으로 취급하지 않습니다.
             if (!message.Payload!.Value.TryGetProperty(nameof(GameReadyEvent.ChoFormation), out _) ||
                 !message.Payload.Value.TryGetProperty(nameof(GameReadyEvent.HanFormation), out _))
                 throw new InvalidOperationException("게임 준비 포진이 누락되었습니다.");
             if (!_service.SubmittedFormation.HasValue && _service.IsFormationSubmitting)
             {
-                // 응답 continuation보다 이벤트 처리가 앞서도 Accepted 확인 후 적용합니다.
                 _deferredGameReady ??= ready;
                 return;
             }
@@ -183,7 +186,6 @@ namespace YuJanggi.Lobby.Matching
                 return;
             if (!_service.TryAcceptGameReady())
                 return;
-
             _readyFormations = (cho, han);
             GameReadyReceived?.Invoke(ready.MatchId, cho, han);
         }
@@ -194,9 +196,27 @@ namespace YuJanggi.Lobby.Matching
             han = default;
             if (!IsGameReady || !_readyFormations.HasValue)
                 return false;
-
             (cho, han) = _readyFormations.Value;
             return true;
+        }
+
+        private void ApplyMatchingFound(MatchingFoundEvent found)
+        {
+            if (_service.State != MatchingState.Matching)
+                return;
+            if (found.Opponent is null)
+                throw new InvalidOperationException("매칭 상대 정보가 없습니다.");
+            var match = new MatchInfo(found.MatchId, ToPlayerTeam(found.MyTeam),
+                found.Opponent.PlayerId, found.Opponent.PlayerNickname,
+                ToPlayerTeam(found.Opponent.PlayerTeam));
+            if (string.IsNullOrWhiteSpace(match.MatchId) || match.Team == match.OpponentTeam)
+                throw new InvalidOperationException("잘못된 매칭 정보입니다.");
+            int version = Connection.Version;
+            _readyFormations = null;
+            JanggiOptionStore.ClearNetworkOptions();
+            MatchFound?.Invoke(match);
+            if (version == Connection.Version)
+                _service.MatchingFound();
         }
 
         private static Formation ToCoreFormation(ProtocolFormation formation) => formation switch
@@ -207,29 +227,6 @@ namespace YuJanggi.Lobby.Matching
             ProtocolFormation.HEEH => Formation.HEEH,
             _ => throw new InvalidOperationException($"잘못된 게임 준비 포진입니다: {formation}")
         };
-
-        private void ApplyMatchingFound(MatchingFound found)
-        {
-            // TODO:
-            // 취소 완료 뒤 늦은 이벤트나 이미 매칭된 상태에서 다른 MatchId가 도착할 수 있습니다.
-            // 현재는 Matching 이외의 이벤트를 무시해 기존 매칭 상태를 보존합니다.
-            // MatchSession / GameSession에서 서버 상태 재동기화와 확정 우선순위를 결정해야 합니다.
-            if (_service.State != MatchingState.Matching)
-                return;
-            if (found.Opponent is null)
-                throw new InvalidOperationException("매칭 상대 정보가 없습니다.");
-            var match = new MatchInfo(found.MatchId, ToPlayerTeam(found.MyTeam),
-                found.Opponent.PlayerId, found.Opponent.PlayerNickname, ToPlayerTeam(found.Opponent.PlayerTeam));
-            if (string.IsNullOrWhiteSpace(match.MatchId) || match.Team == match.OpponentTeam)
-                throw new InvalidOperationException("잘못된 매칭 정보입니다.");
-            // 세션 소유자가 저장한 뒤 Matched 알림을 발생시켜 UI가 새 세션을 조회하게 합니다.
-            int version = _connection.Version;
-            _readyFormations = null;
-            JanggiOptionStore.ClearNetworkOptions();
-            MatchFound?.Invoke(match);
-            if (version == _connection.Version)
-                _service.MatchingFound();
-        }
 
         private static PlayerTeam ToPlayerTeam(ProtocolPlayerTeam team) => team switch
         {
@@ -256,23 +253,10 @@ namespace YuJanggi.Lobby.Matching
             _service.Reset();
         }
 
-        private void EnsureConnected(CancellationToken cancellationToken)
+        protected override void OnDispose()
         {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(MatchingHandler));
-            cancellationToken.ThrowIfCancellationRequested();
-            _connection.EnsureOnline();
-        }
-
-        public void Dispose()
-        {
-            if (_disposed) return;
-            _disposed = true;
-            _connection.MessageReceived -= HandleMessage;
-            _connection.ConnectionClosed -= HandleConnectionClosed;
+            Connection.ConnectionClosed -= HandleConnectionClosed;
             HandleConnectionClosed();
         }
     }
 }
-
-

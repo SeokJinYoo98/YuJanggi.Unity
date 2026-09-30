@@ -2,13 +2,13 @@ using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
+using YuJanggi.Network.Status;
 namespace YuJanggi.Lobby
 {
     using BootStrap;
     using Engine.Domain;
     using Data.AI;
-    using Network.Status;
+
     using Lobby.Matching;
 
     using Runtime.UI;
@@ -41,7 +41,7 @@ namespace YuJanggi.Lobby
         {
             if (!_showNetworkTimer || _formationAttempted)
                 return;
-            var matching = _networkManager.Matching;
+            var matching = _networkManager.Lobby;
             if (matching.IsFormationSubmitting || matching.IsFormationSubmitted)
                 return;
 
@@ -67,14 +67,14 @@ namespace YuJanggi.Lobby
         private void OnDestroy()
         {
             if (_networkManager != null)
-                _networkManager.Matching.GameReadyReceived -= HandleGameReady;
+                _networkManager.Lobby.GameReadyReceived -= HandleGameReady;
         }
         private void OnEnable()
         {
             _networkManager = YuJanggiBootStrap.Instance.NetworkManager;
 
             _networkManager.OnNetworkChanged += HandleNetworkChanged;
-            _networkManager.Matching.GameReadyReceived += HandleGameReady;
+            _networkManager.Lobby.GameReadyReceived += HandleGameReady;
 
             HandleNetworkChanged();
         }
@@ -85,7 +85,7 @@ namespace YuJanggi.Lobby
                 return;
 
             _networkManager.OnNetworkChanged -= HandleNetworkChanged;
-            _networkManager.Matching.GameReadyReceived -= HandleGameReady;
+            _networkManager.Lobby.GameReadyReceived -= HandleGameReady;
         }
 
 
@@ -116,14 +116,14 @@ namespace YuJanggi.Lobby
             if (_curr is NetworkPanelView)
             {
                 if (!CanPrepareNetworkOptions() ||
-                    !_networkManager.Matching.TryGetReadyFormations(out var cho, out var han))
+                    !_networkManager.Lobby.TryGetReadyFormations(out var cho, out var han))
                     return false;
 
                 JanggiOptionStore.SetNetworkOptions(NetworkMatchInfoStore.Current.Team, cho, han);
                 return true;
             }
             // 진행 중인 매칭이 있으면 Local/AI 게임을 시작하지 않습니다.
-            if (_networkManager.Matching.State != MatchingState.Idle)
+            if (_networkManager.Lobby.State != MatchingState.Idle)
                 return false;
             if (_curr is LocalPanelView local)
             {
@@ -146,7 +146,7 @@ namespace YuJanggi.Lobby
         private bool CanPrepareNetworkOptions()
         {
             var match = NetworkMatchInfoStore.Current;
-            return _networkManager.IsOnline && _networkManager.Matching.IsGameReady &&
+            return _networkManager.IsOnline && _networkManager.Lobby.IsGameReady &&
                 match != null && !string.IsNullOrWhiteSpace(match.MatchId) &&
                 match.Team is PlayerTeam.Cho or PlayerTeam.Han;
         }
@@ -172,7 +172,6 @@ namespace YuJanggi.Lobby
             _showNetworkTimer = false;
             _audioManager?.PlayButton();
             _curr = null;
-            Debug.Log("왜 안돼?");
             SceneManager.LoadScene("JanggiScene");
         }
 
@@ -301,7 +300,7 @@ namespace YuJanggi.Lobby
             _networkPanel.ChangeMessage(status, NetworkMatchInfoStore.Current?.Team ?? PlayerTeam.None, timerSeconds);
             _lastNetworkTimerSeconds = timerSeconds ?? -1;
 
-            var matching = _networkManager.Matching;
+            var matching = _networkManager.Lobby;
             if (status.ConnectionState == ConnectionState.Connected && matching.State == MatchingState.Matched)
             {
                 if (_formationAttempted || matching.IsFormationSubmitting ||
@@ -309,7 +308,7 @@ namespace YuJanggi.Lobby
                 {
                     _networkPanel.ShowFormationProgress(_formationFailure ??
                         (matching.IsFormationSubmitted
-                            ? "포진 접수 완료 · 서버 준비 대기 중"
+                            ? "포진 전송 완료 · 서버 준비 대기 중"
                             : "포진 제출 중"));
                 }
             }
@@ -321,25 +320,23 @@ namespace YuJanggi.Lobby
 
         private async UniTask SubmitSelectedFormationAsync()
         {
-            var matching = _networkManager.Matching;
+            var matching = _networkManager.Lobby;
             string matchId = NetworkMatchInfoStore.Current?.MatchId;
             if (_isEnteringGame || !_networkManager.IsOnline || string.IsNullOrWhiteSpace(matchId) ||
                 matching.State != MatchingState.Matched || _formationAttempted ||
                 matching.IsFormationSubmitting || matching.IsFormationSubmitted)
                 return;
 
-            // EndFormationSubmit의 재알림이 await 복귀보다 먼저 와도 자동 재전송하지 않습니다.
+            // 전송 완료 알림이 await 복귀보다 먼저 와도 자동 재전송하지 않습니다.
             _formationAttempted = true;
             _formationFailure = null;
             var formation = (Formation)_networkPanel.Selected;
             _networkPanel.ShowFormationProgress("포진 제출 중");
             try
             {
-                bool accepted = await _networkManager.SubmitFormationAsync(formation);
+                await _networkManager.SubmitFormationAsync(formation);
                 if (this == null || _isEnteringGame || NetworkMatchInfoStore.Current?.MatchId != matchId)
                     return;
-                if (!accepted)
-                    _formationFailure = "포진 접수가 거절되었습니다.";
             }
             catch (OperationCanceledException)
             {

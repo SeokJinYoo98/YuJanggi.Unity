@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace YuJanggi.InGame.Controller
 {
@@ -8,20 +9,17 @@ namespace YuJanggi.InGame.Controller
     using Engine.JanggiEngine;
     using Handler;
 
-    internal sealed class InGameNetworkController : IInGameController, IInGameLocalController
+    internal sealed class InGameNetworkController
+        : InGameLocalController
     {
         #region Fields
         // 내부 상태와 참조를 저장하는 변수
-        private readonly InGameHandler    _networkHandler;
-        private readonly IControllerQuery _query;
-        private readonly IInputHandler    _input;
+        private readonly InGameHandler _networkHandler;
         #endregion
 
         #region Properties
         // 상태를 조회하거나 변경하는 접근 속성
-        public PlayerTeam Team { get; }
-        public bool IsLocal
-            => true;
+
         public bool IsTurn
             => Team == _query.CurrentTurn;
         #endregion
@@ -36,38 +34,27 @@ namespace YuJanggi.InGame.Controller
         #region Constructors
         // 순수 C#
         internal InGameNetworkController(
-                        PlayerTeam team,
+            PlayerTeam team,
             IControllerQuery query,
             IInputHandler input,
             InGameHandler networkHandler)
+            : base(team, query, input)
         {
-            Team = team;
-            _query = query;
-            _input = input;
+            Debug.Log("NetworkController 생성");
+
             _networkHandler = networkHandler;
         }
         #endregion
 
         #region Public Methods
         // 외부에서 호출하는 기능
-        public void BeginTurn()
+        public override void BindEvents(IGameInputReceiver receiver)
         {
-            throw new NotImplementedException();
+            base.BindEvents(receiver);
         }
-
-        public void EndTurn()
+        public override void UnBindEvents(IGameInputReceiver receiver)
         {
-            throw new NotImplementedException();
-        }
-
-        public void BindEvents(IGameInputReceiver receiver)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void UnBindEvents(IGameInputReceiver receiver)
-        {
-            throw new NotImplementedException();
+            base.UnBindEvents(receiver);
         }
         #endregion
 

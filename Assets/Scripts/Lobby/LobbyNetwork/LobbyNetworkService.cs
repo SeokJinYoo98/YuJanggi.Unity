@@ -1,26 +1,26 @@
-#nullable enable
+
+
 using System;
 using YuJanggi.Engine.Domain;
+using YuJanggi.Lobby.Matching;
 
-namespace YuJanggi.Lobby.Matching
+namespace YuJanggi.Lobby.Network
 {
-    /// <summary>매칭 진행 상태와 포진 제출의 로컬 규칙을 관리합니다.</summary>
-    internal sealed class MatchingService
+    /// <summary>Protocol 메시지와 무관한 로비 매칭 상태 전이입니다.</summary>
+    internal sealed class LobbyNetworkService
     {
         private bool _requestInProgress;
         private bool _cancelInProgress;
+        private bool _gameReadyDelivered;
 
         public MatchingState State { get; private set; } = MatchingState.Idle;
-
         public Formation? SelectedFormation { get; private set; }
         public Formation? SubmittedFormation { get; private set; }
         public bool IsFormationSubmitting { get; private set; }
-
-
-        private bool _gameReadyDelivered;
         public bool HasDeliveredGameReady => _gameReadyDelivered;
 
         public event Action? OnDataChanged;
+
         public void BeginRequest()
         {
             EnsureOperationAllowed(MatchingState.Idle);
@@ -49,10 +49,7 @@ namespace YuJanggi.Lobby.Matching
 
         public void MatchingCancelled()
         {
-            // TODO:
-            // 취소 응답보다 매칭 확정이 먼저 적용되면 이미 Matched일 수 있습니다.
-            // 현재는 늦은 취소 성공으로 확정된 매칭 정보를 지우지 않습니다.
-            // MatchSession / GameSession에서 서버의 취소·확정 경쟁 정책에 맞춰 복구를 결정해야 합니다.
+            // 매칭 확정이 취소 응답보다 먼저 도착한 경우 확정 상태를 유지합니다.
             if (State == MatchingState.Matched)
                 return;
             ChangeState(MatchingState.Idle);
@@ -66,22 +63,17 @@ namespace YuJanggi.Lobby.Matching
                 ChangeState(MatchingState.Matched);
         }
 
-        public void SelectFormation(Formation formation)
+        public void BeginFormationSubmit(Formation formation)
         {
             if (State != MatchingState.Matched || IsFormationSubmitting || SubmittedFormation.HasValue)
                 throw new InvalidOperationException("현재는 포진을 변경할 수 없습니다.");
             if (!Enum.IsDefined(typeof(Formation), formation))
                 throw new ArgumentOutOfRangeException(nameof(formation));
             SelectedFormation = formation;
-        }
-
-        public void BeginFormationSubmit(Formation formation)
-        {
-            SelectFormation(formation);
             IsFormationSubmitting = true;
         }
 
-        public void FormationAccepted()
+        public void FormationSent()
         {
             SubmittedFormation = SelectedFormation;
         }
@@ -92,7 +84,6 @@ namespace YuJanggi.Lobby.Matching
             OnDataChanged?.Invoke();
         }
 
-        // 세션 데이터는 보관하지 않고 같은 준비 이벤트의 중복 전달만 방지합니다.
         public bool TryAcceptGameReady()
         {
             if (State != MatchingState.Matched || !SubmittedFormation.HasValue || _gameReadyDelivered)
@@ -110,10 +101,6 @@ namespace YuJanggi.Lobby.Matching
             SubmittedFormation = null;
             _gameReadyDelivered = false;
             ChangeState(MatchingState.Idle);
-            // TODO:
-            // 매칭 확정 직후 연결이 끊겨도 서버에는 매치가 남아 있을 수 있습니다.
-            // 현재 매칭 진행 상태는 초기화하며 재연결 시 이전 매치를 복원하지 않습니다.
-            // MatchSession / GameSession에서 재접속 복원과 이탈 정책을 결정해야 합니다.
         }
 
         private void EnsureOperationAllowed(MatchingState requiredState)
@@ -131,5 +118,3 @@ namespace YuJanggi.Lobby.Matching
         }
     }
 }
-
-
