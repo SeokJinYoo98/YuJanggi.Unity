@@ -19,7 +19,7 @@ namespace YuJanggi.Network
     public sealed class NetworkConnection : IDisposable
     {
         private readonly TcpTransport _tcpClient;
-        private CancellationTokenSource? _connectionCts;
+        private CancellationTokenSource? _lifetimeCts;
         private int _connectionVersion;
         private bool _disposed;
         private bool _closing;
@@ -29,7 +29,7 @@ namespace YuJanggi.Network
         public ConnectionState State { get; private set; } = ConnectionState.Disconnected;
         public bool IsOnline => State == ConnectionState.Connected;
         public int Version => _connectionVersion;
-        public CancellationToken LifetimeToken => _connectionCts?.Token
+        public CancellationToken LifetimeToken => _lifetimeCts?.Token
             ?? throw new InvalidOperationException("서버에 연결되어 있지 않습니다.");
 
         public event Action? OnDataChanged;
@@ -78,8 +78,8 @@ namespace YuJanggi.Network
                 throw new InvalidOperationException("이미 연결 중이거나 서버에 연결되어 있습니다.");
 
             int connectionVersion = ++_connectionVersion;
-            _connectionCts = new CancellationTokenSource();
-            CancellationToken connectionToken = _connectionCts.Token;
+            _lifetimeCts = new CancellationTokenSource();
+            CancellationToken connectionToken = _lifetimeCts.Token;
             using var connectCts = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken, connectionToken);
             var connectToken = connectCts.Token;
@@ -138,10 +138,23 @@ namespace YuJanggi.Network
                 YuJanggiProtocolVersion = Protocol.Version.Version.Current,
                 YuJanggiCoreVersion = Engine.Version.Version.Current
             };
-            var requestMsg = ClientMessageFactory.Create(ClientMessageType.HandshakeRequest, request);
-            await _tcpClient.SendAsync(requestMsg, cancellationToken);
-            var responseMsg = await _tcpClient.ReceiveAsync(cancellationToken);
-            ValidateResponse(requestMsg, responseMsg, ServerMessageType.HandshakeResponse);
+
+            var requestMsg = ClientMessageFactory.CreateRequest(
+                ClientMessageType.HandshakeRequest,
+                request);
+
+            await _tcpClient.SendAsync(
+                requestMsg,
+                cancellationToken);
+
+            var responseMsg = await _tcpClient.ReceiveAsync(
+                cancellationToken);
+
+            ValidateResponse(
+                requestMsg,
+                responseMsg,
+                ServerMessageType.HandshakeResponse);
+
             return responseMsg.GetPayload<ProtocolHandshakeResponse>();
         }
 
@@ -176,8 +189,8 @@ namespace YuJanggi.Network
                 return;
             _closing = true;
             ++_connectionVersion;
-            var connectionCts = _connectionCts;
-            _connectionCts = null;
+            var connectionCts = _lifetimeCts;
+            _lifetimeCts = null;
             Failure = failure;
             if (failure is null)
                 HandshakeResponse = null;

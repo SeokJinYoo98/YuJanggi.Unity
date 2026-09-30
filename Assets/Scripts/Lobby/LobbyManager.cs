@@ -183,15 +183,6 @@ namespace YuJanggi.Lobby
 
 
 
-        #region Refactoring : OnlineMatchService
-
-
-
-
-        private void Check(string str)
-            => Debug.Log(str);
-   
-        
         private void ShowHomeUI()
         {
             Debug.Log("Client: 홈 화면으로 돌아갑니다.");
@@ -217,7 +208,7 @@ namespace YuJanggi.Lobby
         }
 
 
-        #endregion
+
         public void HandleClosePanel()
         {
             _audioManager.PlayButton();
@@ -225,7 +216,7 @@ namespace YuJanggi.Lobby
             _curr.Hide();
             _curr = null;
         }
-        #region Network
+
         public void HandleNetworkButton()
         {
             _audioManager.PlayButton();
@@ -387,7 +378,7 @@ namespace YuJanggi.Lobby
                 ? Math.Max(0, GameStartCountdownSeconds - elapsedSeconds)
                 : elapsedSeconds;
         }
-        #endregion
+
     }
 
 }

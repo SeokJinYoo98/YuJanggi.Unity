@@ -3,6 +3,7 @@
 using System;
 using YuJanggi.Engine.Domain;
 using YuJanggi.Lobby.Matching;
+using YuJanggi.Protocol.Matching;
 
 namespace YuJanggi.Lobby.Network
 {
@@ -116,5 +117,7 @@ namespace YuJanggi.Lobby.Network
             State = state;
             OnDataChanged?.Invoke();
         }
+
+
     }
 }

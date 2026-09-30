@@ -1,19 +1,17 @@
 
 
 using System;
-using YuJanggi.Engine.Domain;
-using YuJanggi.Data.AI;
+
 
 namespace YuJanggi.InGame.Controller
 {
+    using Engine.Domain;
     using Engine.JanggiEngine;
+
     using Runtime.Input;
-    using BootStrap;
-    using Network;
+
     using AI;
-
-    using Handler;
-
+    using Data.AI;
     internal static class InGameControllerFactory
     {
         internal static IInGameController CreateController(
@@ -28,16 +26,17 @@ namespace YuJanggi.InGame.Controller
                   => CreateLocalController(
                       team, query, inputHandler),
 
-                  PlayerType.AI => CreateAIController(
+                  PlayerType.AI
+                  => CreateAIController(
                       team, query, aiPositions),
 
-                  PlayerType.Network => CreateNetworkController(
-                      team, query, inputHandler,
-                      YuJanggiBootStrap.Instance.NetworkManager.InGame),
+                  PlayerType.Network
+                  => CreateLocalController(
+                      team, query, inputHandler),
 
-                  PlayerType.Remote => CreateRemoteController(
-                      team, query,
-                      YuJanggiBootStrap.Instance.NetworkManager.InGame),
+                  PlayerType.Remote
+                  => CreateRemoteController(
+                      team),
 
                   _ => throw new ArgumentOutOfRangeException(
                       nameof(type), type, null)
@@ -57,25 +56,9 @@ namespace YuJanggi.InGame.Controller
                 query,
                 new AIMoveService(aiPositions,
                     AIMoveStrategyFactory.Create(AISessionSettings.Strategy)));
-        private static IInGameController CreateNetworkController(
-                PlayerTeam team,
-                IControllerQuery query,
-                IInputHandler inputHandler,
-                InGameHandler networkHandler)
-            => new InGameNetworkController(
-                team,
-                query,
-                inputHandler,
-                networkHandler);
-
         private static IInGameController CreateRemoteController(
-                PlayerTeam team,
-                IControllerQuery query,
-                InGameHandler networkHandler)
-            => new InGameRemoteController(
-                team,
-                query,
-                networkHandler);
+                PlayerTeam team)
+            => new InGameRemoteController(team);
 
     }
 }
