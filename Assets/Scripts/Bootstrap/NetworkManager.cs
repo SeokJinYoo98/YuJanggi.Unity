@@ -11,6 +11,7 @@ namespace YuJanggi.BootStrap
     using Network;
     using Network.Status;
     using Store;
+    using System.Threading;
     using YuJanggi.Lobby.Network;
     using YuJanggi.Protocol.Messages;
 
