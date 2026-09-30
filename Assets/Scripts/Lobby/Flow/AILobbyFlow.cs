@@ -6,13 +6,10 @@ using YuJanggi.Runtime.UI;
 
 namespace YuJanggi.Lobby.Flow
 {
-    internal sealed class AILobbyFlow : ILobbyFlow
+    internal sealed class AILobbyFlow : LocalFlow
     {
         private readonly AIPanelView _view;
         private readonly Func<bool> _canStart;
-        private bool _bound;
-
-        public event Action<LobbyGameStartContext>? GameStartReady;
 
         internal AILobbyFlow(AIPanelView view, Func<bool> canStart)
         {
@@ -20,23 +17,19 @@ namespace YuJanggi.Lobby.Flow
             _canStart = canStart;
         }
 
-        public void BindEvents()
+        protected override void OnBindEvents()
         {
-            if (_bound) return;
-            _bound = true;
             _view.StartRequested += HandleStartRequested;
         }
 
-        public void UnBindEvents()
+        protected override void OnUnBindEvents()
         {
-            if (!_bound) return;
-            _bound = false;
             _view.StartRequested -= HandleStartRequested;
         }
 
         private void HandleStartRequested()
         {
-            if (!_bound || !_canStart()) return;
+            if (!IsBound || !_canStart()) return;
             bool localIsCho = (PlayerTeam)_view.LocalPlayer == PlayerTeam.Cho;
             var localFormation = (Formation)_view.LocalPlayerFormation;
             var aiFormation = (Formation)UnityEngine.Random.Range(
@@ -50,7 +43,7 @@ namespace YuJanggi.Lobby.Flow
                 HanFormation = localIsCho ? aiFormation : localFormation,
                 TurnTime = LobbyOptionValues.TurnTime(_view.TurnTime)
             };
-            GameStartReady?.Invoke(new LobbyGameStartContext(options, _view.Strategy));
+            RaiseGameStartReady(new LobbyGameStartContext(options, _view.Strategy));
         }
     }
 }

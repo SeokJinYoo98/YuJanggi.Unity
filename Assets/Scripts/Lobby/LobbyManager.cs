@@ -14,10 +14,11 @@ namespace YuJanggi.Lobby
         [SerializeField] private NetworkPanelView _networkPanel;
         [SerializeField] private AIPanelView _aiPanel;
         [SerializeField] private LocalPanelView _localPanel;
+        private AudioManager _audioManager;
 
         private UIVisible _curr;
         private Action _requestStart;
-        private AudioManager _audioManager;
+
         private ILobbyFlow[] _flows;
         private NetworkLobbyFlow _networkFlow;
         private bool _eventsBound;
@@ -42,24 +43,32 @@ namespace YuJanggi.Lobby
         {
             if (_eventsBound) return;
             _eventsBound = true;
+
             foreach (var flow in _flows)
                 flow.GameStartReady += HandleGameStartReady;
+
             _networkFlow.PanelRequested += HandleNetworkPanelRequested;
-            // Network Flow는 패널 표시와 무관하게 로비 동안 서버 이벤트를 관찰한다.
+
             foreach (var flow in _flows)
                 flow.BindEvents();
         }
 
-        private void Update() => _networkFlow?.Tick();
+        private void Update()
+            => _networkFlow?.Tick();
 
-        private void OnDisable() => UnBindFlows();
-        private void OnDestroy() => UnBindFlows();
+        private void OnDisable()
+            => UnBindFlows();
+        private void OnDestroy()
+            => UnBindFlows();
 
         private void UnBindFlows()
         {
             if (!_eventsBound) return;
+
             _eventsBound = false;
+
             _networkFlow.PanelRequested -= HandleNetworkPanelRequested;
+
             foreach (var flow in _flows)
             {
                 flow.GameStartReady -= HandleGameStartReady;

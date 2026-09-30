@@ -5,7 +5,6 @@ using YuJanggi.Lobby.Matching;
 
 namespace YuJanggi.Lobby.Flow
 {
-    // Flow가 확정한 시작 데이터. Store 저장과 씬 이동은 LobbyManager가 수행한다.
     internal sealed class LobbyGameStartContext
     {
         public JanggiOptions Options { get; }
