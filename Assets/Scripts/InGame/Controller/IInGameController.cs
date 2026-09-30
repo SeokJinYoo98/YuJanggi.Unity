@@ -22,8 +22,6 @@ namespace YuJanggi.InGame.Controller
     }
     internal interface IInGameController
     {
-        event MoveRequestHandler OnMoveRequest;
-
         PlayerTeam Team { get; }
         bool IsLocal { get; }
 

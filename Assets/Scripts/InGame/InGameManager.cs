@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -49,6 +50,7 @@ namespace YuJanggi.InGame
         private InGameHandler   _inGameHandler;
 
         private IInGameFlow     _inGameFlow;
+        private CancellationTokenSource _flowCancellation;
         #endregion
 
         #region Properties
@@ -63,7 +65,6 @@ namespace YuJanggi.InGame
         private void Awake()
         {
             PrepareBootStrap();
-            ShowJanggiOption();
 
             CreateInGameSession();
             CreateInGameFlow();
@@ -74,13 +75,9 @@ namespace YuJanggi.InGame
         }
         private void OnEnable()
         {
-            _session?.BindEvents();
-        }
-        private void Start()
-        {
-            _inGameFlow
-             .EnterAsync(this.GetCancellationTokenOnDestroy()) // 
-             .Forget();
+            _session?.BindEvents(_inGameFlow);
+            _flowCancellation = new CancellationTokenSource();
+            _inGameFlow?.EnterAsync(_flowCancellation.Token).Forget();
         }
         private void Update()
         {
@@ -88,7 +85,11 @@ namespace YuJanggi.InGame
         }
         private void OnDisable()
         {
-            _session?.UnBindEvents();
+            _flowCancellation?.Cancel();
+            _inGameFlow?.Exit();
+            _session?.UnBindEvents(_inGameFlow);
+            _flowCancellation?.Dispose();
+            _flowCancellation = null;
         }
         private void OnDestroy()
         {
@@ -107,7 +108,8 @@ namespace YuJanggi.InGame
                     _inGameFlow = InGameFlowFactory.CreateLocal(_session);
                     break;
                 case GameModeType.Network:
-                    _inGameFlow = InGameFlowFactory.CreateNetwork(_session, _inGameHandler);
+                    _inGameFlow = InGameFlowFactory.CreateNetwork(
+                        _session, _inGameHandler, NetworkMatchInfoStore.Current.Team);
                     break;
 
             }
@@ -120,24 +122,7 @@ namespace YuJanggi.InGame
             _inGameHandler =
                 YuJanggiBootStrap.Instance.NetworkManager.InGame;
         }
-        private void ShowJanggiOption()
-        {
-            var janggiOptions = JanggiOptionStore.Current;
-   
-            if (janggiOptions.GameMode == GameModeType.Network)
-            {
-                var networkInfo = NetworkMatchInfoStore.Current;
-                Debug.Log($"MatchID: {networkInfo.MatchId}");
-            }
-               
-            Debug.Log(
-                $"GameMode: {janggiOptions.GameMode}, " +
-                $"Cho: {janggiOptions.PlayerCho}, " +
-                $"ChoFormation: {janggiOptions.ChoFormation}, " +
-                $"Han: {janggiOptions.PlayerHan}, " +
-                $"HanFormation: {janggiOptions.HanFormation}, " +
-                $"TurnTime: {janggiOptions.TurnTime}");
-        }
+
         private void CreateInGameSession()
         {
             var options =
@@ -178,16 +163,19 @@ namespace YuJanggi.InGame
         {
             var option = JanggiOptionStore.Current;
 
-            if (option.GameMode == GameModeType.Local) return;
-            if (option.PlayerCho  == PlayerType.Local) return;
+            if (option.GameMode == GameModeType.Local)
+                return;
+
+            var localTeam =
+                option.PlayerCho is PlayerType.Local or PlayerType.Network
+                    ? PlayerTeam.Cho
+                    : PlayerTeam.Han;
+
+            if (localTeam == PlayerTeam.Cho)
+                return;
 
             _boardView.SetDeathPosition(new Vector3(4, 0, 11));
             _localInput.RotateCamera(PlayerTeam.Han);
-        }
-
-        private async UniTask NotifyGameSceneReadyAsync()
-        {
-            await _inGameHandler.SendGameSceneReadyAsync();
         }
         #endregion
 
@@ -218,7 +206,6 @@ namespace YuJanggi.InGame
         public void HandleMainLobby()
         {
             _audioManager.PlayButton();
-            _session.UnBindEvents();
             SceneManager.LoadScene("LobbyScene");
         }
         public void HandleReplayModeEnter()

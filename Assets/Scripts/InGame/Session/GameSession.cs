@@ -17,7 +17,7 @@ namespace YuJanggi.InGame.Session
         void ToEnd();
         void ToEndReplay();
     }
-    internal class GameSession : ISessionTransition, IGameInputReceiver, IGameResultContext
+    internal class GameSession : ISessionTransition, IGameResultContext
     {
 
         #region Fields
@@ -89,7 +89,12 @@ namespace YuJanggi.InGame.Session
             _playerCho.BeginTurn();
             _playerHan.EndTurn();
         }
-        public void BindEvents()
+        public bool IsCurrentTurn(PlayerTeam team)
+            => _currState == SessionState.LiveState && _engine.CurrentTurn == team;
+
+        public bool IsStarted => _play;
+
+        public void BindEvents(IGameInputReceiver inputReceiver)
         {
             _engine.BindEvents();
             _liveView.BindUI(_engine.GameStateEvents);
@@ -101,10 +106,10 @@ namespace YuJanggi.InGame.Session
             events.OnGameEnded     += OnGameEnded;
             events.OnTurnChanged   += OnTurnChanged;
 
-            _playerCho.BindEvents(this); // this = IGameInputReceiver
-            _playerHan.BindEvents(this); // this = IGameInputReceiver
+            _playerCho.BindEvents(inputReceiver);
+            _playerHan.BindEvents(inputReceiver);
         }
-        public void UnBindEvents()
+        public void UnBindEvents(IGameInputReceiver inputReceiver)
         {
             _engine.UnBindEvents();
             _liveView.UnBindUI(_engine.GameStateEvents);
@@ -116,8 +121,8 @@ namespace YuJanggi.InGame.Session
             events.OnTurnChanged   -= OnTurnChanged;
             events.OnGameEnded     -= OnGameEnded;
 
-            _playerCho.UnBindEvents(this); 
-            _playerHan.UnBindEvents(this);
+            _playerCho.UnBindEvents(inputReceiver);
+            _playerHan.UnBindEvents(inputReceiver);
         }
 
         public void Tick(float deltaTime)

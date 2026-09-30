@@ -143,7 +143,7 @@ namespace YuJanggi.InGame.Controller
 
             return true;
         }
-        private void ClearSelection()
+        protected void ClearSelection()
         {
             _selectedPos = Pos.Invalid;
 

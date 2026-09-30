@@ -3,10 +3,13 @@
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using YuJanggi.InGame.Session;
+using YuJanggi.InGame.Controller;
+using YuJanggi.Engine.Domain;
+using System.Collections.Generic;
 
 namespace YuJanggi.InGame.Flow
 {
-    public interface IInGameFlow
+    public interface IInGameFlow : IGameInputReceiver
     {
         /// <summary>
         /// 인게임 흐름에 진입합니다.
@@ -23,6 +26,7 @@ namespace YuJanggi.InGame.Flow
     internal abstract class InGameFlow : IInGameFlow
     {
         private bool _entered;
+        private CancellationToken _entryToken;
         protected GameSession Session { get; }
             protected InGameFlow(GameSession session)
     {
@@ -37,15 +41,17 @@ namespace YuJanggi.InGame.Flow
             cancellationToken.ThrowIfCancellationRequested();
 
             _entered = true;
-            Bind();
+            _entryToken = cancellationToken;
 
             try
             {
+                Bind();
                 await StartAsync(cancellationToken);
             }
             catch
             {
-                Exit();
+                if (_entered && _entryToken == cancellationToken)
+                    Exit();
                 throw;
             }
         }
@@ -57,8 +63,14 @@ namespace YuJanggi.InGame.Flow
                 return;
 
             _entered = false;
+            _entryToken = default;
             UnBind();
         }
+
+        public abstract void RequestMove(Pos from, Pos to);
+
+        public void ChangeSelection(int? pieceId, IReadOnlyList<Pos> legal, IReadOnlyList<Pos> illegal)
+            => Session.ChangeSelection(pieceId, legal, illegal);
 
         /// <summary>
         /// 현재 게임 모드의 흐름 진행에 필요한 이벤트를 연결합니다.

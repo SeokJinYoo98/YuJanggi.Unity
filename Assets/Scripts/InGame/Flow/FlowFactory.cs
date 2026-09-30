@@ -14,10 +14,12 @@ namespace YuJanggi.InGame.Flow
 
         internal static IInGameFlow CreateNetwork(
             GameSession session,
-            InGameHandler handler)
+            InGameHandler handler,
+            PlayerTeam localTeam)
             => new NetworkInGameFlow(
                 session,
-                handler);
+                handler,
+                localTeam);
     }
 }
 

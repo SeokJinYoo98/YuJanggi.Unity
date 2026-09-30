@@ -1,7 +1,6 @@
 #nullable enable
 using Cysharp.Threading.Tasks;
 using System;
-using System.Threading;
 using UnityEngine;
 
 namespace YuJanggi.BootStrap
@@ -25,8 +24,15 @@ namespace YuJanggi.BootStrap
     {
      
         private LobbyNetworkHandler? _lobbyNetworkHandler;
+
+        private InGameHandler? _inGameHandler;
+
         internal ILobbyNetwork Lobby
             => _lobbyNetworkHandler
+               ?? throw new InvalidOperationException(
+                   "NetworkManager가 초기화되지 않았습니다.");
+        internal InGameHandler InGame
+            => _inGameHandler
                ?? throw new InvalidOperationException(
                    "NetworkManager가 초기화되지 않았습니다.");
         internal void HandleMessage(ServerMessage message)
@@ -43,6 +49,7 @@ namespace YuJanggi.BootStrap
                     _lobbyNetworkHandler?.HandleMessage(message);
                     break;
                 case ServerMessageType.GameStartEvent:
+                case ServerMessageType.MovePieceEvent:
                     _inGameHandler?.HandleMessage(message);
                     break;
             }
@@ -59,16 +66,10 @@ namespace YuJanggi.BootStrap
 
 
         #region Fields
-        private CancellationTokenSource? _lifetimeCts;
-        private CancellationTokenSource? _connectingRequestCts;
-        private CancellationTokenSource? _matchingRequestCts;
-
         private NetworkConnection? _connection;
         private RequestDispatcher? _requests;
 
        
-        private InGameHandler? _inGameHandler;
-
         #endregion
         #region Properties
         public MatchInfo? NetworkInfo
@@ -81,9 +82,6 @@ namespace YuJanggi.BootStrap
                 return string.IsNullOrEmpty(matchId) ? null : matchId;
             }
         }
-
-        public InGameHandler InGame
-            => _inGameHandler ?? throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
 
         public bool IsMatched
             => Status.MatchingState == MatchingState.Matched;
@@ -108,7 +106,6 @@ namespace YuJanggi.BootStrap
 
             _lobbyNetworkHandler = new LobbyNetworkHandler(_connection, _requests, () => MatchId);
             _inGameHandler = new InGameHandler(_connection, _requests);
-            _lifetimeCts = new CancellationTokenSource();
 
             _connection.MessageReceived += HandleMessage;
 
@@ -133,13 +130,12 @@ namespace YuJanggi.BootStrap
             if (_lobbyNetworkHandler is not null)
             {
                 _lobbyNetworkHandler.OnDataChanged -= HandleClientDataChanged;
-                _lobbyNetworkHandler.MatchFound -= HandleMatchFound;
+                _lobbyNetworkHandler.MatchFound    -= HandleMatchFound;
             }
             NetworkMatchInfoStore.Current = default;
 
             // 연결 종료가 Service 초기화와 pending 취소를 먼저 수행합니다.
             _connection?.Dispose();
-            _lifetimeCts?.Cancel();
             _lobbyNetworkHandler?.Dispose();
             _inGameHandler?.Dispose();
             _requests?.Dispose();
@@ -148,63 +144,38 @@ namespace YuJanggi.BootStrap
             _lobbyNetworkHandler = null;
             _inGameHandler = null;
 
-            _lifetimeCts?.Dispose();
-            _lifetimeCts = null;
         }
         #endregion
         #region Public Methods
         // Init
 
         // Connection
-        public async UniTask ConnectAsync()
+        public UniTask ConnectAsync()
         {
-            if (_connection is null || _lifetimeCts is null)
+            if (_connection is null)
                 throw new InvalidOperationException(
                     "NetworkManager가 초기화되지 않았습니다.");
-
-            if (_connectingRequestCts is not null || IsOnline)
-                throw new InvalidOperationException(
-                    "이미 연결 중이거나 서버에 연결되어 있습니다.");
-
-            using var connectCts =
-                CancellationTokenSource.CreateLinkedTokenSource(
-                    _lifetimeCts.Token);
-
-            _connectingRequestCts = connectCts;
-
-            try
-            {
-                await _connection.ConnectAsync(
-                    connectCts.Token);
-            }
-            finally
-            {
-                if (_connectingRequestCts == connectCts)
-                    _connectingRequestCts = null;
-            }
+            return _connection.ConnectAsync();
         }
         public void Disconnect()
         {
-            // 이전 연결을 무효화하고 상태를 초기화한 뒤 요청 취소를 완료합니다.
             _connection?.Disconnect();
-            _matchingRequestCts?.Cancel();
-            _connectingRequestCts?.Cancel();
         }
 
-        // Matching: Unity 요청 수명만 관리하고 메시지 해석은 Handler에 위임합니다.
+        // 로비 요청의 수명과 메시지 처리는 Handler에 위임합니다.
         public UniTask StartMatchMakingAsync()
         {
-            return RunMatchingRequestAsync((handler, token) => handler.MatchingStartRequestAsync(token));
+            return Lobby.MatchingStartRequestAsync();
         }
         public UniTask CancelMatchMakingAsync()
         {
-            return RunMatchingRequestAsync((handler, token) => handler.MatchingCancelRequestAsync(token));
+            return Lobby.MatchingCancelRequestAsync();
         }
 
         /// <summary>선택한 포진을 전송합니다. 게임 준비는 서버 이벤트로 확정됩니다.</summary>
         public UniTask SubmitFormationAsync(Formation formation)
         {
-            return RunMatchingRequestAsync((handler, token) => handler.SubmitFormationAsync(formation, token));
+            return Lobby.SubmitFormationAsync(formation);
         }
 
         #endregion
@@ -228,30 +199,6 @@ namespace YuJanggi.BootStrap
                 _lobbyNetworkHandler.State);
 
             OnNetworkChanged?.Invoke();
-        }
-
-        #endregion
-        #region Private Methods
-        private async UniTask RunMatchingRequestAsync(
-            Func<ILobbyNetwork, CancellationToken, UniTask> sendRequest)
-        {
-            if (_connection is null || _lifetimeCts is null)
-                throw new InvalidOperationException("NetworkManager가 초기화되지 않았습니다.");
-            if (_matchingRequestCts is not null)
-                throw new InvalidOperationException("이미 매칭 신청 또는 취소 요청을 처리 중입니다.");
-
-            using var matchingCts = CancellationTokenSource.CreateLinkedTokenSource(_lifetimeCts.Token);
-            _matchingRequestCts = matchingCts;
-            try
-            {
-                matchingCts.Token.ThrowIfCancellationRequested();
-                await sendRequest(Lobby, matchingCts.Token);
-            }
-            finally
-            {
-                if (_matchingRequestCts == matchingCts)
-                    _matchingRequestCts = null;
-            }
         }
 
         #endregion

@@ -11,22 +11,17 @@ namespace YuJanggi.InGame.Handler
 {
     using Network;
     using Protocol.InGame;
+    using Protocol.Matching;
     using Protocol.Messages;
     using Service;
     using YuJanggi.Engine.Domain;
     using YuJanggi.Network.Handler;
 
     /// <summary>인게임 서버 이벤트의 검증·해석 경계입니다. 게임 상태나 화면은 소유하지 않습니다.</summary>
-    public sealed class InGameHandler
+    internal sealed class InGameHandler : NetworkHandler
     {
-        private readonly NetworkConnection _connection;
-        private readonly RequestDispatcher _requests;
-
-        private readonly InGameService _service;
-        private bool _disposed;
-
         #region Fields
-        // 내부 상태와 참조를 저장하는 변수
+        private readonly InGameService _service;
         #endregion
 
         #region Properties
@@ -35,7 +30,7 @@ namespace YuJanggi.InGame.Handler
 
         #region Events
         // 상태 변화나 특정 동작을 외부에 알리는 이벤트
-        public event Action<PlayerTeam, Pos, Pos>? MoveResponse;
+        public event Action<PlayerTeam, Pos, Pos>? MoveConfirmed;
         #endregion
 
         #region Constructors
@@ -43,30 +38,15 @@ namespace YuJanggi.InGame.Handler
         public InGameHandler(
             NetworkConnection connection,
             RequestDispatcher requests)
+            : base(connection, requests)
         {
-            _connection = connection;
-            _requests = requests;
             _service = new InGameService();
-            _connection.ConnectionClosed += HandleConnectionClosed;
+            Connection.ConnectionClosed += HandleConnectionClosed;
         }
         #endregion
 
         #region Public Methods
         // 외부에서 호출하는 기능
-        public void HandleMessage(ServerMessage message)
-        {
-            if (_disposed || message.RequestId is not null)
-                return;
-
-            switch (message.Type)
-            {
-                case ServerMessageType.GameStartEvent:
-                    HandleGameStart(message);
-                    break;
-                default:
-                    break;
-            }
-        }
         public UniTask WaitUntilGameStartedAsync(
             CancellationToken cancellationToken = default)
         {
@@ -74,49 +54,111 @@ namespace YuJanggi.InGame.Handler
             return _service.WaitUntilGameStartedAsync(cancellationToken);
         }
 
-        public async UniTask SendGameSceneReadyAsync(
+        public UniTask SendGameSceneReadyAsync(
             CancellationToken cancellationToken = default)
         {
-            EnsureConnected(cancellationToken);
-            int version = _connection.Version;
-            using var requestCts = CancellationTokenSource.CreateLinkedTokenSource(
-                cancellationToken, _connection.LifetimeToken);
             // 대응 Response 계약이 없으므로 RequestDispatcher의 응답 대기를 등록하지 않습니다.
-            var payload = new GameSceneReadyRequest();
-
-            var message = ClientMessageFactory.Create(
-                ClientMessageType.GameSceneReadyRequest,
-                payload);
-
-            await _connection.SendAsync(
-                message,
-                requestCts.Token);
-            requestCts.Token.ThrowIfCancellationRequested();
-            _connection.EnsureCurrentConnection(version);
+            return SendAsync(
+                ClientMessageType.GameSceneReady,
+                new GameSceneReady(),
+                cancellationToken);
         }
-        public void Dispose()
+
+        public UniTask SendMoveAsync(
+            PlayerTeam team, Pos from, Pos to,
+            CancellationToken cancellationToken = default)
         {
-            if (_disposed)
+            if (!IsBoardPosition(from) || !IsBoardPosition(to))
+                throw new ArgumentOutOfRangeException(nameof(from), "잘못된 이동 좌표입니다.");
+
+            return SendAsync(
+                ClientMessageType.MovePieceRequest,
+                new MovePieceRequest
+                {
+                    Team = ToProtocolTeam(team),
+                    FromX = (byte)from.X,
+                    FromZ = (byte)from.Z,
+                    ToX = (byte)to.X,
+                    ToZ = (byte)to.Z
+                },
+                cancellationToken);
+        }
+        #endregion
+
+        #region Protected Methods
+        protected override void OnHandleMessage(ServerMessage message)
+        {
+            if (message.RequestId is not null)
                 return;
-            _disposed = true;
-            _connection.ConnectionClosed -= HandleConnectionClosed;
+
+            switch (message.Type)
+            {
+                case ServerMessageType.GameStartEvent:
+                    HandleGameStart(message);
+                    break;
+                case ServerMessageType.MovePieceEvent:
+                    HandleMovePiece(message);
+                    break;
+            }
+        }
+
+        protected override void OnDispose()
+        {
+            Connection.ConnectionClosed -= HandleConnectionClosed;
             _service.Reset();
         }
         #endregion
 
         #region Event Handlers
-        // 구독한 이벤트가 발생했을 때 실행하는 처리 메서드
+        private void HandleConnectionClosed() => _service.Reset();
         #endregion
 
         #region Private Methods
         // 클래스 내부에서 사용하는 보조 로직
 
 
-            // TODO:
-            // MoveApplied / TurnChanged / GameEnded 계약이 추가되면 이곳에서 각각 분기합니다.
-            // 현재는 해당 이벤트를 처리하지 않으며, 결과 반영은 InGameSession 등 인게임 계층에 연결해야 합니다.
-            // 향후 요청 송신은 _requests를 사용하고 응답 대기는 RequestDispatcher에 맡깁니다.
-        
+        private static bool IsBoardPosition(Pos pos)
+            => pos.X is >= 0 and <= 8 && pos.Z is >= 0 and <= 9;
+
+        private static ProtocolPlayerTeam ToProtocolTeam(PlayerTeam team)
+            => team switch
+            {
+                PlayerTeam.Cho => ProtocolPlayerTeam.Cho,
+                PlayerTeam.Han => ProtocolPlayerTeam.Han,
+                _ => throw new ArgumentOutOfRangeException(nameof(team))
+            };
+
+        private static PlayerTeam ToPlayerTeam(ProtocolPlayerTeam team)
+            => team switch
+            {
+                ProtocolPlayerTeam.Cho => PlayerTeam.Cho,
+                ProtocolPlayerTeam.Han => PlayerTeam.Han,
+                _ => throw new InvalidDataException("잘못된 이동 진영입니다.")
+            };
+
+        private void HandleMovePiece(ServerMessage message)
+        {
+            if (message.Payload is not { ValueKind: JsonValueKind.Object })
+                throw new InvalidDataException("MovePieceEvent Payload가 올바르지 않습니다.");
+
+            var payload = message.Payload.Value;
+            if (
+                !payload.TryGetProperty(nameof(MovePieceEvent.Team), out _) ||
+                !payload.TryGetProperty(nameof(MovePieceEvent.FromX), out _) ||
+                !payload.TryGetProperty(nameof(MovePieceEvent.FromZ), out _) ||
+                !payload.TryGetProperty(nameof(MovePieceEvent.ToX), out _) ||
+                !payload.TryGetProperty(nameof(MovePieceEvent.ToZ), out _))
+                throw new InvalidDataException("MovePieceEvent Payload가 올바르지 않습니다.");
+
+            var move = message.GetPayload<MovePieceEvent>();
+            var team = ToPlayerTeam(move.Team);
+            var from = new Pos(move.FromX, move.FromZ);
+            var to = new Pos(move.ToX, move.ToZ);
+            if (!IsBoardPosition(from) || !IsBoardPosition(to))
+                throw new InvalidDataException("MovePieceEvent 좌표가 올바르지 않습니다.");
+
+            MoveConfirmed?.Invoke(team, from, to);
+        }
         private void HandleGameStart(ServerMessage message)
         {
             if (_service.IsGameStarted)
@@ -131,15 +173,6 @@ namespace YuJanggi.InGame.Handler
             _service.ApplyGameStart();
         }
 
-        private void HandleConnectionClosed() => _service.Reset();
-
-        private void EnsureConnected(CancellationToken cancellationToken)
-        {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(InGameHandler));
-            cancellationToken.ThrowIfCancellationRequested();
-            _connection.EnsureOnline();
-        }
         #endregion
     }
 }
