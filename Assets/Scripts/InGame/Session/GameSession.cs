@@ -92,6 +92,10 @@ namespace YuJanggi.InGame.Session
         public bool IsCurrentTurn(PlayerTeam team)
             => _currState == SessionState.LiveState && _engine.CurrentTurn == team;
 
+        public bool CanApplyConfirmedMove(PlayerTeam team)
+            => (_currState == SessionState.LiveState || _currState == SessionState.ReplayState)
+                && _engine.CurrentTurn == team;
+
         public bool IsStarted => _play;
 
         public void BindEvents(IGameInputReceiver inputReceiver)
