@@ -8,6 +8,7 @@ using YuJanggi.Engine.Domain;
 using YuJanggi.InGame.Handler;
 using YuJanggi.InGame.Service;
 using YuJanggi.InGame.Session;
+using YuJanggi.Protocol.InGame;
 
 namespace YuJanggi.InGame.Flow
 {
@@ -37,7 +38,7 @@ namespace YuJanggi.InGame.Flow
                 return;
 
             _movePending = true;
-            SendMoveAsync(from, to, _cancellationToken).Forget();
+            SendMoveRequestAsync(from, to, _cancellationToken).Forget();
         }
 
         protected override void Bind()
@@ -73,21 +74,34 @@ namespace YuJanggi.InGame.Flow
             _gameStarted = true;
         }
 
-        private async UniTask SendMoveAsync(Pos from, Pos to, CancellationToken cancellationToken)
+        private async UniTask SendMoveRequestAsync(
+            Pos from,
+            Pos to,
+            CancellationToken cancellationToken)
         {
             try
             {
-                await _handler.SendMoveAsync(_localTeam, from, to, cancellationToken);
+                var result = await _handler.SendMoveRequestAsync(
+                    _localTeam,
+                    from,
+                    to,
+                    cancellationToken);
+
+                if (result.Result != MovePieceResult.Accepted)
+                {
+                    _movePending = false;
+
+                    Debug.LogWarning(
+                        $"이동 요청이 거절되었습니다. Result={result}");
+                }
             }
             catch (OperationCanceledException)
             {
-                if (cancellationToken == _cancellationToken)
-                    _movePending = false;
+                _movePending = false;
             }
             catch (Exception exception)
             {
-                if (cancellationToken == _cancellationToken)
-                    _movePending = false;
+                _movePending = false;
                 Debug.LogException(exception);
             }
         }
