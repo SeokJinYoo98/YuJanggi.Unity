@@ -12,6 +12,7 @@ namespace YuJanggi.Lobby.Network
     internal interface ILobbyNetwork
     {
         MatchingState State { get; }
+        MatchInfo? Match { get; }
 
         bool IsFormationSubmitting { get; }
         bool IsFormationSubmitted { get; }

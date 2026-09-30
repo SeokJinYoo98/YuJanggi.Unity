@@ -1,9 +1,7 @@
-
-
+#nullable enable
 using System;
 using YuJanggi.Engine.Domain;
 using YuJanggi.Lobby.Matching;
-using YuJanggi.Protocol.Matching;
 
 namespace YuJanggi.Lobby.Network
 {
@@ -13,8 +11,10 @@ namespace YuJanggi.Lobby.Network
         private bool _requestInProgress;
         private bool _cancelInProgress;
         private bool _gameReadyDelivered;
+        private (Formation Cho, Formation Han)? _readyFormations;
 
         public MatchingState State { get; private set; } = MatchingState.Idle;
+        public MatchInfo? Match { get; private set; }
         public Formation? SelectedFormation { get; private set; }
         public Formation? SubmittedFormation { get; private set; }
         public bool IsFormationSubmitting { get; private set; }
@@ -58,10 +58,13 @@ namespace YuJanggi.Lobby.Network
 
         public void EndCancel() => _cancelInProgress = false;
 
-        public void MatchingFound()
+        public void MatchingFound(MatchInfo match)
         {
             if (State == MatchingState.Matching)
+            {
+                Match = match;
                 ChangeState(MatchingState.Matched);
+            }
         }
 
         public void BeginFormationSubmit(Formation formation)
@@ -85,11 +88,22 @@ namespace YuJanggi.Lobby.Network
             OnDataChanged?.Invoke();
         }
 
-        public bool TryAcceptGameReady()
+        public bool TryAcceptGameReady(Formation cho, Formation han)
         {
             if (State != MatchingState.Matched || !SubmittedFormation.HasValue || _gameReadyDelivered)
                 return false;
             _gameReadyDelivered = true;
+            _readyFormations = (cho, han);
+            return true;
+        }
+
+        public bool TryGetReadyFormations(out Formation cho, out Formation han)
+        {
+            cho = default;
+            han = default;
+            if (!_gameReadyDelivered || !_readyFormations.HasValue)
+                return false;
+            (cho, han) = _readyFormations.Value;
             return true;
         }
 
@@ -101,6 +115,8 @@ namespace YuJanggi.Lobby.Network
             SelectedFormation = null;
             SubmittedFormation = null;
             _gameReadyDelivered = false;
+            Match = null;
+            _readyFormations = null;
             ChangeState(MatchingState.Idle);
         }
 

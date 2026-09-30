@@ -8,7 +8,6 @@ using YuJanggi.Network;
 using YuJanggi.Network.Handler;
 using YuJanggi.Protocol.Matching;
 using YuJanggi.Protocol.Messages;
-using YuJanggi.Store;
 
 namespace YuJanggi.Lobby.Network
 {
@@ -17,7 +16,6 @@ namespace YuJanggi.Lobby.Network
     {
         #region Fields
         private readonly LobbyNetworkService _service = new();
-        private readonly Func<string?> _getMatchId;
         private readonly object        _requestSync = new();
 
         private CancellationTokenSource? _matchingRequestCts;
@@ -28,12 +26,12 @@ namespace YuJanggi.Lobby.Network
         private MatchingFoundEvent? _deferredMatchingFound;
         private GameReadyEvent?     _deferredGameReady;
 
-        private (Formation Cho, Formation Han)? _readyFormations;
         #endregion
 
         #region Properties
         public MatchingState State
             => _service.State;
+        public MatchInfo? Match => _service.Match;
         public bool IsFormationSubmitting
             => _service.IsFormationSubmitting;
         public bool IsFormationSubmitted
@@ -55,11 +53,9 @@ namespace YuJanggi.Lobby.Network
         #region Constructors
         public LobbyNetworkHandler(
             NetworkConnection connection,
-            RequestDispatcher requests,
-            Func<string?> getMatchId)
+            RequestDispatcher requests)
             : base(connection, requests)
         {
-            _getMatchId = getMatchId;
             Connection.ConnectionClosed += HandleConnectionClosed;
         }
         #endregion
@@ -83,16 +79,7 @@ namespace YuJanggi.Lobby.Network
         public bool TryGetReadyFormations(
             out Formation cho,
             out Formation han)
-        {
-            cho = default;
-            han = default;
-
-            if (!IsGameReady || !_readyFormations.HasValue)
-                return false;
-
-            (cho, han) = _readyFormations.Value;
-            return true;
-        }
+            => _service.TryGetReadyFormations(out cho, out han);
         #endregion
 
         #region Private Methods
@@ -163,7 +150,7 @@ namespace YuJanggi.Lobby.Network
             CancellationToken cancellationToken = default)
         {
             EnsureConnected(cancellationToken);
-            string? matchId = _getMatchId();
+            string? matchId = Match?.MatchId;
 
             if (string.IsNullOrWhiteSpace(matchId))
                 throw new InvalidOperationException("포진을 제출할 매칭 정보가 없습니다.");
@@ -214,7 +201,7 @@ namespace YuJanggi.Lobby.Network
             {
                 case ServerMessageType.MatchingFoundEvent:
                     var found = message.GetPayload<MatchingFoundEvent>();
-                    if (_getMatchId() == found.MatchId)
+                    if (Match?.MatchId == found.MatchId)
                         return;
 
                     if (_service.State == MatchingState.Requesting)
@@ -303,7 +290,7 @@ namespace YuJanggi.Lobby.Network
             var ready = message.GetPayload<GameReadyEvent>();
             if (_service.HasDeliveredGameReady ||
                 _service.State != MatchingState.Matched ||
-                _getMatchId() != ready.MatchId)
+                Match?.MatchId != ready.MatchId)
                 return;
 
             if (!message.Payload!.Value.TryGetProperty(
@@ -325,21 +312,19 @@ namespace YuJanggi.Lobby.Network
 
         private void ApplyGameReady(GameReadyEvent ready)
         {
-            if (ready.MatchId != _getMatchId())
+            if (ready.MatchId != Match?.MatchId)
                 return;
             var cho = LobbyProtocolMapper.ToCoreFormation(ready.ChoFormation);
             var han = LobbyProtocolMapper.ToCoreFormation(ready.HanFormation);
-            var match = NetworkMatchInfoStore.Current;
+            var match = Match;
 
             if (match is null ||
                 match.MatchId != ready.MatchId ||
                 match.Team is not (PlayerTeam.Cho or PlayerTeam.Han))
                 return;
 
-            if (!_service.TryAcceptGameReady())
+            if (!_service.TryAcceptGameReady(cho, han))
                 return;
-
-            _readyFormations = (cho, han);
 
             GameReadyReceived?.Invoke(ready.MatchId, cho, han);
         }
@@ -363,13 +348,9 @@ namespace YuJanggi.Lobby.Network
                 throw new InvalidOperationException("잘못된 매칭 정보입니다.");
 
             int version = Connection.Version;
-
-            _readyFormations = null;
-            JanggiOptionStore.ClearNetworkOptions();
-            MatchFound?.Invoke(match);
-
+            _service.MatchingFound(match);
             if (version == Connection.Version)
-                _service.MatchingFound();
+                MatchFound?.Invoke(match);
         }
 
 
@@ -380,8 +361,6 @@ namespace YuJanggi.Lobby.Network
         {
             _deferredMatchingFound = null;
             _deferredGameReady = null;
-            _readyFormations = null;
-            JanggiOptionStore.ClearNetworkOptions();
             _service.Reset();
         }
         #endregion

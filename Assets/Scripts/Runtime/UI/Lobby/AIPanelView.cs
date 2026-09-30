@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using System;
 
 namespace YuJanggi.Runtime.UI
 {
@@ -15,6 +16,8 @@ namespace YuJanggi.Runtime.UI
         public int LocalPlayer          => _teamDropdown.value;
         public int TurnTime             => _timeDropdown.value;
         public int LocalPlayerFormation => _formationDropdown.value;
+        public event Action StartRequested;
+        public void RequestStart() => StartRequested?.Invoke();
         public AIMoveStrategyType Strategy
         {
             get

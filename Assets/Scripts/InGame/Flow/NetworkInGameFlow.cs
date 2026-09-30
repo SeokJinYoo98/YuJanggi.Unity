@@ -20,7 +20,10 @@ namespace YuJanggi.InGame.Flow
         private bool _gameStarted;
         private bool _movePending;
 
-        internal NetworkInGameFlow(GameSession session, InGameHandler handler, PlayerTeam localTeam)
+        internal NetworkInGameFlow(
+            GameSession session,
+            InGameHandler handler,
+            PlayerTeam localTeam)
             : base(session)
         {
             _handler = handler;
