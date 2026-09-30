@@ -115,7 +115,7 @@ namespace YuJanggi.InGame.Flow
             await UniTask.SwitchToMainThread();
 
             if (!_active || !_gameStarted || cancellationToken.IsCancellationRequested ||
-                cancellationToken != _cancellationToken || !Session.IsCurrentTurn(team))
+                cancellationToken != _cancellationToken || !Session.CanApplyConfirmedMove(team))
                 return;
 
             Session.RequestMove(from, to);
