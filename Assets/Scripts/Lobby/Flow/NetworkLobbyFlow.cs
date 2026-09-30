@@ -13,25 +13,23 @@ using YuJanggi.Runtime.UI;
 
 namespace YuJanggi.Lobby.Flow
 {
-    internal sealed class NetworkLobbyFlow : ILobbyFlow
+    internal sealed class NetworkLobbyFlow : LocalFlow
     {
-        private const int GameStartCountdownSeconds = 10;
+        // 의존성
         private readonly NetworkPanelView _view;
         private readonly ILobbyNetwork _network;
         private readonly NetworkManager _connection;
+        private readonly LobbyNetworkTimer _timer = new();
+
+        // Flow 생명주기
         private CancellationTokenSource? _lifetimeCts;
         private CancellationToken _lifetimeToken;
-        private bool _bound;
         private bool _readyRaised;
-        private MatchingState _timerState = MatchingState.Idle;
-        private bool _showTimer;
-        private double _timerStartedAt;
-        private int _lastTimerSeconds = -1;
-        private string? _timerMatchId;
+
+        // 포진 제출 시도와 실패 표시
         private string? _formationFailure;
         private bool _formationAttempted;
 
-        public event Action<LobbyGameStartContext>? GameStartReady;
         internal bool CanStartOtherMode => _network.State == MatchingState.Idle;
         // Manager가 현재 패널을 선택하고 교체한다.
         public event Action<bool>? PanelRequested;
@@ -44,36 +42,41 @@ namespace YuJanggi.Lobby.Flow
             _connection = connection;
         }
 
-        public void BindEvents()
+        protected override void OnBindEvents()
         {
-            if (_bound) return;
-            _bound = true;
             _readyRaised = false;
+
             _lifetimeCts = new CancellationTokenSource();
             _lifetimeToken = _lifetimeCts.Token;
+
             _view.ConnectRequested += HandleConnectRequested;
             _view.MatchingRequested += HandleMatchingRequested;
             _view.CloseRequested += HandleCloseRequested;
             _view.StartRequested += HandleStartRequested;
+
             _connection.OnNetworkChanged += HandleNetworkChanged;
+
             _network.MatchFound += HandleMatchFound;
             _network.GameReadyReceived += HandleGameReady;
+
             HandleNetworkChanged();
         }
 
-        public void UnBindEvents()
+        protected override void OnUnBindEvents()
         {
-            if (!_bound) return;
-            _bound = false;
             _view.ConnectRequested -= HandleConnectRequested;
             _view.MatchingRequested -= HandleMatchingRequested;
             _view.CloseRequested -= HandleCloseRequested;
             _view.StartRequested -= HandleStartRequested;
+
             _connection.OnNetworkChanged -= HandleNetworkChanged;
+
             _network.MatchFound -= HandleMatchFound;
             _network.GameReadyReceived -= HandleGameReady;
+
             if (_formationAttempted && !_network.IsFormationSubmitted)
                 _formationFailure ??= "포진 제출이 취소되었습니다.";
+
             var lifetime = _lifetimeCts;
             _lifetimeCts = null;
             lifetime?.Cancel();
@@ -82,21 +85,21 @@ namespace YuJanggi.Lobby.Flow
 
         public void Tick()
         {
-            if (!_bound || _readyRaised || !_showTimer || _formationAttempted ||
+            if (!IsBound || _readyRaised || _formationAttempted ||
                 _network.IsFormationSubmitting || _network.IsFormationSubmitted)
                 return;
 
-            int seconds = GetTimerSeconds();
-            if (seconds == _lastTimerSeconds) return;
-            _lastTimerSeconds = seconds;
-            _view.UpdateTimer(_timerState, seconds);
-            if (_timerState == MatchingState.Matched && seconds == 0)
+            if (!_timer.TryGetChangedSeconds(Time.realtimeSinceStartupAsDouble, out int seconds))
+                return;
+
+            _view.UpdateTimer(_timer.State, seconds);
+            if (_timer.State == MatchingState.Matched && seconds == 0)
                 SubmitSelectedFormationAsync(_lifetimeToken).Forget();
         }
 
         private void HandleConnectRequested()
         {
-            if (!_bound || _connection.IsOnline) return;
+            if (!IsBound || _connection.IsOnline) return;
             PanelRequested?.Invoke(true);
             ConnectAsync(_lifetimeToken).Forget();
         }
@@ -116,9 +119,12 @@ namespace YuJanggi.Lobby.Flow
 
         private void HandleMatchingRequested()
         {
-            if (!_bound || _readyRaised) return;
-            if (_connection.IsOnline && _network.State == MatchingState.Idle)
+            if (!IsBound || _readyRaised) return;
+
+            if (_connection.IsOnline &&
+                _network.State == MatchingState.Idle)
                 ChangeMatchingAsync(false, _lifetimeToken).Forget();
+
             else if (_network.State == MatchingState.Matching)
                 ChangeMatchingAsync(true, _lifetimeToken).Forget();
         }
@@ -141,7 +147,7 @@ namespace YuJanggi.Lobby.Flow
 
         private void HandleCloseRequested()
         {
-            if (!_bound) return;
+            if (!IsBound) return;
             if (_network.State == MatchingState.Matched)
             {
                 Debug.Log("이미 매치가 성사되어 취소하지 못합니다.");
@@ -153,24 +159,31 @@ namespace YuJanggi.Lobby.Flow
 
         private void HandleMatchFound(MatchInfo match)
         {
-            if (!_bound || _network.Match?.MatchId != match.MatchId) return;
+            if (!IsBound ||
+                _network.Match?.MatchId != match.MatchId)
+               { return; }
+
             HandleNetworkChanged();
         }
 
         private void HandleGameReady(string matchId, Formation cho, Formation han)
         {
-            if (_bound && _network.Match?.MatchId == matchId)
-                HandleStartRequested();
+            if (IsBound &&
+                _network.Match?.MatchId == matchId)
+                { HandleStartRequested(); }
         }
 
         private void HandleStartRequested()
         {
             var match = _network.Match;
-            if (!_bound || _readyRaised || !_connection.IsOnline || !_network.IsGameReady ||
+            if (!IsBound ||
+                _readyRaised ||
+                !_connection.IsOnline ||
+                !_network.IsGameReady ||
                 match == null || string.IsNullOrWhiteSpace(match.MatchId) ||
                 match.Team is not (PlayerTeam.Cho or PlayerTeam.Han) ||
                 !_network.TryGetReadyFormations(out var cho, out var han))
-                return;
+                { return; }
 
             bool localIsCho = match.Team == PlayerTeam.Cho;
             var options = new JanggiOptions
@@ -184,17 +197,17 @@ namespace YuJanggi.Lobby.Flow
                 TurnTime = 30
             };
             _readyRaised = true;
-            _showTimer = false;
+            _timer.Stop();
             PanelRequested?.Invoke(true);
-            GameStartReady?.Invoke(new LobbyGameStartContext(options, networkMatch: match));
+            RaiseGameStartReady(new LobbyGameStartContext(options, networkMatch: match));
         }
 
         private void HandleNetworkChanged()
         {
-            if (!_bound || _readyRaised) return;
+            if (!IsBound || _readyRaised) return;
             var status = _connection.Status;
             var match = _network.Match;
-            if (_timerMatchId != match?.MatchId || status.MatchingState != MatchingState.Matched)
+            if (_timer.MatchId != match?.MatchId || status.MatchingState != MatchingState.Matched)
             {
                 _formationFailure = null;
                 _formationAttempted = false;
@@ -204,15 +217,14 @@ namespace YuJanggi.Lobby.Flow
                 HandleStartRequested();
                 if (_readyRaised) return;
             }
-            UpdateTimerState(status);
+            _timer.Update(status, match?.MatchId, Time.realtimeSinceStartupAsDouble);
             // 실패 문구는 남기고 정상 연결 해제 시 패널을 닫는다.
             if ((status.Error ?? NetworkError.None) == NetworkError.None &&
                 status.ConnectionState == ConnectionState.Disconnected)
                 PanelRequested?.Invoke(false);
 
-            int? seconds = _showTimer ? GetTimerSeconds() : (int?)null;
+            int? seconds = _timer.GetSecondsForDisplay(Time.realtimeSinceStartupAsDouble);
             _view.ChangeMessage(status, match?.Team ?? PlayerTeam.None, seconds);
-            _lastTimerSeconds = seconds ?? -1;
             if (status.ConnectionState == ConnectionState.Connected &&
                 _network.State == MatchingState.Matched &&
                 (_formationAttempted || _network.IsFormationSubmitting || _network.IsFormationSubmitted))
@@ -222,7 +234,7 @@ namespace YuJanggi.Lobby.Flow
                         ? "포진 전송 완료 · 서버 준비 대기 중"
                         : "포진 제출 중"));
             }
-            if (_timerState == MatchingState.Matched && seconds == 0)
+            if (_timer.State == MatchingState.Matched && seconds == 0)
                 SubmitSelectedFormationAsync(_lifetimeToken).Forget();
         }
 
@@ -262,28 +274,7 @@ namespace YuJanggi.Lobby.Flow
         }
 
         private bool IsCurrent(CancellationToken token)
-            => _bound && !token.IsCancellationRequested && token == _lifetimeToken;
+            => IsBound && !token.IsCancellationRequested && token == _lifetimeToken;
 
-        private void UpdateTimerState(in NetworkStatus status)
-        {
-            bool showTimer = (status.Error ?? NetworkError.None) == NetworkError.None &&
-                status.ConnectionState == ConnectionState.Connected &&
-                (status.MatchingState == MatchingState.Matching ||
-                 status.MatchingState == MatchingState.Matched);
-            string? matchId = _network.Match?.MatchId;
-            if (showTimer && (!_showTimer || _timerState != status.MatchingState ||
-                (status.MatchingState == MatchingState.Matched && _timerMatchId != matchId)))
-                _timerStartedAt = Time.realtimeSinceStartupAsDouble;
-            _timerState = status.MatchingState;
-            _timerMatchId = matchId;
-            _showTimer = showTimer;
-        }
-
-        private int GetTimerSeconds()
-        {
-            int elapsed = (int)Math.Floor(Time.realtimeSinceStartupAsDouble - _timerStartedAt);
-            return _timerState == MatchingState.Matched
-                ? Math.Max(0, GameStartCountdownSeconds - elapsed) : elapsed;
-        }
     }
 }

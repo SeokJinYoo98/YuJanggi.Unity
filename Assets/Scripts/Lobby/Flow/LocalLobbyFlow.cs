@@ -6,13 +6,10 @@ using YuJanggi.Runtime.UI;
 
 namespace YuJanggi.Lobby.Flow
 {
-    internal sealed class LocalLobbyFlow : ILobbyFlow
+    internal sealed class LocalLobbyFlow : LocalFlow
     {
         private readonly LocalPanelView _view;
         private readonly Func<bool> _canStart;
-        private bool _bound;
-
-        public event Action<LobbyGameStartContext>? GameStartReady;
 
         internal LocalLobbyFlow(LocalPanelView view, Func<bool> canStart)
         {
@@ -20,23 +17,19 @@ namespace YuJanggi.Lobby.Flow
             _canStart = canStart;
         }
 
-        public void BindEvents()
+        protected override void OnBindEvents()
         {
-            if (_bound) return;
-            _bound = true;
             _view.StartRequested += HandleStartRequested;
         }
 
-        public void UnBindEvents()
+        protected override void OnUnBindEvents()
         {
-            if (!_bound) return;
-            _bound = false;
             _view.StartRequested -= HandleStartRequested;
         }
 
         private void HandleStartRequested()
         {
-            if (!_bound || !_canStart()) return;
+            if (!IsBound || !_canStart()) return;
             var options = new JanggiOptions
             {
                 GameMode = GameModeType.Local,
@@ -46,7 +39,7 @@ namespace YuJanggi.Lobby.Flow
                 HanFormation = (Formation)_view.HanFormation,
                 TurnTime = LobbyOptionValues.TurnTime(_view.TurnTime)
             };
-            GameStartReady?.Invoke(new LobbyGameStartContext(options));
+            RaiseGameStartReady(new LobbyGameStartContext(options));
         }
     }
 }
