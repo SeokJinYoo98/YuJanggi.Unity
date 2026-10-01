@@ -29,8 +29,8 @@ Transform:
   m_GameObject: {fileID: 3795874044370956706}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -26.17275, y: -19.30842, z: 17.21529}
-  m_LocalScale: {x: 3, y: 1, z: 3}
+  m_LocalPosition: {x: 0, y: 0.2, z: 0}
+  m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -105,6 +105,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e4299a6802ae3a4d92a344c78c4554d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.Piece.PieceView
+  _moveDuration: 0.16
+  _visual: {fileID: 4030716262367460685}
+  _highlightHeight: 0.5
+  _highlightDuration: 0.2
+  _highlightRotateSpeed: 30
 --- !u!65 &5546104078667275153
 BoxCollider:
   m_ObjectHideFlags: 0

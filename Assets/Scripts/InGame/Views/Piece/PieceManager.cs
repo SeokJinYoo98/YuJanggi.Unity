@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace YuJanggi.Runtime.Piece
+namespace YuJanggi.InGame.Views.Piece
 {
     using Engine.JanggiBoard;
     using Engine.Domain;
@@ -11,38 +11,14 @@ namespace YuJanggi.Runtime.Piece
     {
         private PieceSpawner _pieceSpawner;
         private readonly Dictionary<int, PieceView> _views = new();
-        private int _currPiece;
+
         private void Awake()
         {
             _pieceSpawner = GetComponent<PieceSpawner>();
         }
-        public void HighlightPiece(int id)
-        {
-            if (id == -1)
-            {
-                UnHighlightPiece();
-                return;
-            }
 
-            UnHighlightPiece();
-
-            if (!_views.TryGetValue(id, out var view))
-            {
-                Debug.LogError($"PieceView not found. id:{id}");
-                return;
-            }
-
-            _currPiece = id;
-            view.Highlight();
-        }
-        public void UnHighlightPiece()
-        {
-            if (_views.TryGetValue(_currPiece, out var curr))
-                curr.UnHighlight();
-
-            _currPiece = -1;
-        }
-
+        public bool TryGetPiece(int id, out PieceView piece)
+            => _views.TryGetValue(id, out piece);
         public void ResetViews(IReadOnlyBoard boardModel)
         {
             int width = boardModel.WIDTH;
@@ -58,7 +34,7 @@ namespace YuJanggi.Runtime.Piece
 
                     var pieceInfo = boardModel.GetPiece(pos);
                     _views[pieceInfo.Id].MoveTo(new Pos(x, z));
-                    _views[pieceInfo.Id].SetDead(false);
+                    _views[pieceInfo.Id].SetSelectable(true);
                 }
             }
         }
@@ -85,13 +61,13 @@ namespace YuJanggi.Runtime.Piece
         {
             var view = _views[id];
             view.MoveTo(to);
-            view.SetDead(false);
+            view.SetSelectable(true);
         }
         public void PlaceCapturedPiece(int id, Vector3 to)
         {
             var view = _views[id];
             view.MoveTo(to);
-            view.SetDead(true);
+            view.SetSelectable(false);
         }
 
         public void DoMove(int id, Pos to)

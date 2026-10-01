@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace YuJanggi.Runtime.Piece
+namespace YuJanggi.InGame.Views.Piece
 {
     using Engine.JanggiBoard;
     using Engine.Domain;

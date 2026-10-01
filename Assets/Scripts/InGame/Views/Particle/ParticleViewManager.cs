@@ -3,13 +3,13 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Pool;
 
-namespace YuJanggi.Runtime.Particle
+namespace YuJanggi.InGame.Views.Particle
 {
-    public class ParticleView : MonoBehaviour
+    public class ParticleManager : MonoBehaviour
     {
         [Header("Prefabs")]
-        [SerializeField] private PooledParticle _captureParticlePrefab;
-        [SerializeField] private PooledParticle _moveParticlePrefab;
+        [SerializeField] private ParticleView _capturedParticlePrefab;
+        [SerializeField] private ParticleView _moveParticlePrefab;
 
 
         [Header("Pool Settings")]
@@ -19,8 +19,8 @@ namespace YuJanggi.Runtime.Particle
         [SerializeField] private int _captureDefaultCapacity = 4;
         [SerializeField] private int _captureMaxSize         = 8;
 
-        private ObjectPool<PooledParticle> _movePool;
-        private ObjectPool<PooledParticle> _capturePool;
+        private ObjectPool<ParticleView> _movePool;
+        private ObjectPool<ParticleView> _capturePool;
 
         private const float MovementDuration = 0.16f;
         private const Ease  MovementEase     = Ease.Linear;
@@ -34,7 +34,7 @@ namespace YuJanggi.Runtime.Particle
             );
 
             _capturePool = CreatePool(
-                _captureParticlePrefab,
+                _capturedParticlePrefab,
                 _captureDefaultCapacity,
                 _captureMaxSize
             );
@@ -52,17 +52,17 @@ namespace YuJanggi.Runtime.Particle
         public void PlayCapture(Vector3 worldPosition)
             => _capturePool.Get().Play(worldPosition);
 
-        private ObjectPool<PooledParticle> CreatePool(
-            PooledParticle prefab,
+        private ObjectPool<ParticleView> CreatePool(
+            ParticleView prefab,
             int defaultCapacity,
             int maxSize)
         {
-            ObjectPool<PooledParticle> pool = null;
+            ObjectPool<ParticleView> pool = null;
 
-            pool = new ObjectPool<PooledParticle>(
+            pool = new ObjectPool<ParticleView>(
                 createFunc: () =>
                 {
-                    PooledParticle particle = Instantiate(prefab, transform);
+                    ParticleView particle = Instantiate(prefab, transform);
                     particle.Initialize(pool.Release);
                     particle.gameObject.SetActive(false);
                     return particle;
@@ -86,9 +86,9 @@ namespace YuJanggi.Runtime.Particle
 
             return pool;
         }
-        private void Prewarm(ObjectPool<PooledParticle> pool, int count)
+        private void Prewarm(ObjectPool<ParticleView> pool, int count)
         {
-            List<PooledParticle> particles = new List<PooledParticle>(count);
+            List<ParticleView> particles = new List<ParticleView>(count);
 
             for (int i = 0; i < count; i++)
             {

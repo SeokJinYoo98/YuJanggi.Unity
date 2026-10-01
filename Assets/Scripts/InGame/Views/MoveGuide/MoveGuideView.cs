@@ -1,12 +1,12 @@
 using UnityEngine;
 using YuJanggi.Runtime.Input;
 
-namespace YuJanggi.Runtime.Board
+namespace YuJanggi.InGame.Views.Board
 {
     using Engine.Domain;
 
 
-    public class MoveGuideCellView : MonoBehaviour, IBoardClickable
+    public class MoveGuideView : MonoBehaviour, IBoardClickable
     {
         Renderer    _renderer;
         BoxCollider _collider;

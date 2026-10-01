@@ -4,16 +4,16 @@ using System;
 using DG.Tweening;
 using UnityEngine;
 
-namespace YuJanggi.Runtime.Particle
+namespace YuJanggi.InGame.Views.Particle
 {
-    public sealed class PooledParticle : MonoBehaviour
+    public sealed class ParticleView : MonoBehaviour
     {
         [SerializeField] private ParticleSystem _particleSystem;
 
-        private Action<PooledParticle> _onStopped;
+        private Action<ParticleView> _onStopped;
         private Tween _moveTween;
 
-        public void Initialize(Action<PooledParticle> onStopped)
+        public void Initialize(Action<ParticleView> onStopped)
         {
             _onStopped = onStopped;
 
@@ -24,7 +24,7 @@ namespace YuJanggi.Runtime.Particle
 
             if (_particleSystem == null)
             {
-                Debug.LogError($"{nameof(PooledParticle)} requires ParticleSystem.");
+                Debug.LogError($"{nameof(ParticleView)} requires ParticleSystem.");
                 return;
             }
 

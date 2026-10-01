@@ -5,7 +5,7 @@ namespace YuJanggi.Data.Board
 {
     using Engine.Domain;
 
-    using Runtime.Piece;
+    using InGame.Views.Piece;
 
     [CreateAssetMenu(fileName = "PieceDataBase", menuName = "Piece/PieceDataBase")]
     public class PieceDataBase : ScriptableObject

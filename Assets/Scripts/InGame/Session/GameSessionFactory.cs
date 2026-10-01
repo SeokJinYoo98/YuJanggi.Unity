@@ -9,6 +9,7 @@ namespace YuJanggi.InGame.Session
 
     using Controller;
     using Views;
+    using Views.Board;
     using Store;
 
 
@@ -18,7 +19,7 @@ namespace YuJanggi.InGame.Session
         internal static GameSession CreateSession(
             IJanggiEngine engine,
             IInputHandler inputHandler,
-            LiveView liveView, ReplayView replayView)
+            LiveView liveView, ReplayView replayView, BoardView boardView)
 
         {
             var options = JanggiOptionStore.Current;
@@ -31,7 +32,7 @@ namespace YuJanggi.InGame.Session
                 options.PlayerHan, PlayerTeam.Han,
                 engine, engine, inputHandler);
 
-            return new GameSession(engine, inputHandler, cho, han, liveView, replayView);
+            return new GameSession(engine, inputHandler, cho, han, liveView, replayView, boardView);
         }
 
 

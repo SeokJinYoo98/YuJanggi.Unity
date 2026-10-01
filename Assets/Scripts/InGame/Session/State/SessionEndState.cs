@@ -6,6 +6,7 @@ namespace YuJanggi.InGame.Session
 {
     using Engine.Domain;
     using InGame.Views;
+    using InGame.Views.Board;
     using YuJanggi.Engine.JanggiEngine;
     using YuJanggi.InGame.Controller;
 
@@ -58,22 +59,24 @@ namespace YuJanggi.InGame.Session
     {
         private readonly IGameResultContext _resultCtx;
         private readonly LiveView          _liveView;
+        private readonly BoardView         _boardView;
         public SessionEndState(
             ISessionTransition sessionFsm, 
             IGameResultContext sessionResult,
             IInGameController cho, IInGameController han, 
             ISessionEngine engine,
-            LiveView liveView) 
+            LiveView liveView, BoardView boardView)
             : base(sessionFsm, cho, han, engine)
         {
             _resultCtx  = sessionResult;
             _liveView  = liveView;
+            _boardView = boardView;
         }
 
         public override void Enter()
         {
             base.Enter();
-            _liveView.SyncBoardState(_engine.Board);
+            _boardView.SyncBoardState(_engine.Board);
             if (!_resultCtx.GameResult.HasValue) _transition.ToLive();
             DisableAllControllers();
             var result          = _resultCtx.GameResult.Value;
