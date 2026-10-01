@@ -11,30 +11,30 @@ namespace YuJanggi.InGame.Session
     internal sealed class SessionReplayState : SessionStateBase
     {
         private readonly LiveView   _liveView;
-        private readonly ReplayView _replayView;
+        private readonly ReplayPlayback _replayPlayback;
         public SessionReplayState(
             ISessionTransition      sessionFsm, 
             ISessionEngine          engine, 
             IInGameController cho, IInGameController han, 
-            ReplayView replayView, 
+            ReplayPlayback replayPlayback,
             LiveView  matchView)
             : base(sessionFsm, cho, han, engine)
         {
             _liveView   = matchView;
-            _replayView  = replayView;
+            _replayPlayback  = replayPlayback;
         }
         // 리플레이 준비
         public override void Enter()
         {
             base.Enter();
             _engine.ToReplayRecord();
-            _replayView.EnterReplayView();
+            _replayPlayback.EnterReplayView();
         }
         // 리플레이 정리
         public override void Exit()
         {
             base.Exit();
-            _replayView.ExitReplayView();
+            _replayPlayback.ExitReplayView();
         }
         public override void OnTurnChanged(PlayerTeam next)
         {
@@ -65,7 +65,7 @@ namespace YuJanggi.InGame.Session
         public override void RequestStepBackward()
         {
             base.RequestStepBackward();
-            var result = _replayView.TryReplayBackward();
+            var result = _replayPlayback.TryReplayBackward();
             if (_debug)
                 Debug.Log($"{result}");
             if (result == ReplayResult.Succeeded) return;
@@ -75,7 +75,7 @@ namespace YuJanggi.InGame.Session
         public override void RequestStepForward()
         {
             base.RequestStepForward();
-            var result = _replayView.TryReplayForward();
+            var result = _replayPlayback.TryReplayForward();
             if (_debug)
                 Debug.Log($"{result}");
             if (result == ReplayResult.Succeeded) return;

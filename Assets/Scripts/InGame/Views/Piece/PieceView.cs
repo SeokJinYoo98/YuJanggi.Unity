@@ -110,8 +110,18 @@ namespace YuJanggi.InGame.Views.Piece
         }
 
 
-        public void Highlight()
-            => SwapMaterial();
+        public void ShowHighlightPose()
+        {
+            MoveToHighlightPosition();
+            StartHighlightRotation();
+        }
+
+        public void ShowMovementPose()
+        {
+            StopHighlightTweens();
+            MoveToOriginPosition();
+            RestoreHighlightRotation();
+        }
 
 
         #endregion

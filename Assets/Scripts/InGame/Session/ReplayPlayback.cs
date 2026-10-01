@@ -1,14 +1,13 @@
 using System.Collections;
 using UnityEngine;
-using TMPro;
-namespace YuJanggi.InGame.Views
+
+namespace YuJanggi.InGame.Session
 {
     using Engine.Domain;
     using Engine.JanggiRecord;
 
-    using Audio;
-    using BootStrap;
-    using Board;
+    using Views;
+    using Views.Board;
     using Runtime.Input;
 
 
@@ -18,31 +17,34 @@ namespace YuJanggi.InGame.Views
         RecordIsEmpty, IdxAtEnd, IdxAtStart,
         Succeeded, Failed
     }
-    public class ReplayView
+    public class ReplayPlayback
     {
-        private Coroutine                     _replayRoutine;
+        private Coroutine _replayRoutine;
 
-        private readonly ICoroutineRunner     _runner;
-        private readonly IReplayBoardView _board;
-        private readonly IReadOnlyRecord      _record;
-        private readonly AudioManager         _audio;
-        private readonly TMP_Text             _displayModeText;
-        private int                           _currIdx = 0;
+        private readonly ICoroutineRunner _runner;
+        private readonly IReadOnlyRecord _record;
+        private readonly BoardView _board;
+        private readonly LiveView _view;
 
-        private bool IsEmpty          => _record.Count == 0;
-        private bool IsAtStart        => _currIdx == 0;
-        private bool IsAtEnd          => _currIdx == _record.Count - 1;
-        public ReplayView(
-            IReplayBoardView board,
+        private bool _moveApplied;
+        private int _currIdx = 0;
+
+        private bool IsEmpty
+            => _record.Count == 0;
+        private bool IsAtStart
+            => _currIdx == 0;
+        private bool IsAtEnd
+            => _currIdx == _record.Count - 1;
+        public ReplayPlayback(
+            BoardView board,
             IReadOnlyRecord record,
             ICoroutineRunner runner,
-            TMP_Text displayMode)
+            LiveView view)
         {
             _board       = board;
             _record      = record;
             _runner      = runner;
-            _audio       = YuJanggiBootStrap.Instance.AudioManager;
-            _displayModeText = displayMode;
+            _view = view;
         }
         private enum ReplayState { Live, Forward, Backward };
         private ReplayState     _currState   = ReplayState.Live;
@@ -68,7 +70,7 @@ namespace YuJanggi.InGame.Views
         }
         private void ClearPrevState(ReplayState nextState)
         {
-            _board.UnHighlight();
+            _board.ClearSelection();
             StopCoroutine();
             if (_currCtx.HasValue)
             {
@@ -82,12 +84,13 @@ namespace YuJanggi.InGame.Views
         private void PrepareVisual(in MoveRecord moveRecord)
         {
             var movedPiece = moveRecord.MovedPiece;
-            _board.HighlightOnlyPiece(movedPiece.Id);
+            _board.SelectPiece(movedPiece.Id, playAudio: false);
         }
         private void EnterState(ReplayState nextState, in MoveContext nextCtx, int nextIdx)
         {
             ClearPrevState(nextState);
 
+            _moveApplied = nextState == ReplayState.Backward;
             if (!nextCtx.IsHandicap)
             {
                 PrepareVisual(nextCtx.Record);
@@ -98,40 +101,23 @@ namespace YuJanggi.InGame.Views
         }
         private void UnDoMove(MoveContext moveCtx)
         {
-            if (moveCtx.IsHandicap) return;
-            var record = moveCtx.Record;
-            var movedPiece   = record.MovedPiece;
-            var movedToPos   = record.From;
-            _board.MovePiece(movedPiece.Id, movedToPos);
-
-            if (!record.IsCapture)
-                return;
-            
-            var capturedId    = record.CapturedPiece.Id;
-            var cpaturedTeam  = record.CapturedPiece.Team;
-            var cpaturedToPos = record.To;
-            _board.RestoreCapturedPiece(capturedId, cpaturedTeam, cpaturedToPos);
+            if (moveCtx.IsHandicap || !_moveApplied) return;
+            _board.RevertMovement(moveCtx.Record, clearSelection: false,
+                restoreSelectionPose: true);
+            _moveApplied = false;
         }
         private void DoMove(MoveContext moveCtx, bool playAudio)
         {
             if (moveCtx.IsHandicap) return;
-
-            if (playAudio)
-                _audio.PlaySfxOneShot(JanggiSfx.Move);
-
-            var record = moveCtx.Record;
-            var movedPiece = record.MovedPiece;
-            var movedToPos = record.To;
-            _board.MovePiece(movedPiece.Id, movedToPos);
-
-            if (!record.IsCapture)
-                return;
-            
-            if (playAudio) 
-                _audio.PlaySfxOneShot(JanggiSfx.Capture);
-            var capturedId   = record.CapturedPiece.Id;
-            var capturedTeam = record.CapturedPiece.Team;
-            _board.PlaceCapturedPiece(capturedId, capturedTeam);
+            if (_moveApplied)
+            {
+                if (!playAudio) return;
+                // Normalize an already applied move before repeating its presentation.
+                UnDoMove(moveCtx);
+            }
+            _board.ApplyMovement(moveCtx.Record, playAudio: playAudio,
+                playParticle: false, clearSelection: false, lowerSelectedPiece: true);
+            _moveApplied = true;
         }
         private IEnumerator ReplayRoutine(MoveContext ctx)
         {
@@ -146,11 +132,14 @@ namespace YuJanggi.InGame.Views
         }
         public void ResetGame()
         {
-            _currState = ReplayState.Live;
+            _board.ClearSelection();
+            StopCoroutine();
+            UpdateState(ReplayState.Live, null, 0);
+            _moveApplied = false;
         }
         public void EnterReplayView()
         {
-            _displayModeText.SetText("기보 보기");
+            _view.ShowReplayMode();
 
             var nextState = ReplayState.Backward;
             var nextIdx   = _record.Count - 1;
@@ -163,7 +152,7 @@ namespace YuJanggi.InGame.Views
             ClearPrevState(ReplayState.Forward);
             UpdateState(ReplayState.Live, null, _record.Count - 1);
 
-            _displayModeText.SetText("라이브 보기");
+            _view.ShowLiveMode();
         }
         public ReplayResult TryReplayBackward()
         {
