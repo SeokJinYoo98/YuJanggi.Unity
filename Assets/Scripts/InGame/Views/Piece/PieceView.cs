@@ -16,31 +16,33 @@ namespace YuJanggi.InGame.Views.Piece
 
     public class PieceView : MonoBehaviour, IPieceView, IBoardClickable
     {
+        #region Fields
+        [Header("Movement Options")]
         [SerializeField] private float _moveDuration = 0.16f;
-        public Pos BoardPos
-            => _boardPos;
+        [Header("Highlight Options")]
+        [SerializeField] private Transform _visual;
+
         private Pos          _boardPos;
         private BoxCollider  _boxCollider;
         private MeshFilter   _meshFilter;
         private MeshRenderer _meshRenderer;
      
         private Tween _moveTween;
-
-
-        [SerializeField] private Transform _visual;
-
-        [SerializeField] private float _highlightHeight = 1f;
-        [SerializeField] private float _highlightDuration = 0.2f;
-        [SerializeField] private float _highlightRotateSpeed = 30f;
-
         private Tween _highlightMoveTween;
         private Tween _highlightRotateTween;
 
-        private bool        _highlight;
-        private Vector3 _visualOriginLocalPos;
+        private Vector3    _visualOriginLocalPos;
         private Quaternion _visualOriginLocalRot;
+        private const float _highlightHeight = 1f;
+        private const float _highlightRotateSpeed = 360f;
+        private const float _defaultZ = 0.1f;
+        #endregion
 
-        private float _defaultZ = 0.1f;
+        #region Properties
+        public Pos BoardPos => _boardPos;
+        #endregion
+
+        #region Unity Lifecycle
         void Awake()
         {
             _boxCollider  = GetComponent<BoxCollider>();
@@ -50,6 +52,17 @@ namespace YuJanggi.InGame.Views.Piece
             _visualOriginLocalPos = _visual.localPosition;
             _visualOriginLocalRot = _visual.localRotation;
         }
+
+        private void OnDisable()
+        {
+            StopHighlightTweens();
+            _visual.localPosition = _visualOriginLocalPos;
+            _visual.localRotation = _visualOriginLocalRot;
+        }
+
+        #endregion
+
+        #region Public Methods
         public void Init(PieceData data, Pos pos)
         {
             _boardPos                = pos;
@@ -82,28 +95,29 @@ namespace YuJanggi.InGame.Views.Piece
 
         public void SetSelectable(bool selectable)
             => _boxCollider.enabled = selectable;
-        
-        public void MoveToHighlightPosition()
+        public void SelectPiece()
         {
-            _highlightMoveTween?.Kill();
-
-            _highlightMoveTween = _visual
-                .DOLocalMoveY(
-                    _visualOriginLocalPos.y + _highlightHeight,
-                    _highlightDuration)
-                .SetEase(Ease.OutQuad);
+            MoveToHighlightPosition();
+            SwapMaterial();
+            StartHighlightRotation();
+        }
+        public void UnSelectPiece()
+        {
+            StopHighlightTweens();
+            MoveToOriginPosition();
+            RestoreHighlightRotation();
+            SwapMaterial();
         }
 
-        public void MoveToOriginPosition()
-        {
-            _highlightMoveTween?.Kill();
 
-            _highlightMoveTween = _visual
-                .DOLocalMoveY(
-                    _visualOriginLocalPos.y,
-                    _highlightDuration)
-                .SetEase(Ease.OutQuad);
-        }
+        public void Highlight()
+            => SwapMaterial();
+
+
+        #endregion
+
+        #region Private Methods
+
         private void MaterialCheck(PlayerTeam team, PieceType type)
         {
             if (team == PlayerTeam.Cho)
@@ -132,10 +146,61 @@ namespace YuJanggi.InGame.Views.Piece
             (mats[0], mats[1]) = (mats[1], mats[0]);
             _meshRenderer.sharedMaterials = mats;
         }
-        public void Highlight()
+        private void MoveToHighlightPosition()
         {
-            SwapMaterial();
+            _highlightMoveTween?.Kill();
+
+            _highlightMoveTween = _visual
+                .DOLocalMoveY(
+                    _visualOriginLocalPos.y + _highlightHeight,
+                    _moveDuration)
+                .SetEase(Ease.OutQuad);
         }
+
+        private void MoveToOriginPosition()
+        {
+            _highlightMoveTween?.Kill();
+
+            _highlightMoveTween = _visual
+                .DOLocalMoveY(
+                    _visualOriginLocalPos.y,
+                    _moveDuration)
+                .SetEase(Ease.OutQuad);
+        }
+
+        private void StartHighlightRotation()
+        {
+            _highlightRotateTween?.Kill();
+            _highlightRotateTween = null;
+
+            if (Mathf.Abs(_highlightRotateSpeed) < 0.001f)
+                return;
+
+            _highlightRotateTween = _visual
+                .DOLocalRotate(
+                    new Vector3(Mathf.Sign(_highlightRotateSpeed) * 360f, 0f, 0f),
+                    360f / Mathf.Abs(_highlightRotateSpeed),
+                    RotateMode.LocalAxisAdd)
+                .SetEase(Ease.Linear)
+                .SetLoops(-1, LoopType.Incremental);
+        }
+
+        private void StopHighlightTweens()
+        {
+            _highlightMoveTween?.Kill();
+            _highlightMoveTween = null;
+            _highlightRotateTween?.Kill();
+            _highlightRotateTween = null;
+        }
+
+        private void RestoreHighlightRotation()
+        {
+            _highlightRotateTween = _visual
+                .DOLocalRotateQuaternion(_visualOriginLocalRot, _moveDuration)
+                .SetEase(Ease.InOutSine)
+                .OnComplete(() => _highlightRotateTween = null);
+        }
+        #endregion
     }
 
 }

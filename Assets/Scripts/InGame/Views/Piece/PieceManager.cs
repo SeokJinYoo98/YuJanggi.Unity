@@ -17,8 +17,6 @@ namespace YuJanggi.InGame.Views.Piece
             _pieceSpawner = GetComponent<PieceSpawner>();
         }
 
-        public void HighlightPiece(int id)
-            => _views[id].Highlight();
         public bool TryGetPiece(int id, out PieceView piece)
             => _views.TryGetValue(id, out piece);
         public void ResetViews(IReadOnlyBoard boardModel)

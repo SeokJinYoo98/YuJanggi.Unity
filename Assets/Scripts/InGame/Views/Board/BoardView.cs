@@ -102,17 +102,16 @@ namespace YuJanggi.InGame.Views.Board
                 return;
 
             ClearSelection();
+
             _currPiece = piece;
-            _currPiece.Highlight();
-            _currPiece.MoveToHighlightPosition();
+            _currPiece.SelectPiece();
+
             Audio.PlaySfxOneShot(JanggiSfx.Select);
         }
 
         public void UnSelectPiece()
         {
-            _currPiece?.MoveToOriginPosition();
-            // Highlight toggles materials, so restore the currently selected piece before clearing it.
-            _currPiece?.Highlight();
+            _currPiece?.UnSelectPiece();
             _currPiece = null;
         }
 
