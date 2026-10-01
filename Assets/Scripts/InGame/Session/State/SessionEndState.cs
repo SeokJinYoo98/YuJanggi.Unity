@@ -12,32 +12,32 @@ namespace YuJanggi.InGame.Session
 
     internal sealed class SessionEndReplayState : SessionStateBase
     {
-        private readonly ReplayView _replayView;
+        private readonly ReplayPlayback _replayPlayback;
         public SessionEndReplayState(
             ISessionTransition sessionFsm,
             IInGameController cho, IInGameController han,
             ISessionEngine engine,
-            ReplayView replayView)
+            ReplayPlayback replayPlayback)
                 : base(sessionFsm, cho, han, engine)
         {
-            _replayView = replayView;
+            _replayPlayback = replayPlayback;
         }
         public override void Enter()
         {
             base.Enter();
             if (_engine.Record.Count == 0) 
                 _transition.ToEnd();
-            _replayView.EnterReplayView();
+            _replayPlayback.EnterReplayView();
         }
         public override void Exit()
         {
             base.Exit();
-            _replayView.ExitReplayView();
+            _replayPlayback.ExitReplayView();
         }
         public override void RequestStepBackward()
         {
             base.RequestStepBackward();
-            var result = _replayView.TryReplayBackward();
+            var result = _replayPlayback.TryReplayBackward();
             if (_debug)
                 Debug.Log($"{result}");
             if (result == ReplayResult.Succeeded) return;
@@ -47,7 +47,7 @@ namespace YuJanggi.InGame.Session
         public override void RequestStepForward()
         {
             base.RequestStepForward();
-            var result = _replayView.TryReplayForward();
+            var result = _replayPlayback.TryReplayForward();
             if (_debug)
                 Debug.Log($"{result}");
             if (result == ReplayResult.Succeeded) return;

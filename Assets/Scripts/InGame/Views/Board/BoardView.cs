@@ -10,21 +10,12 @@ namespace YuJanggi.InGame.Views.Board
     using Particle;
     using Piece;
 
-    public interface IReplayBoardView
-    {
-        public void RestoreCapturedPiece(int id, PlayerTeam team, Pos to);
-        public void PlaceCapturedPiece(int id, PlayerTeam team);
-        public void MovePiece(int id, Pos to);
-        public void UnHighlight();
-        public void HighlightOnlyPiece(int id);
-    }
-
     public interface ILiveBoardView
     {
     }
 
     /// <summary>Live/Replay 여부와 무관하게 보드 위의 시각적 표현을 조정합니다.</summary>
-    public class BoardView : MonoBehaviour, IReplayBoardView
+    public class BoardView : MonoBehaviour
     {
         [SerializeField] private PieceManager _piece;
         [SerializeField] private ParticleManager _particle;
@@ -47,13 +38,6 @@ namespace YuJanggi.InGame.Views.Board
             _piece.ResetViews(boardModel);
         }
 
-        public void ResetGame(IReadOnlyBoard model)
-        {
-            SyncBoardState(model);
-            _deathPos = new Vector3(4, 0, -2);
-            _deathCnt = 0;
-        }
-
         public void MovePiece(int id, Pos to) => _piece.DoMove(id, to);
 
         public void PlaceCapturedPiece(int id, PlayerTeam team)
@@ -69,34 +53,43 @@ namespace YuJanggi.InGame.Views.Board
             _piece.RestoreCapturedPiece(id, to);
         }
 
-        public void ApplyMovement(MoveRecord record)
+        public void ApplyMovement(MoveRecord record, bool playAudio = true,
+            bool playParticle = true, bool clearSelection = true, bool lowerSelectedPiece = false)
         {
-            ClearSelection();
+            if (clearSelection) ClearSelection();
+            if (lowerSelectedPiece && _piece.TryGetPiece(record.MovedPiece.Id, out var selected)
+                && selected == _currPiece)
+                selected.ShowMovementPose();
             var from = record.From;
             var to = record.To;
-            _particle.PlayMovementParticle(
-                new Vector3(from.X, 1f, from.Z),
-                new Vector3(to.X, 1f, to.Z));
+            if (playParticle)
+                _particle.PlayMovementParticle(
+                    new Vector3(from.X, 1f, from.Z),
+                    new Vector3(to.X, 1f, to.Z));
             MovePiece(record.MovedPiece.Id, to);
-            Audio.PlaySfxOneShot(JanggiSfx.Move);
+            if (playAudio) Audio.PlaySfxOneShot(JanggiSfx.Move);
 
             if (record.IsCapture)
             {
-                _particle.PlayCapture(new Vector3(to.X, 0f, to.Z));
+                if (playParticle) _particle.PlayCapture(new Vector3(to.X, 0f, to.Z));
                 PlaceCapturedPiece(record.CapturedPiece.Id, record.CapturedPiece.Team);
-                Audio.PlaySfxOneShot(JanggiSfx.Capture);
+                if (playAudio) Audio.PlaySfxOneShot(JanggiSfx.Capture);
             }
         }
 
-        public void RevertMovement(MoveRecord record)
+        public void RevertMovement(MoveRecord record, bool clearSelection = true,
+            bool restoreSelectionPose = false)
         {
-            ClearSelection();
+            if (clearSelection) ClearSelection();
             MovePiece(record.MovedPiece.Id, record.From);
             if (record.IsCapture)
                 RestoreCapturedPiece(record.CapturedPiece.Id, record.CapturedPiece.Team, record.To);
+            if (restoreSelectionPose && _piece.TryGetPiece(record.MovedPiece.Id, out var selected)
+                && selected == _currPiece)
+                selected.ShowHighlightPose();
         }
 
-        public void SelectPiece(int id)
+        public void SelectPiece(int id, bool playAudio = true)
         {
             if (!_piece.TryGetPiece(id, out var piece))
                 return;
@@ -106,7 +99,7 @@ namespace YuJanggi.InGame.Views.Board
             _currPiece = piece;
             _currPiece.SelectPiece();
 
-            Audio.PlaySfxOneShot(JanggiSfx.Select);
+            if (playAudio) Audio.PlaySfxOneShot(JanggiSfx.Select);
         }
 
         public void UnSelectPiece()
@@ -130,32 +123,5 @@ namespace YuJanggi.InGame.Views.Board
 
         public void HideMoveGuides() => _moveGuide.HideHighlight();
 
-        public void OnSelectionChanged(int? id, IReadOnlyList<Pos> legals, IReadOnlyList<Pos> illegals)
-        {
-            if (!id.HasValue)
-            {
-                ClearSelection();
-                return;
-            }
-
-            if (!_piece.TryGetPiece(id.Value, out _))
-                return;
-
-            SelectPiece(id.Value);
-            ShowMoveGuides(legals, illegals);
-        }
-
-        // Existing Replay contract: retain these entry points without changing ReplayView.
-        public void UnHighlight() => ClearSelection();
-
-        public void HighlightOnlyPiece(int id)
-        {
-            if (!_piece.TryGetPiece(id, out var piece))
-                return;
-
-            ClearSelection();
-            piece.Highlight();
-            _currPiece = piece;
-        }
     }
 }

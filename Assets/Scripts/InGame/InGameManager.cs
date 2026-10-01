@@ -135,20 +135,17 @@ namespace YuJanggi.InGame
             var liveView =
                 InGameViewFactory.CreateLiveView(
                     _resultUI,
-                    _matchUI);
-
-            var replayView =
-                InGameViewFactory.CreateReplayView(
-                    _boardView,
-                    engine.Record,
-                    _runner,
+                    _matchUI,
                     _displayModeText);
+
+            var replayPlayback = new ReplayPlayback(
+                _boardView, engine.Record, _runner, liveView);
 
             _session = GameSessionFactory.CreateSession(
                 engine,
                 _localInput,
                 liveView,
-                replayView,
+                replayPlayback,
                 _boardView);
         }
 

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 namespace YuJanggi.InGame.Session
 {
+    using Engine.JanggiEngine;
     using Engine.Domain;
 
     using InGame.Views;
@@ -9,7 +10,7 @@ namespace YuJanggi.InGame.Session
 
     using Controller;
     using Runtime.Input;
-    using YuJanggi.Engine.JanggiEngine;
+
 
     internal interface ISessionTransition
     {
@@ -32,7 +33,7 @@ namespace YuJanggi.InGame.Session
         private readonly IInGameController  _playerHan;
 
         private readonly LiveView   _liveView;
-        private readonly ReplayView _replayView;
+        private readonly ReplayPlayback _replayPlayback;
         private readonly BoardView _boardView;
 
         private bool _play = false;
@@ -52,13 +53,13 @@ namespace YuJanggi.InGame.Session
             IJanggiEngine engine,
             IInputHandler localInput,
             IInGameController cho, IInGameController han,
-            LiveView liveView, ReplayView replayView, BoardView boardView)
+            LiveView liveView, ReplayPlayback replayPlayback, BoardView boardView)
         {
             _engine     = engine;
             _localInput = localInput;
             _playerCho  = cho;
             _playerHan  = han;
-            _liveView = liveView; _replayView = replayView;
+            _liveView = liveView; _replayPlayback = replayPlayback;
             _boardView = boardView;
             _states = CreateStates();
         }
@@ -194,7 +195,7 @@ namespace YuJanggi.InGame.Session
             var board = _engine.Board;
 
             _engine.InitEngine();
-            _replayView.ResetGame();
+            _replayPlayback.ResetGame();
             _liveView.ResetGame();
             _boardView.SyncBoardState(_engine.Board);
             _engine.StartEngine();
@@ -207,9 +208,9 @@ namespace YuJanggi.InGame.Session
         {
             var states = new Dictionary<SessionState, ISessionState>();
             states[SessionState.LiveState]   = new SessionLiveState(this, _engine, _playerCho, _playerHan, _liveView, _boardView);
-            states[SessionState.ReplayState] = new SessionReplayState(this, _engine, _playerCho, _playerHan, _replayView, _liveView);
+            states[SessionState.ReplayState] = new SessionReplayState(this, _engine, _playerCho, _playerHan, _replayPlayback, _liveView);
             states[SessionState.EndState]    = new SessionEndState(this, this, _playerCho, _playerHan, _engine, _liveView, _boardView);
-            states[SessionState.EndReplayState] = new SessionEndReplayState(this, _playerCho, _playerHan, _engine, _replayView);
+            states[SessionState.EndReplayState] = new SessionEndReplayState(this, _playerCho, _playerHan, _engine, _replayPlayback);
             return states;
         }
 
