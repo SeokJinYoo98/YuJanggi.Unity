@@ -55,6 +55,10 @@ namespace YuJanggi.Runtime.Input
             {
                 _camera.transform.position = new Vector3(4, 9, 6);
                 _camera.transform.eulerAngles = new Vector3(90, 0, 180);
+                _camera.fieldOfView =
+                    Camera.HorizontalToVerticalFieldOfView(
+                        59f,
+                        _camera.aspect);
             }
             else
             {

@@ -28,13 +28,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3795874044370956706}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: 0, y: 0.2, z: 0}
-  m_LocalScale: {x: 3, y: 3, z: 3}
+  m_LocalScale: {x: 3, y: 2, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!33 &1838582484300104116
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -107,9 +107,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.Piece.PieceView
   _moveDuration: 0.16
   _visual: {fileID: 4030716262367460685}
-  _highlightHeight: 0.5
-  _highlightDuration: 0.2
-  _highlightRotateSpeed: 30
 --- !u!65 &5546104078667275153
 BoxCollider:
   m_ObjectHideFlags: 0

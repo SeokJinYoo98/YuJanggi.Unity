@@ -86,16 +86,21 @@ namespace YuJanggi.InGame.Session
             var movedPiece = moveRecord.MovedPiece;
             _board.SelectPiece(movedPiece.Id, playAudio: false);
         }
+        private void PreparePlayback(MoveContext moveCtx)
+        {
+            if (moveCtx.IsHandicap) return;
+
+            // Restore the move and captured piece before selecting the starting pose.
+            UnDoMove(moveCtx);
+            PrepareVisual(moveCtx.Record);
+            StartCoroutine(moveCtx);
+        }
         private void EnterState(ReplayState nextState, in MoveContext nextCtx, int nextIdx)
         {
             ClearPrevState(nextState);
 
             _moveApplied = nextState == ReplayState.Backward;
-            if (!nextCtx.IsHandicap)
-            {
-                PrepareVisual(nextCtx.Record);
-                StartCoroutine(nextCtx);
-            }
+            PreparePlayback(nextCtx);
 
             UpdateState(nextState, nextCtx, nextIdx);
         }
