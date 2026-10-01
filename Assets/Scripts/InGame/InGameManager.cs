@@ -10,10 +10,11 @@ namespace YuJanggi.InGame
 
     using BootStrap;
 
+    using Views.Particle;
+    using Views.Board;
 
-    using Runtime.Board;
     using Runtime.Input;
-    using Runtime.Particle;
+
     using Runtime.UI;
     using Store;
 
@@ -22,8 +23,7 @@ namespace YuJanggi.InGame
     using Handler;
     using Session;
     using Views;
-    using YuJanggi.Engine.JanggiRecord;
-    using YuJanggi.InGame.Controller;
+
 
     public class InGameManager : MonoBehaviour
     {
@@ -32,8 +32,8 @@ namespace YuJanggi.InGame
 
         [Header("Views")]
         [SerializeField] private BoardView     _boardView;
-        [SerializeField] private MoveGuideView _moveGuideView;
-        [SerializeField] private ParticleView  _particleView;
+        [SerializeField] private MoveGuideManager _moveGuideView;
+        [SerializeField] private ParticleManager  _particleView;
 
         [Header("UIs")]
         [SerializeField] private ResultUI   _resultUI;
@@ -134,9 +134,6 @@ namespace YuJanggi.InGame
 
             var liveView =
                 InGameViewFactory.CreateLiveView(
-                    _particleView,
-                    _moveGuideView,
-                    _boardView,
                     _resultUI,
                     _matchUI);
 
@@ -151,7 +148,8 @@ namespace YuJanggi.InGame
                 engine,
                 _localInput,
                 liveView,
-                replayView);
+                replayView,
+                _boardView);
         }
 
         private void InitInGameSession()

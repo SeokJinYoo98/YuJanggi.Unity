@@ -4,33 +4,51 @@ using DG.Tweening;
 using YuJanggi.Runtime.Input;
 
 
-namespace YuJanggi.Runtime.Piece
+namespace YuJanggi.InGame.Views.Piece
 {
     using Engine.Domain;
     using Data.Board;
 
     public interface IPieceView
     {
-        public void Highlight();
         public void MoveTo(Pos toPos);
     }
 
     public class PieceView : MonoBehaviour, IPieceView, IBoardClickable
     {
         [SerializeField] private float _moveDuration = 0.16f;
-        public Pos BoardPos => _boardPos;
-        
+        public Pos BoardPos
+            => _boardPos;
         private Pos          _boardPos;
         private BoxCollider  _boxCollider;
         private MeshFilter   _meshFilter;
         private MeshRenderer _meshRenderer;
-        private bool         _highlight;
-        private Tween        _moveTween;
+     
+        private Tween _moveTween;
+
+
+        [SerializeField] private Transform _visual;
+
+        [SerializeField] private float _highlightHeight = 1f;
+        [SerializeField] private float _highlightDuration = 0.2f;
+        [SerializeField] private float _highlightRotateSpeed = 30f;
+
+        private Tween _highlightMoveTween;
+        private Tween _highlightRotateTween;
+
+        private bool        _highlight;
+        private Vector3 _visualOriginLocalPos;
+        private Quaternion _visualOriginLocalRot;
+
+        private float _defaultZ = 0.1f;
         void Awake()
         {
             _boxCollider  = GetComponent<BoxCollider>();
             _meshFilter   = GetComponent<MeshFilter>();
             _meshRenderer = GetComponent<MeshRenderer>();
+
+            _visualOriginLocalPos = _visual.localPosition;
+            _visualOriginLocalRot = _visual.localRotation;
         }
         public void Init(PieceData data, Pos pos)
         {
@@ -41,8 +59,7 @@ namespace YuJanggi.Runtime.Piece
             var type = data.Type;
 
             MaterialCheck(team, type);
-            transform.position = new Vector3(pos.X, 1, pos.Z);
-            transform.Rotate(new Vector3(0, 180, 0));
+            transform.position = new Vector3(pos.X, _defaultZ, pos.Z);
         }
         public void  MoveTo(Vector3 toPos)
         {
@@ -57,39 +74,35 @@ namespace YuJanggi.Runtime.Piece
                     _moveTween         = null;
                 });
         }
-        public void  MoveTo(Pos toPos)
+        public void MoveTo(Pos toPos)
         {
-            Vector3 worldPos = new Vector3(toPos.X, 1f, toPos.Z);
-
-            _moveTween?.Kill();
-
-            _moveTween = transform
-                .DOMove(worldPos, _moveDuration)
-                .SetEase(Ease.Linear)
-                .OnComplete(() =>
-                {
-                    _boardPos           = toPos;
-                    transform.position  = worldPos;
-                    _moveTween          = null;
-                });
+            _boardPos = toPos;
+            MoveTo(new Vector3(toPos.X, _defaultZ, toPos.Z));
         }
 
-        public void SetDead(bool dead)
+        public void SetSelectable(bool selectable)
+            => _boxCollider.enabled = selectable;
+        
+        public void MoveToHighlightPosition()
         {
-            _boxCollider.enabled = !dead;
-            UnHighlight();
+            _highlightMoveTween?.Kill();
+
+            _highlightMoveTween = _visual
+                .DOLocalMoveY(
+                    _visualOriginLocalPos.y + _highlightHeight,
+                    _highlightDuration)
+                .SetEase(Ease.OutQuad);
         }
-        public void  Highlight()
+
+        public void MoveToOriginPosition()
         {
-            if (_highlight) return;
-            SwapMaterial();
-            _highlight = !_highlight;
-        }
-        public void  UnHighlight()
-        {
-            if (!_highlight) return;
-            SwapMaterial();
-            _highlight = !_highlight;
+            _highlightMoveTween?.Kill();
+
+            _highlightMoveTween = _visual
+                .DOLocalMoveY(
+                    _visualOriginLocalPos.y,
+                    _highlightDuration)
+                .SetEase(Ease.OutQuad);
         }
         private void MaterialCheck(PlayerTeam team, PieceType type)
         {
@@ -119,7 +132,10 @@ namespace YuJanggi.Runtime.Piece
             (mats[0], mats[1]) = (mats[1], mats[0]);
             _meshRenderer.sharedMaterials = mats;
         }
-
+        public void Highlight()
+        {
+            SwapMaterial();
+        }
     }
 
 }

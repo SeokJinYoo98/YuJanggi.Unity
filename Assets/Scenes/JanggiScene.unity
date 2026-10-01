@@ -624,7 +624,7 @@ Camera:
   m_BackGroundColor: {r: 0.3018868, g: 0.3018868, b: 0.3018868, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
-  m_FOVAxisMode: 0
+  m_FOVAxisMode: 1
   m_Iso: 200
   m_ShutterSpeed: 0.005
   m_Aperture: 16
@@ -643,9 +643,9 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 10
-  field of view: 60
-  orthographic: 1
+  far clip plane: 20
+  field of view: 84.34201
+  orthographic: 0
   orthographic size: 9
   m_Depth: 0
   m_CullingMask:
@@ -671,7 +671,7 @@ Transform:
   m_GameObject: {fileID: 135010635}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 4, y: 9, z: 3}
+  m_LocalPosition: {x: 4, y: 10, z: 3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -703,13 +703,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182760223}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.20693347, y: -0, z: -0, w: 0.97835505}
-  m_LocalPosition: {x: 4.6173, y: -3.46, z: 2.7144}
+  m_LocalRotation: {x: 0.312078, y: -0, z: -0, w: 0.9500565}
+  m_LocalPosition: {x: 4.6173, y: 7.9, z: -7.85}
   m_LocalScale: {x: 41.663, y: 41.663006, z: 41.663}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: -66.115, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 36.369, y: 0, z: 0}
 --- !u!114 &182760225
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -756,7 +756,7 @@ Light:
   m_InnerSpotAngle: 21.80208
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
-    m_Type: 0
+    m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
@@ -1089,7 +1089,7 @@ GameObject:
   - component: {fileID: 320383218}
   - component: {fileID: 320383219}
   m_Layer: 2
-  m_Name: View_ParticleView
+  m_Name: Manager_ParticleView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1104,7 +1104,7 @@ Transform:
   m_GameObject: {fileID: 320383217}
   serializedVersion: 2
   m_LocalRotation: {x: -0.00053782546, y: 0.9999996, z: 0.00073765655, w: 0.000033442295}
-  m_LocalPosition: {x: 4, y: 0, z: 4.5}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1122,7 +1122,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79d8ba22d04fb564ea620172745e3253, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ParticleView
-  _captureParticlePrefab: {fileID: 7809088595500980869, guid: d676a011454169648b72dc1ef1343b95, type: 3}
+  _capturedParticlePrefab: {fileID: 7809088595500980869, guid: d676a011454169648b72dc1ef1343b95, type: 3}
   _moveParticlePrefab: {fileID: 7809088595500980869, guid: 9aa4008f80959754390ac9b38a325952, type: 3}
   _moveDefaultCapacity: 8
   _moveMaxSize: 16
@@ -1950,7 +1950,7 @@ GameObject:
   - component: {fileID: 509507444}
   - component: {fileID: 509507443}
   m_Layer: 2
-  m_Name: View_PieceViews
+  m_Name: Manager_PieceView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1965,7 +1965,7 @@ Transform:
   m_GameObject: {fileID: 509507441}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 6.8182697, y: 5.1869397, z: 14.346068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3305,8 +3305,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1161876142}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -6.81827, y: 1, z: -14.34607}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4204,7 +4204,7 @@ Transform:
   m_GameObject: {fileID: 1442720189}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -6.81827, y: 1, z: -14.34607}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4354,7 +4354,7 @@ GameObject:
   - component: {fileID: 1524079746}
   - component: {fileID: 1524079747}
   m_Layer: 3
-  m_Name: View_MoveGuideCellView
+  m_Name: Manager_MoveGuideView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4369,7 +4369,7 @@ Transform:
   m_GameObject: {fileID: 1524079744}
   serializedVersion: 2
   m_LocalRotation: {x: 0.00073765655, y: -0.000033442295, z: 0.00053782546, w: 0.9999996}
-  m_LocalPosition: {x: 1.7091947, y: 4.399237, z: 3.3515778}
+  m_LocalPosition: {x: 0, y: 0.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5635,13 +5635,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2126822358}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.00053782546, y: 0.9999996, z: 0.00073765655, w: 0.000033442295}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: 4, y: 0, z: 4.5}
   m_LocalScale: {x: 1, y: 1, z: 1.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: -0.085, y: 179.996, z: -0.062}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &2126822363
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5654,7 +5654,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4aa45871e93674409a672bf74cd2644, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.View.Board.BoardView
-  _pieces: {fileID: 509507444}
+  _piece: {fileID: 509507444}
+  _particle: {fileID: 320383219}
+  _moveGuide: {fileID: 1524079747}
 --- !u!1 &2129848564
 GameObject:
   m_ObjectHideFlags: 0

@@ -128,7 +128,7 @@ namespace YuJanggi.InGame.Controller
 
             OnMoveRequest(_selectedPos, toPos);
 
-            ClearSelection();
+            ResetSelection();
             return true;
         }
         private bool TryReselectPiece(Pos pos)
@@ -143,12 +143,16 @@ namespace YuJanggi.InGame.Controller
 
             return true;
         }
-        protected void ClearSelection()
+        private void ResetSelection()
         {
             _selectedPos = Pos.Invalid;
 
             _legal.Clear();
             _illegal.Clear();
+        }
+        protected void ClearSelection()
+        {
+            ResetSelection();
 
             OnSelectionChanged?.Invoke(
                 null,

@@ -1,21 +1,22 @@
 using UnityEngine;
+using UnityEngine.Pool;
+using System.Collections.Generic;
 
-namespace YuJanggi.Runtime.Board
+namespace YuJanggi.InGame.Views.Board
 { 
     using Engine.Domain;
-    using System.Collections.Generic;
-    using UnityEngine.Pool;
 
-    public class MoveGuideView : MonoBehaviour
+
+    public class MoveGuideManager : MonoBehaviour
     {
-        [SerializeField] private MoveGuideCellView _prefab;
-        private ObjectPool<MoveGuideCellView>      _pool;
-        private List<MoveGuideCellView> _active;
+        [SerializeField] private MoveGuideView _prefab;
+        private ObjectPool<MoveGuideView>      _pool;
+        private List<MoveGuideView>            _active;
         void Awake()
         {
-            _active = new List<MoveGuideCellView>(25);
+            _active = new List<MoveGuideView>(25);
 
-            _pool = new ObjectPool<MoveGuideCellView>(
+            _pool = new ObjectPool<MoveGuideView>(
                 ()  => Instantiate(_prefab, transform),
                 obj => obj.Show(true),
                 obj => obj.Hide(),

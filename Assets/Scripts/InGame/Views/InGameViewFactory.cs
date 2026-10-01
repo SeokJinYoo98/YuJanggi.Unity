@@ -1,29 +1,22 @@
-
-
 using TMPro;
-using YuJanggi.Engine.JanggiRecord;
-using YuJanggi.Runtime.Board;
-using YuJanggi.Runtime.Input;
-using YuJanggi.Runtime.Particle;
-using YuJanggi.Runtime.UI;
 
 namespace YuJanggi.InGame.Views
 {
+    using Engine.JanggiRecord;
+    using Board;
+    using Runtime.UI;
+    using Runtime.Input;
+
     internal static class InGameViewFactory
     {
-        internal static LiveView CreateLiveView(
-            ParticleView particleView,
-            MoveGuideView moveGuideView,
-            BoardView boardView,
-            ResultUI resultUI,
-            MatchUI matchUI)
-                => new(particleView, moveGuideView, boardView, resultUI, matchUI);
+        internal static LiveView CreateLiveView(ResultUI resultUI, MatchUI matchUI)
+            => new(resultUI, matchUI);
 
         internal static ReplayView CreateReplayView(
-            IReplayBoardRenderer board,
+            IReplayBoardView board,
             IReadOnlyRecord record,
             ICoroutineRunner runner,
             TMP_Text displayMode)
-                => new(board, record, runner, displayMode);
+            => new(board, record, runner, displayMode);
     }
 }

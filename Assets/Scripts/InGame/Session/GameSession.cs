@@ -5,6 +5,7 @@ namespace YuJanggi.InGame.Session
     using Engine.Domain;
 
     using InGame.Views;
+    using InGame.Views.Board;
 
     using Controller;
     using Runtime.Input;
@@ -32,6 +33,7 @@ namespace YuJanggi.InGame.Session
 
         private readonly LiveView   _liveView;
         private readonly ReplayView _replayView;
+        private readonly BoardView _boardView;
 
         private bool _play = false;
         #endregion
@@ -50,13 +52,14 @@ namespace YuJanggi.InGame.Session
             IJanggiEngine engine,
             IInputHandler localInput,
             IInGameController cho, IInGameController han,
-            LiveView liveView, ReplayView replayView)
+            LiveView liveView, ReplayView replayView, BoardView boardView)
         {
             _engine     = engine;
             _localInput = localInput;
             _playerCho  = cho;
             _playerHan  = han;
             _liveView = liveView; _replayView = replayView;
+            _boardView = boardView;
             _states = CreateStates();
         }
 
@@ -78,7 +81,7 @@ namespace YuJanggi.InGame.Session
         public void InitGame()
         {
             _engine.InitEngine();
-            _liveView.InitMatchView(_engine.Board);
+            _boardView.InitPieces(_engine.Board);
         }
         public void StartGame()
         {
@@ -192,7 +195,8 @@ namespace YuJanggi.InGame.Session
 
             _engine.InitEngine();
             _replayView.ResetGame();
-            _liveView.ResetGame(_engine.Board);
+            _liveView.ResetGame();
+            _boardView.SyncBoardState(_engine.Board);
             _engine.StartEngine();
             ToLive();
         }
@@ -202,9 +206,9 @@ namespace YuJanggi.InGame.Session
         private Dictionary<SessionState, ISessionState> CreateStates()
         {
             var states = new Dictionary<SessionState, ISessionState>();
-            states[SessionState.LiveState]   = new SessionLiveState(this, _engine, _playerCho, _playerHan, _liveView);
+            states[SessionState.LiveState]   = new SessionLiveState(this, _engine, _playerCho, _playerHan, _liveView, _boardView);
             states[SessionState.ReplayState] = new SessionReplayState(this, _engine, _playerCho, _playerHan, _replayView, _liveView);
-            states[SessionState.EndState]    = new SessionEndState(this, this, _playerCho, _playerHan, _engine, _liveView);
+            states[SessionState.EndState]    = new SessionEndState(this, this, _playerCho, _playerHan, _engine, _liveView, _boardView);
             states[SessionState.EndReplayState] = new SessionEndReplayState(this, _playerCho, _playerHan, _engine, _replayView);
             return states;
         }

@@ -1,16 +1,16 @@
-using System;
 using System.Collections;
 using UnityEngine;
 using TMPro;
 namespace YuJanggi.InGame.Views
 {
+    using Engine.Domain;
+    using Engine.JanggiRecord;
+
     using Audio;
     using BootStrap;
-    using Engine.Domain;
-
-    using Runtime.Board;
+    using Board;
     using Runtime.Input;
-    using YuJanggi.Engine.JanggiRecord;
+
 
 
     public enum ReplayResult
@@ -23,7 +23,7 @@ namespace YuJanggi.InGame.Views
         private Coroutine                     _replayRoutine;
 
         private readonly ICoroutineRunner     _runner;
-        private readonly IReplayBoardRenderer _board;
+        private readonly IReplayBoardView _board;
         private readonly IReadOnlyRecord      _record;
         private readonly AudioManager         _audio;
         private readonly TMP_Text             _displayModeText;
@@ -33,7 +33,7 @@ namespace YuJanggi.InGame.Views
         private bool IsAtStart        => _currIdx == 0;
         private bool IsAtEnd          => _currIdx == _record.Count - 1;
         public ReplayView(
-            IReplayBoardRenderer board,
+            IReplayBoardView board,
             IReadOnlyRecord record,
             ICoroutineRunner runner,
             TMP_Text displayMode)

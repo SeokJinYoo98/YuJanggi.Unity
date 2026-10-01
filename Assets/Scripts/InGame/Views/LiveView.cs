@@ -1,149 +1,65 @@
-using System.Collections.Generic;
-using UnityEngine;
-
-
 namespace YuJanggi.InGame.Views
 {
+    using Engine.JanggiEngine;
+    using Engine.Domain;
     using Audio;
     using BootStrap;
-    using Engine.Domain;
-    using Engine.JanggiBoard;
-    using Runtime.Board;
-    using Runtime.Particle;
     using Runtime.UI;
-    using UnityEngine.SocialPlatforms.Impl;
-    using YuJanggi.Engine.JanggiEngine;
 
-    public class LiveView 
+    /// <summary>Live 게임 상태에서 사용하는 UI와 HUD 표현을 담당합니다.</summary>
+    public class LiveView
     {
-        public LiveView(
-            ParticleView    particleView,
-            MoveGuideView   moveGuideView,
-            BoardView       boardView,
-            ResultUI        resultUI,
-            MatchUI         matchUI)
+        private readonly ResultUI _resultUI;
+        private readonly MatchUI _liveUI;
+        private readonly AudioManager _audioManager;
+
+        public LiveView(ResultUI resultUI, MatchUI matchUI)
         {
-            _particleView   = particleView;
-            _moveGuideView  = moveGuideView;
-            _boardView      = boardView;
-            _resultUI       = resultUI;
-            _liveUI        = matchUI;
-            _audioManager   = YuJanggiBootStrap.Instance.AudioManager;
+            _resultUI = resultUI;
+            _liveUI = matchUI;
+            _audioManager = YuJanggiBootStrap.Instance.AudioManager;
         }
+
         public void CheckOccured(PlayerTeam team)
         {
             _audioManager.PlaySfxOneShot(JanggiSfx.Check);
             _liveUI.PlayJanggun(team);
         }
+
         public void CheckReleased()
             => _audioManager.PlaySfxOneShot(JanggiSfx.UnCheck);
-        public void SyncBoardState(IReadOnlyBoard board)
-            => _boardView.SyncBoardState(board);
 
-        public void HighlightPiece(int pieceId)
-        {
-            _audioManager.PlaySfxOneShot(JanggiSfx.Select);
-            _boardView.HighlightOnlyPiece(pieceId);
-        }
-        public void HighlightWays(IReadOnlyList<Pos> legals, IReadOnlyList<Pos> illegals)
-        {
-            _moveGuideView.ShowHighlight(legals, true);
-            _moveGuideView.ShowHighlight(illegals, false);
-        }
-        public void UnHighlight()
-        {
-            _boardView.UnHighlightPiece();
-            _moveGuideView.HideHighlight();
-        }
-        public void ApplyMovement(MoveRecord record)
-        {
-            var fromPos = record.From;
-            var toPos = record.To;
-            _particleView.PlayMovementParticle(
-                new Vector3(fromPos.X, 1f, fromPos.Z),
-                new Vector3(toPos.X, 1f, toPos.Z));
-            _boardView.MovePiece(record.MovedPiece.Id, toPos);
-            _audioManager.PlaySfxOneShot(JanggiSfx.Move);
-            if (record.IsCapture)
-            {
-                _particleView.PlayCapture(new Vector3(toPos.X, 0f, toPos.Z));
-                _boardView.PlaceCapturedPiece(record.CapturedPiece.Id, record.CapturedPiece.Team);
-                _audioManager.PlaySfxOneShot(JanggiSfx.Capture);
-            }
-        }
-        public void RevertMovement(MoveRecord record)
-        {
-            var movedPiece = record.MovedPiece;
-            var to = record.From;
-            _boardView.MovePiece(movedPiece.Id, to);
-
-            if (record.IsCapture)
-            {
-                to = record.To;
-                var captured = record.CapturedPiece;
-                _boardView.RestoreCapturedPiece(captured.Id, captured.Team, to);
-            }
-        }
         public void OnGameEnded(in GameResultInfo info, bool loserIsLocal)
         {
-            if (loserIsLocal) _audioManager.PlaySfxOneShot(JanggiSfx.Lose);
-            else _audioManager.PlaySfxOneShot(JanggiSfx.Win);
+            _audioManager.PlaySfxOneShot(loserIsLocal ? JanggiSfx.Lose : JanggiSfx.Win);
             _resultUI.EndGame(info);
         }
-        public void ShowResultUI()
-            => _resultUI.Show();
-        public void HideResultUI()
-            => _resultUI.Hide();
 
+        public void ShowResultUI() => _resultUI.Show();
+        public void HideResultUI() => _resultUI.Hide();
 
         public void BindUI(IReadOnlyGameStateEvents events)
         {
-            events.OnRecordChanged  += _liveUI.UpdateTotalTurn;
-            events.OnTimeChanged    += _liveUI.UpdateTimer;
-            events.OnScoreChanged   += _liveUI.UpdateScore;
-        }
-        public void UnBindUI(IReadOnlyGameStateEvents events)
-        {
-            events.OnRecordChanged  -= _liveUI.UpdateTotalTurn;
-            events.OnTimeChanged    -= _liveUI.UpdateTimer;
-            events.OnScoreChanged   -= _liveUI.UpdateScore;
+            events.OnRecordChanged += _liveUI.UpdateTotalTurn;
+            events.OnTimeChanged += _liveUI.UpdateTimer;
+            events.OnScoreChanged += _liveUI.UpdateScore;
         }
 
-        /// <summary>
-        /// 흠ㅁ,,,,,,
-        /// </summary>
-        /// <param name="isLocal"></param>
-        private void LocalTurnAlert(bool isLocal)
+        public void UnBindUI(IReadOnlyGameStateEvents events)
         {
-            if (!isLocal) return;
-            _audioManager.PlaySfxOneShot(JanggiSfx.TurnAlert);
+            events.OnRecordChanged -= _liveUI.UpdateTotalTurn;
+            events.OnTimeChanged -= _liveUI.UpdateTimer;
+            events.OnScoreChanged -= _liveUI.UpdateScore;
         }
+
         public void UpdateTurnInfo(PlayerTeam next, bool isLocal)
         {
-            LocalTurnAlert(isLocal);
+            if (isLocal)
+                _audioManager.PlaySfxOneShot(JanggiSfx.TurnAlert);
 
             _liveUI.UpdateTurn(next);
         }
 
-        public void ResetGame(IReadOnlyBoard boardModel)
-        {
-            _resultUI.Hide();
-            _boardView.SyncBoardState(boardModel);
-        }
-        public void InitMatchView(IReadOnlyBoard boardModel)
-        {
-            _boardView.InitPieces(boardModel);
-        }
-
-
-        private readonly ParticleView   _particleView;
-        private readonly MoveGuideView  _moveGuideView;
-        private readonly BoardView      _boardView;
-
-        private readonly ResultUI       _resultUI;
-        private readonly MatchUI        _liveUI;
-        private readonly AudioManager   _audioManager;
+        public void ResetGame() => _resultUI.Hide();
     }
 }
-
-
