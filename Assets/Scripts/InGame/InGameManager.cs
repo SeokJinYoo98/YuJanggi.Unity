@@ -201,6 +201,12 @@ namespace YuJanggi.InGame
         public void HandleMainLobby()
         {
             _audioManager.PlayButton();
+            if (GameMode == GameModeType.Network)
+            {
+                var networkManager = YuJanggiBootStrap.Instance.NetworkManager;
+                networkManager.ResetMatchState();
+                networkManager.Disconnect();
+            }
             SceneManager.LoadScene("LobbyScene");
         }
         public void HandleReplayModeEnter()

@@ -8,9 +8,9 @@ namespace YuJanggi.InGame.Controller
     public interface IGameInputReceiver
     {
         void RequestMove(Pos from, Pos to);
-        void ChangeSelection(int? pieceId, IReadOnlyList<Pos> legal, IReadOnlyList<Pos> illegal);
+        void SelectPiece(int? pieceId, IReadOnlyList<Pos> legal, IReadOnlyList<Pos> illegal);
     }
-    internal delegate void SelectionChangedHandler(
+    internal delegate void OnSelectPiece(
             int? pieceId,
             IReadOnlyList<Pos> legalWays,
             IReadOnlyList<Pos> illegalWays);
@@ -18,7 +18,7 @@ namespace YuJanggi.InGame.Controller
 
     internal interface IInGameLocalController
     {
-        event SelectionChangedHandler OnSelectionChanged;
+        event OnSelectPiece OnSelectionChanged;
     }
     internal interface IInGameController
     {

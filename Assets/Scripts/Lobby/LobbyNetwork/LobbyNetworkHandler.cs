@@ -61,6 +61,13 @@ namespace YuJanggi.Lobby.Network
         #endregion
 
         #region Public Methods
+        public void ResetMatchState()
+        {
+            _deferredMatchingFound = null;
+            _deferredGameReady = null;
+            _service.ResetMatchState();
+        }
+
         public UniTask MatchingStartRequestAsync(
             CancellationToken cancellationToken = default)
             => RunMatchingRequestAsync(MatchingStartCoreAsync, cancellationToken);
@@ -359,9 +366,7 @@ namespace YuJanggi.Lobby.Network
         #region Event Handlers
         private void HandleConnectionClosed()
         {
-            _deferredMatchingFound = null;
-            _deferredGameReady = null;
-            _service.Reset();
+            ResetMatchState();
         }
         #endregion
     }

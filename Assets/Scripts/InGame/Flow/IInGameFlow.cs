@@ -13,16 +13,25 @@ namespace YuJanggi.InGame.Flow
     {
         UniTask EnterAsync(CancellationToken cancellationToken);
         void Exit();
+        void PrepareReturnToLobby();
     }
     internal abstract class InGameFlow : IInGameFlow
     {
-        private bool _entered;
-        private CancellationToken _entryToken;
-        protected GameSession Session { get; }
+        #region Fields
+        private bool                _entered;
+        private CancellationToken   _entryToken;
+
+        protected GameSession       Session { get; }
+        #endregion
+
+        #region Constructor
         protected InGameFlow(GameSession session)
         {
             Session = session;
         }
+        #endregion
+
+        #region Public Methods
         public async UniTask EnterAsync(
             CancellationToken cancellationToken)
         {
@@ -46,6 +55,16 @@ namespace YuJanggi.InGame.Flow
                 throw;
             }
         }
+
+        public void SelectPiece(
+            int? pieceId,
+            IReadOnlyList<Pos> legal,
+            IReadOnlyList<Pos> illegal)
+            => Session.ChangeSelection(pieceId, legal, illegal);
+        public abstract void RequestMove(
+            Pos from, Pos to);
+        public virtual void SubmitGameResult(in GameResultInfo info) { }
+        public virtual void PrepareReturnToLobby() { }
         public void Exit()
         {
             if (!_entered)
@@ -55,38 +74,17 @@ namespace YuJanggi.InGame.Flow
             _entryToken = default;
             UnBind();
         }
+        #endregion
 
-        public abstract void RequestMove(Pos from, Pos to);
-
-        public void ChangeSelection(
-            int? pieceId,
-            IReadOnlyList<Pos> legal,
-            IReadOnlyList<Pos> illegal)
-            => Session.ChangeSelection(pieceId, legal, illegal);
-
-        /// <summary>
-        /// 현재 게임 모드의 흐름 진행에 필요한 이벤트를 연결합니다.
-        /// 별도의 이벤트 연결이 필요하지 않은 경우 재정의하지 않습니다.
-        /// </summary>
         protected virtual void Bind()
         {
         }
-
-        /// <summary>
-        /// 현재 게임 모드에 맞는 인게임 시작 절차를 수행합니다.
-        /// 로컬 게임은 즉시 게임을 시작하고,
-        /// 네트워크 게임은 서버 준비 요청 등의 비동기 절차를 수행할 수 있습니다.
-        /// </summary>
-        protected abstract UniTask StartAsync(
-            CancellationToken cancellationToken);
-
-        /// <summary>
-        /// 현재 게임 모드의 흐름을 위해 연결했던 이벤트를 해제합니다.
-        /// 별도의 이벤트 해제가 필요하지 않은 경우 재정의하지 않습니다.
-        /// </summary>
         protected virtual void UnBind()
         {
         }
+
+        protected abstract UniTask StartAsync(
+            CancellationToken cancellationToken);
     }
 }
 
