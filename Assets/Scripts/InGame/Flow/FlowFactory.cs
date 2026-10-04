@@ -1,6 +1,7 @@
 namespace YuJanggi.InGame.Flow
 {
     using System;
+    using YuJanggi.BootStrap;
     using YuJanggi.Engine.Domain;
     using YuJanggi.InGame.Handler;
     using YuJanggi.InGame.Service;
@@ -15,11 +16,13 @@ namespace YuJanggi.InGame.Flow
         internal static IInGameFlow CreateNetwork(
             GameSession session,
             InGameHandler handler,
-            PlayerTeam localTeam)
+            PlayerTeam localTeam,
+            NetworkManager networkManager)
             => new NetworkInGameFlow(
                 session,
                 handler,
-                localTeam);
+                localTeam,
+                networkManager);
     }
 }
 

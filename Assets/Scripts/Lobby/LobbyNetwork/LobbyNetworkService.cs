@@ -108,7 +108,7 @@ namespace YuJanggi.Lobby.Network
             return true;
         }
 
-        public void Reset()
+        public void ResetMatchState()
         {
             _requestInProgress = false;
             _cancelInProgress = false;

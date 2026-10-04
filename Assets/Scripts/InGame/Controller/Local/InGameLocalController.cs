@@ -35,7 +35,7 @@ namespace YuJanggi.InGame.Controller
 
         #region Events
         // 상태 변화나 특정 동작을 외부에 알리는 이벤트
-        public event SelectionChangedHandler  OnSelectionChanged;
+        public event OnSelectPiece  OnSelectionChanged;
         public event MoveRequestHandler       OnMoveRequest;
         #endregion
 
@@ -59,7 +59,7 @@ namespace YuJanggi.InGame.Controller
         {
             _input.OnBoardClicked += HandleBoardClicked;
             _input.OnEmptyClicked += HandleEmptyClicked;
-            OnSelectionChanged    += receiver.ChangeSelection;
+            OnSelectionChanged    += receiver.SelectPiece;
             OnMoveRequest         += receiver.RequestMove;
         }
         public virtual void UnBindEvents(IGameInputReceiver receiver)
@@ -70,7 +70,7 @@ namespace YuJanggi.InGame.Controller
                 _input.OnEmptyClicked -= HandleEmptyClicked;
             }
 
-            OnSelectionChanged    -= receiver.ChangeSelection;
+            OnSelectionChanged    -= receiver.SelectPiece;
             OnMoveRequest         -= receiver.RequestMove;
         }
         public void BeginTurn()
@@ -79,7 +79,7 @@ namespace YuJanggi.InGame.Controller
         }
         public void EndTurn()
         {
-
+            ClearSelection();
         }
         #endregion
 

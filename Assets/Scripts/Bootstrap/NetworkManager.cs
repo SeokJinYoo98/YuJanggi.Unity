@@ -51,6 +51,7 @@ namespace YuJanggi.BootStrap
                     break;
                 case ServerMessageType.GameStartEvent:
                 case ServerMessageType.MovePieceEvent:
+                case ServerMessageType.GameEndedEvent:
                     _inGameHandler?.HandleMessage(message);
                     break;
             }
@@ -162,6 +163,12 @@ namespace YuJanggi.BootStrap
         }
 
         // 로비 요청의 수명과 메시지 처리는 Handler에 위임합니다.
+        public void ResetMatchState()
+        {
+            NetworkMatchInfoStore.Current = default;
+            _lobbyNetworkHandler?.ResetMatchState();
+        }
+
         public UniTask StartMatchMakingAsync()
         {
             return Lobby.MatchingStartRequestAsync();

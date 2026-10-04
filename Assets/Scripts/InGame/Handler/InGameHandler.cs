@@ -32,6 +32,7 @@ namespace YuJanggi.InGame.Handler
         #region Events
         // 상태 변화나 특정 동작을 외부에 알리는 이벤트
         public event Action<PlayerTeam, Pos, Pos>? MoveConfirmed;
+        public event Action<GameEndedEvent>? GameEndConfirmed;
         #endregion
 
         #region Constructors
@@ -88,6 +89,26 @@ namespace YuJanggi.InGame.Handler
 
             return message.GetPayload<MovePieceResponse>();
         }
+        public async Task<GameEndResponse> SendGameEndRequestAsync(
+            ProtocolGameEndReason endReason,
+            ProtocolPlayerTeam winner,
+            int totalMoves,
+            CancellationToken cancellationToken = default)
+        {
+            var request = new GameEndRequest
+            {
+                EndReason  = endReason,
+                Winner     = winner,
+                TotalMoves = totalMoves
+            };
+            var message = await SendRequestAsync(
+                ClientMessageType.GameEndRequest,
+                request,
+                ServerMessageType.GameEndResponse,
+                cancellationToken);
+
+            return message.GetPayload<GameEndResponse>();
+        }
         #endregion
 
         #region Protected Methods
@@ -103,6 +124,9 @@ namespace YuJanggi.InGame.Handler
                     break;
                 case ServerMessageType.MovePieceEvent:
                     HandleMovePiece(message);
+                    break;
+                case ServerMessageType.GameEndedEvent:
+                    HandleGameEnded(message);
                     break;
             }
         }
@@ -124,6 +148,22 @@ namespace YuJanggi.InGame.Handler
 
         private static bool IsBoardPosition(Pos pos)
             => pos.X is >= 0 and <= 8 && pos.Z is >= 0 and <= 9;
+
+        private void HandleGameEnded(ServerMessage message)
+        {
+            var ended = message.GetPayload<GameEndedEvent>();
+
+            if ((ended.Winner != ProtocolPlayerTeam.None &&
+                 ended.Winner != ProtocolPlayerTeam.Cho &&
+                 ended.Winner != ProtocolPlayerTeam.Han) ||
+                ended.TotalMoves < 0)
+            {
+                throw new InvalidDataException(
+                    "GameEndedEvent 종료 정보가 올바르지 않습니다.");
+            }
+
+            GameEndConfirmed?.Invoke(ended);
+        }
 
         private static ProtocolPlayerTeam ToProtocolTeam(PlayerTeam team)
             => team switch

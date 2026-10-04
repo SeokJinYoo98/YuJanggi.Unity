@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace YuJanggi.InGame.Session
@@ -37,6 +38,9 @@ namespace YuJanggi.InGame.Session
         private readonly BoardView _boardView;
 
         private bool _play = false;
+        private GameResultInfo? _pendingGameResult;
+        internal bool RequireServerGameEndConfirmation { get; set; }
+        internal event Action<GameResultInfo> LocalGameEnded;
         #endregion
 
         #region Properties
@@ -173,8 +177,33 @@ namespace YuJanggi.InGame.Session
             => _states[_currState].OnTurnChanged(next);
         private void OnGameEnded(GameResultInfo info)
         {
+            if (RequireServerGameEndConfirmation)
+            {
+                _pendingGameResult = info;
+                _localInput.Deactivate();
+                _playerCho.EndTurn();
+                _playerHan.EndTurn();
+                LocalGameEnded?.Invoke(info);
+                return;
+            }
             GameResult = info; 
             _states[_currState].OnGameEnded(in info);
+        }
+        internal bool ApplyConfirmedGameEnd(PlayerTeam? loser, int totalMoves)
+        {
+            if (GameResult.HasValue || !_pendingGameResult.HasValue)
+                return false;
+
+            var info = _pendingGameResult.Value;
+            info.MoveCnt = totalMoves;
+            if (loser.HasValue)
+                info.Loser = loser.Value;
+            else
+                info.Type = Engine.Domain.GameResult.Draw;
+            GameResult = info;
+            _pendingGameResult = null;
+            ToEnd();
+            return true;
         }
         // Player
 
@@ -192,6 +221,7 @@ namespace YuJanggi.InGame.Session
         public void  ResetGame()
         {
             GameResult = null;
+            _pendingGameResult = null;
             var board = _engine.Board;
 
             _engine.InitEngine();

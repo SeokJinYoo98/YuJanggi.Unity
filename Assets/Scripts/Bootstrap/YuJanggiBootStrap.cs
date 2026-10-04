@@ -16,13 +16,14 @@ namespace YuJanggi.BootStrap
         [field: SerializeField]
         public AudioManager AudioManager { get; private set; } = null!;
 
-        [Header("Network Settings")]
-        [SerializeField] private string _host = "127.0.0.1";
-        [SerializeField] private int _port    = 7777;
-
         [Header("Audio Settings")]
         [SerializeField] private float _sfxVolume = 1.0f;
         [SerializeField] private float _uiVolume  = 1.0f;
+
+        private readonly string _host = "127.0.0.1";
+        //private readonly string _host = "3.37.62.101";
+        private readonly int    _port = 7777;
+
 
         private void Awake()
         {
