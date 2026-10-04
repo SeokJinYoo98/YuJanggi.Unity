@@ -109,7 +109,10 @@ namespace YuJanggi.InGame
                     break;
                 case GameModeType.Network:
                     _inGameFlow = InGameFlowFactory.CreateNetwork(
-                        _session, _inGameHandler, NetworkMatchInfoStore.Current.Team);
+                        _session,
+                        _inGameHandler,
+                        NetworkMatchInfoStore.Current.Team,
+                        YuJanggiBootStrap.Instance.NetworkManager);
                     break;
 
             }
