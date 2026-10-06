@@ -57,7 +57,7 @@ namespace YuJanggi.BootStrap
             var port = int.TryParse(serverPort, out var parsedPort)
                 ? parsedPort
                 : _port;
-
+            Debug.Log($"Server endpoint: {host}:{port}");
             return (host, port);
         }
         private async UniTask InitializeAsync()
