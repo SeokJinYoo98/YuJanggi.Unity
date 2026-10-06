@@ -1,8 +1,8 @@
 {
   "dependencies": {
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
-    "com.seokjinyoo.yujanggi.engine": "file:D:/Git/YuJanggi/YuJanggi.Engine/upm",
-    "com.seokjinyoo.yujanggi.protocol": "file:D:/Git/YuJanggi/YuJanggi.Protocol/upm",
+    "com.seokjinyoo.yujanggi.engine": "file:D:/Git/YuJanggi/upm/engine/com.seokjinyoo.yujanggi.engine-2.5.1.tgz",
+    "com.seokjinyoo.yujanggi.protocol": "file:C:/Users/you84/Desktop/com.seokjinyoo.yujanggi.protocol-1.5.2.tgz",
     "com.unity.ai.navigation": "2.0.11",
     "com.unity.collab-proxy": "2.10.2",
     "com.unity.ide.rider": "3.0.38",

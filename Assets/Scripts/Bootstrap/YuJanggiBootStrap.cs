@@ -20,9 +20,8 @@ namespace YuJanggi.BootStrap
         [SerializeField] private float _sfxVolume = 1.0f;
         [SerializeField] private float _uiVolume  = 1.0f;
 
-        private readonly string _host = "127.0.0.1";
-        //private readonly string _host = "3.37.62.101";
-        private readonly int    _port = 7777;
+        private const string _host = "127.0.0.1";
+        private const int    _port = 7777;
 
 
         private void Awake()
@@ -47,13 +46,28 @@ namespace YuJanggi.BootStrap
             await SceneManager.LoadSceneAsync("LobbyScene");
         }
 
+        private (string host, int port) GetServerEndpoint()
+        {
+            var serverHost = System.Environment.GetEnvironmentVariable("SERVER_HOST");
+            var host = string.IsNullOrWhiteSpace(serverHost)
+                ? _host
+                : serverHost.Trim();
+
+            var serverPort = System.Environment.GetEnvironmentVariable("SERVER_PORT");
+            var port = int.TryParse(serverPort, out var parsedPort)
+                ? parsedPort
+                : _port;
+
+            return (host, port);
+        }
         private async UniTask InitializeAsync()
         {
-            NetworkManager.Initialize(
-                _host,
-                _port);
+            var data = GetServerEndpoint();
 
-            // await AddressableManager.InitializeAsync();
+            NetworkManager.Initialize(
+                data.host,
+                data.port);
+
 
             AudioManager.Initialize(
                 _sfxVolume,
