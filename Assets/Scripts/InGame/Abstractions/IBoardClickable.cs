@@ -1,4 +1,4 @@
-namespace YuJanggi.Core.Abstractions
+namespace YuJanggi.InGame.Abstractions
 {
     using Engine.Domain;
 

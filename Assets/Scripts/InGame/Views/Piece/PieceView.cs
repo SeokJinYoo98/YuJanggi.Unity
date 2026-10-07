@@ -5,9 +5,9 @@ using DG.Tweening;
 
 namespace YuJanggi.InGame.Views.Piece
 {
-    using Core.Abstractions;
+    using YuJanggi.InGame.Abstractions;
     using Engine.Domain;
-    using Data.Board;
+    using YuJanggi.InGame.Data;
 
     public interface IPieceView
     {

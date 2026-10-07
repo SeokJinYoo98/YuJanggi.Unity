@@ -1,17 +1,14 @@
 
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Unity.Profiling;
 
-namespace YuJanggi.InGame.Controller.AI
+namespace YuJanggi.AI.Service
 {
+    using Abstraction;
+    using Strategy;
     using Engine.Domain;
     using Engine.JanggiEngine;
-    using Unity.Profiling;
-
-    internal interface IAIMoveService
-    {
-        UniTask<AIMove?> SelectMoveAsync(PlayerTeam team, CancellationToken cancellationToken);
-    }
 
     internal sealed class AIMoveService : IAIMoveService
     {
@@ -19,9 +16,9 @@ namespace YuJanggi.InGame.Controller.AI
             new("AI.CreateSnapshot");
 
         private readonly IAIPositionSource _positions;
-        private readonly IAIMoveStrategy _strategy;
+        private readonly IAI _strategy;
 
-        public AIMoveService(IAIPositionSource positions, IAIMoveStrategy strategy)
+        public AIMoveService(IAIPositionSource positions, IAI strategy)
         {
             _positions = positions;
             _strategy = strategy;

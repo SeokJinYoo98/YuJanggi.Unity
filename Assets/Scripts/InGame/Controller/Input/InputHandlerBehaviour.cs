@@ -4,7 +4,7 @@ using UnityEngine;
 namespace YuJanggi.InGame.Controller.Input
 {
     using Engine.Domain;
-    using Core.Abstractions;
+    using YuJanggi.InGame.Abstractions;
 
     public abstract class InputHandlerBehaviour : MonoBehaviour, IInputHandler
     {

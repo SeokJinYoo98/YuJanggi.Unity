@@ -1,6 +1,6 @@
 using UnityEngine;
 using YuJanggi.Engine.Domain;
-namespace YuJanggi.Data.Board
+namespace YuJanggi.InGame.Data
 {
 
     [CreateAssetMenu(fileName = "PieceData", menuName = "YuJanggi/Piece/PieceData")]

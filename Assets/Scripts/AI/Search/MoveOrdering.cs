@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 
 
-namespace YuJanggi.InGame.Controller.AI
+namespace YuJanggi.AI.Search
 {
+    using Utilities;
     using Engine.JanggiEngine;
     internal static class MoveOrdering
     {

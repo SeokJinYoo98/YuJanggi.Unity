@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 namespace YuJanggi.InGame.Controller.Input
 {
     using Engine.Domain;
-    using Core.Abstractions;
+    using YuJanggi.InGame.Abstractions;
 
     public class PointerInputHandler : InputHandlerBehaviour
     {

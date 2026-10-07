@@ -1,7 +1,8 @@
 
 
-namespace YuJanggi.InGame.Controller.AI
+namespace YuJanggi.AI.Search
 {
+    using Utilities;
     using Engine.Domain;
     using Engine.JanggiEngine;
     internal sealed class PositionEvaluator

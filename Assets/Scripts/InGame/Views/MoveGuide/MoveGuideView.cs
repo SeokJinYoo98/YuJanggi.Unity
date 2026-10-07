@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace YuJanggi.InGame.Views.Board
 {
-    using Core.Abstractions;
+    using YuJanggi.InGame.Abstractions;
     using Engine.Domain;
 
 

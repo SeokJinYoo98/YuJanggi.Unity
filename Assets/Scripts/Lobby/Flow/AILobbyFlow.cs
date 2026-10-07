@@ -20,31 +20,33 @@ namespace YuJanggi.Lobby.Flow
 
         protected override void OnBindEvents()
         {
-            _view.StartRequested += HandleStartRequested;
+           // _view.StartRequested += HandleStartRequested;
         }
 
         protected override void OnUnBindEvents()
         {
-            _view.StartRequested -= HandleStartRequested;
+            //_view.StartRequested -= HandleStartRequested;
         }
 
         private void HandleStartRequested()
         {
-            if (!IsBound || !_canStart()) return;
-            bool localIsCho = (PlayerTeam)_view.LocalPlayer == PlayerTeam.Cho;
-            var localFormation = (Formation)_view.LocalPlayerFormation;
-            var aiFormation = (Formation)UnityEngine.Random.Range(
-                0, Enum.GetValues(typeof(Formation)).Length);
-            var options = new JanggiOptions
-            {
-                GameMode = GameModeType.AI,
-                PlayerCho = localIsCho ? PlayerType.Local : PlayerType.AI,
-                PlayerHan = localIsCho ? PlayerType.AI : PlayerType.Local,
-                ChoFormation = localIsCho ? localFormation : aiFormation,
-                HanFormation = localIsCho ? aiFormation : localFormation,
-                TurnTime = LobbyOptionValues.TurnTime(_view.TurnTime)
-            };
-            RaiseGameStartReady(new LobbyGameStartContext(options, _view.Strategy));
+            //if (!IsBound || !_canStart()) return;
+            //bool localIsCho = (PlayerTeam)_view.LocalPlayer == PlayerTeam.Cho;
+            //var localFormation = (Formation)_view.LocalPlayerFormation;
+            //var aiFormation = (Formation)UnityEngine.Random.Range(
+            //    0, Enum.GetValues(typeof(Formation)).Length);
+            //var options = new JanggiOptions
+            //{
+            //    GameMode = GameModeType.AI,
+            //    PlayerCho = localIsCho ? PlayerType.Local : PlayerType.AI,
+            //    PlayerHan = localIsCho ? PlayerType.AI : PlayerType.Local,
+            //    ChoFormation = localIsCho ? localFormation : aiFormation,
+            //    HanFormation = localIsCho ? aiFormation : localFormation,
+            //    TurnTime = LobbyOptionValues.TurnTime(_view.TurnTime)
+            //};
+            //RaiseGameStartReady(new
+            //
+            //(options, _view.Strategy));
         }
     }
 }

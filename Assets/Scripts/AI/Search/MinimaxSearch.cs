@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Unity.Profiling;
 
 
-namespace YuJanggi.InGame.Controller.AI
+namespace YuJanggi.AI.Search
 {
+    using Utilities;
     using Engine.Domain;
     using Engine.JanggiEngine;
-    using Unity.Profiling;
 
     internal sealed class MinimaxSearch
     {

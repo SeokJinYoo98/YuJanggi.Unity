@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 
-namespace YuJanggi.InGame.Controller.AI
+namespace YuJanggi.AI.Search
 {
+    using Data;
     using Engine.Domain;
     using Engine.JanggiEngine;
 
@@ -43,11 +44,5 @@ namespace YuJanggi.InGame.Controller.AI
             return hash;
         }
 
-        private readonly struct Entry
-        {
-            public Entry(int depth, int score) { Depth = depth; Score = score; }
-            public int Depth { get; }
-            public int Score { get; }
-        }
     }
 }

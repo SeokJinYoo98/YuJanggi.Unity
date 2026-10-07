@@ -1,17 +1,16 @@
-
-
 using System;
-
 
 namespace YuJanggi.InGame.Controller
 {
     using Engine.Domain;
     using Engine.JanggiEngine;
 
-    using Core.Abstractions;
+    using YuJanggi.InGame.Abstractions;
 
-    using AI;
-    using Data.AI;
+    using YuJanggi.AI.Data;
+    using YuJanggi.AI.Service;
+    using YuJanggi.AI.Strategy;
+
     internal static class InGameControllerFactory
     {
         internal static IInGameController CreateController(

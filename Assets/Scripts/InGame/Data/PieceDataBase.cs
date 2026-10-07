@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace YuJanggi.Data.Board
+namespace YuJanggi.InGame.Data
 {
     using Engine.Domain;
 
