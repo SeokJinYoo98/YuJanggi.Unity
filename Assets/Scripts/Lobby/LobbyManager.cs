@@ -30,10 +30,13 @@ namespace YuJanggi.Lobby
         private void Awake()
         {
             var bootstrap = YuJanggiBootStrap.Instance;
+
             _audioManager = bootstrap.AudioManager;
             var networkManager = bootstrap.NetworkManager;
+
             _networkFlow = new NetworkLobbyFlow(
                 _networkPanel, networkManager.Lobby, networkManager);
+
             _flows = new ILobbyFlow[]
             {
                 new LocalLobbyFlow(_localPanel, () => _networkFlow.CanStartOtherMode),
@@ -111,8 +114,14 @@ namespace YuJanggi.Lobby
             _curr?.Show();
         }
 
-        // LobbyScene에 직렬화된 버튼 콜백을 유지하는 연결 함수.
-        // 입력의 의미와 진행 조건은 View 이벤트를 구독한 Flow가 처리한다.
+        public void HandleOpenPanel(int type)
+        {
+
+        }
+        public void HandleOptionPanel()
+        {
+
+        }
         public void HandleAIPanel()
         {
             _audioManager.PlayButton();

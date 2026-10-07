@@ -15,8 +15,8 @@ namespace YuJanggi.Audio
         {
             _uiSource = GetComponent<AudioSource>();
         }
-        public void PlayUI(UISfx type, float volume = 1.0f)
-            => _uiSource.PlayOneShot(_audios[(int)type], volume);
+        public void PlayUI(UISfx type)
+            => _uiSource.PlayOneShot(_audios[(int)type], AudioOptions.UIVolume);
     }
 }
 

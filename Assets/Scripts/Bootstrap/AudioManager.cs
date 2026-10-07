@@ -10,19 +10,17 @@ namespace YuJanggi.BootStrap
         [SerializeField]
         private UIAudio     _ui = null!;
 
-        private float _sfxVolume;
-        private float _uiVolume;
         public void Initialize(
             float sfxVolume,
             float uiVolume)
         {
-            _sfxVolume = Mathf.Clamp01(sfxVolume);
-            _uiVolume  = Mathf.Clamp01(uiVolume);
+            AudioOptions.SfxVolume = sfxVolume;
+            AudioOptions.UIVolume = uiVolume;
         }
         public void PlaySfxOneShot(JanggiSfx type)
-            => _sfx.PlaySfx(type, _sfxVolume);
+            => _sfx.PlaySfx(type);
         public void PlayUI(UISfx type)
-            => _ui.PlayUI(type, _uiVolume);
+            => _ui.PlayUI(type);
         public void PlayButton()
             => PlayUI(UISfx.Button);
     }
