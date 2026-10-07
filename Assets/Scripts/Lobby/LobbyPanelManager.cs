@@ -7,6 +7,7 @@ using YuJanggi.UI;
 
 namespace YuJanggi.Lobby
 {
+    using Audio;
 
     public class LobbyPanelManager : MonoBehaviour
     {

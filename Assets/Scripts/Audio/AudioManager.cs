@@ -1,11 +1,25 @@
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 
-namespace YuJanggi.BootStrap
+namespace YuJanggi.Audio
 {
-    using Audio;
     using Audio.Player;
-    using UnityEngine.Audio;
+    public enum JanggiSfx
+    {
+        Select,
+        Move,
+        Capture,
+        Check,
+        UnCheck,
+        CheckMate,
+        TurnAlert,
+        Win,
+        Lose
+    }
+    public enum UISfx
+    {
+        Button
+    }
 
     public class AudioManager : MonoBehaviour
     {

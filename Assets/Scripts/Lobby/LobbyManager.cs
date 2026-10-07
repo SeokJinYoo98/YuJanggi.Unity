@@ -10,6 +10,7 @@ namespace YuJanggi.Lobby
     using Flow;
     using Store;
     using UI;
+    using Audio;
     public class LobbyManager : MonoBehaviour
     {
         [SerializeField] private LobbyPanelManager _panelManager;
