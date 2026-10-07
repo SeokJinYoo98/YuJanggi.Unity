@@ -9,6 +9,7 @@ namespace YuJanggi.InGame
     using Engine.JanggiEngine;
 
     using BootStrap;
+    using Audio;
 
     using Views.Particle;
     using Views.Board;

@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 808429b5fdb7dcd4f999188dcb025bbc, type: 3}
+  m_Name: "\uCD08\uB9C8"
+  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Data.Board.PieceData
+  _playerType: 0
+  _pieceType: 3
+  _mesh: {fileID: -2521227053030314608, guid: 7c2073e8c5954af428f9bdfda9fdad6a, type: 3}
+  _pieceValue: 5

@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 
 namespace YuJanggi.BootStrap
 {
+    using Audio;
     public sealed class YuJanggiBootStrap : MonoBehaviour
     {
         public static YuJanggiBootStrap Instance { get; private set; } = null!;
@@ -87,22 +88,7 @@ namespace YuJanggi.BootStrap
             Instance = null!;
         }
     }
-    public enum JanggiSfx
-    {
-        Select,
-        Move,
-        Capture,
-        Check,
-        UnCheck,
-        CheckMate,
-        TurnAlert,
-        Win,
-        Lose
-    }
-    public enum UISfx
-    {
-        Button
-    }
+
 }
 
 
