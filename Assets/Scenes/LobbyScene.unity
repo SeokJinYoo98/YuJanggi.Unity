@@ -203,20 +203,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.LobbyManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
         m_MethodName: HandleQuitGame
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Manager.GameManager, Assembly-CSharp
-        m_MethodName: GiveUp
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -352,7 +340,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f7a6fe5f3ba41d842ae685e04b5f3ce4, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.UI.AISessionMaker
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.Lobby.UI.AIPanelView
   _teamDropdown: {fileID: 503984917}
   _timeDropdown: {fileID: 874578574}
   _formationDropdown: {fileID: 2031032175}
@@ -723,7 +711,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.LobyManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
         m_MethodName: HandleClosePanel
         m_Mode: 1
         m_Arguments:
@@ -1768,7 +1756,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.LobbyManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
         m_MethodName: HandleCloseNetworkPanel
         m_Mode: 1
         m_Arguments:
@@ -2572,7 +2560,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 07926151f5984ac4b878a84f99d81a5e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.UI.ResultUI
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.UI.ResultUI
   _winner: {fileID: 1932497418}
   _cnt: {fileID: 1065007398}
   _result: {fileID: 121788791}
@@ -3355,18 +3343,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.GameManager, Assembly-CSharp
-        m_MethodName: HandleUndo
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
 --- !u!114 &330477928
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3701,20 +3677,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.LobyManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
         m_MethodName: HandleClosePanel
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Manager.GameManager, Assembly-CSharp
-        m_MethodName: GiveUp
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -7913,20 +7877,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.LobyManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
         m_MethodName: HandleAIPanel
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.GameManager, Assembly-CSharp
-        m_MethodName: HandleUndo
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -10529,18 +10481,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.GameManager, Assembly-CSharp
-        m_MethodName: HandleHandicap
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
 --- !u!114 &1233269424
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11491,7 +11431,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4d76591cd5fceee4da3ad86ee983cc87, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.UI.LocalPanelView
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.Lobby.UI.LocalPanelView
   _choFormationDropdown: {fileID: 141227653}
   _hanFormationDropdown: {fileID: 421890144}
   _timeDropdown: {fileID: 2063375597}
@@ -12239,20 +12179,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.LobbyManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
         m_MethodName: HandleLocalPanel
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.GameManager, Assembly-CSharp
-        m_MethodName: HandleUndo
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -12567,7 +12495,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4903e8808dba63b4dbbe648d5d1b9024, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.UI.NetworkPanelView
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.Lobby.UI.NetworkPanelView
   _statusText: {fileID: 2115170284}
   _statusDetailText: {fileID: 898184473}
   _formationDropDown: {fileID: 1959698396}
@@ -13081,18 +13009,6 @@ MonoBehaviour:
       - m_Target: {fileID: 947781670}
         m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
         m_MethodName: HandleGameStart
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Manager.GameManager, Assembly-CSharp
-        m_MethodName: GiveUp
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -15112,20 +15028,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: YuJanggi.Runtime.Game.LobbyManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
         m_MethodName: HandleNetworkButton
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.GameManager, Assembly-CSharp
-        m_MethodName: HandleUndo
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

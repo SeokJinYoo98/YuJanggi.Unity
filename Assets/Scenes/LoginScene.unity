@@ -539,7 +539,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 27afde049c1c1254793128400d88bc9f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.Audio.SfxAudios
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.Audio.SfxAudios
   _audios:
   - {fileID: 8300000, guid: 6c504b54102186946b52cb3e5e1ff7c3, type: 3}
   - {fileID: 8300000, guid: e79d38f2b5d28954d91f35563989aa36, type: 3}
@@ -905,7 +905,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9f1a5cf5cc20a2c40b5d16c621d17aa0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.Audio.UIAudio
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.Audio.UIAudio
   _audios:
   - {fileID: 8300000, guid: 1dbcccf592d8e6d42bc1b4c2c268d564, type: 3}
 --- !u!82 &2125364683

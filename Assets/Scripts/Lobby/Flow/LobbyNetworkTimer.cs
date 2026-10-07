@@ -1,10 +1,12 @@
 #nullable enable
 using System;
-using YuJanggi.Lobby.Matching;
 using YuJanggi.Network.Status;
+
+using MatchingState = YuJanggi.Lobby.Network.MatchingState;
 
 namespace YuJanggi.Lobby.Flow
 {
+
     internal sealed class LobbyNetworkTimer
     {
         private const int GameStartCountdownSeconds = 10;

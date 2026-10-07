@@ -2,14 +2,15 @@
 using System;
 using YuJanggi.Engine.Domain;
 using YuJanggi.Engine.JanggiOption;
-using YuJanggi.Runtime.UI;
 
 namespace YuJanggi.Lobby.Flow
 {
+    using UI;
+
     internal sealed class AILobbyFlow : LocalFlow
     {
         private readonly AIPanelView _view;
-        private readonly Func<bool> _canStart;
+        private readonly Func<bool>  _canStart;
 
         internal AILobbyFlow(AIPanelView view, Func<bool> canStart)
         {

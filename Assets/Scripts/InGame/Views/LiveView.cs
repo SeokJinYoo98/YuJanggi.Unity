@@ -6,7 +6,7 @@ namespace YuJanggi.InGame.Views
     using Engine.Domain;
     using Audio;
     using BootStrap;
-    using Runtime.UI;
+    using UI;
 
     /// <summary>게임 UI와 HUD, Live/Replay 모드 표시를 담당합니다.</summary>
     public class LiveView

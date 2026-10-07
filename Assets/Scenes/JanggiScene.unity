@@ -214,7 +214,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 07926151f5984ac4b878a84f99d81a5e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.UI.ResultUI
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.UI.ResultUI
   _winner: {fileID: 1154979685}
   _cnt: {fileID: 503004688}
   _result: {fileID: 943914199}
@@ -535,7 +535,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8f6455ef257d7fa4c8b539be211aa7dd, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.Input.PointerInputHandler
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Controller.Input.PointerInputHandler
   _camera: {fileID: 135010638}
   _clickableLayer:
     serializedVersion: 2
@@ -1212,7 +1212,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1678781764}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.GameManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: YuJanggi.InGame.InGameManager, Assembly-CSharp
         m_MethodName: HandleResetGame
         m_Mode: 1
         m_Arguments:
@@ -1345,7 +1345,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1678781764}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.GameManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: YuJanggi.InGame.InGameManager, Assembly-CSharp
         m_MethodName: HandleReplayForward
         m_Mode: 1
         m_Arguments:
@@ -1889,7 +1889,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1678781764}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.GameManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: YuJanggi.InGame.InGameManager, Assembly-CSharp
         m_MethodName: HandleReplayModeEnter
         m_Mode: 1
         m_Arguments:
@@ -1984,7 +1984,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 927e457b863e0ff4384a5f8c7bc595c2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.Piece.PieceSpawner
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Views.Piece.PieceSpawner
   _pieceDB: {fileID: 11400000, guid: 91b60798b7aa6b947a530e34e5f1bd84, type: 2}
   _cho: {fileID: 1161876143}
   _han: {fileID: 1442720190}
@@ -1999,7 +1999,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: eebc9367781b3a24aab1b0d4b80fb279, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.Piece.PieceManager
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Views.Piece.PieceManager
 --- !u!1 &720711491
 GameObject:
   m_ObjectHideFlags: 0
@@ -2339,7 +2339,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f373cc5c0a5035e4cbb5ba04863cfcb4, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.Input.CoroutineRunner
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Session.CoroutineRunner
 --- !u!4 &769973064
 Transform:
   m_ObjectHideFlags: 0
@@ -2746,7 +2746,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1678781764}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.GameManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: YuJanggi.InGame.InGameManager, Assembly-CSharp
         m_MethodName: HandleGiveUp
         m_Mode: 1
         m_Arguments:
@@ -3617,7 +3617,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3af46bc8cd79be34e8aeb11e6b05ba08, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.UI.MatchUI
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.UI.MatchUI
   _recordText: {fileID: 238652086}
   _turnText: {fileID: 1904971444}
   _choScoreText: {fileID: 1639911014}
@@ -3893,7 +3893,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1678781764}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.GameManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: YuJanggi.InGame.InGameManager, Assembly-CSharp
         m_MethodName: HandleUndo
         m_Mode: 1
         m_Arguments:
@@ -4026,7 +4026,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1678781764}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.GameManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: YuJanggi.InGame.InGameManager, Assembly-CSharp
         m_MethodName: HandleReplayBackward
         m_Mode: 1
         m_Arguments:
@@ -4294,7 +4294,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1678781764}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.GameManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: YuJanggi.InGame.InGameManager, Assembly-CSharp
         m_MethodName: HandleHandicap
         m_Mode: 1
         m_Arguments:
@@ -4386,7 +4386,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 77f00f322e4f81441b8a95cab8f1cff4, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.Board.BoardHighlighter
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Views.Board.MoveGuideManager
   _prefab: {fileID: -4218553759093457651, guid: 0f63ac58968e97e438f2dda825c0e34c, type: 3}
 --- !u!1 &1548855159
 GameObject:
@@ -4823,7 +4823,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1678781764}
-        m_TargetAssemblyTypeName: Yujanggi.Runtime.Game.GameManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: YuJanggi.InGame.InGameManager, Assembly-CSharp
         m_MethodName: HandleMainLobby
         m_Mode: 1
         m_Arguments:
@@ -4915,7 +4915,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c7add935fd2e3dd4f85f3edba604f8ed, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.Manager.GameManager
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.InGameManager
   _boardView: {fileID: 2126822363}
   _moveGuideView: {fileID: 1524079747}
   _particleView: {fileID: 320383219}

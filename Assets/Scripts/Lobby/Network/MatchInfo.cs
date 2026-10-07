@@ -1,7 +1,7 @@
 #nullable enable
 using YuJanggi.Engine.Domain;
 
-namespace YuJanggi.Lobby.Matching
+namespace YuJanggi.Lobby.Network
 {
     public enum MatchingState { Idle, Requesting, Matching, Matched }
 

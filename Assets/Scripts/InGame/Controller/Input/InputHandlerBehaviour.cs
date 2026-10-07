@@ -1,18 +1,10 @@
 using System;
 using UnityEngine;
 
-namespace YuJanggi.Runtime.Input
+namespace YuJanggi.InGame.Controller.Input
 {
     using Engine.Domain;
-
-    public interface IInputHandler
-    {
-        public event Action<Pos> OnBoardClicked;
-        public event Action OnEmptyClicked;
-        public void RotateCamera(PlayerTeam team);
-        public void Activate();
-        public void Deactivate();
-    }
+    using Core.Abstractions;
 
     public abstract class InputHandlerBehaviour : MonoBehaviour, IInputHandler
     {
@@ -24,10 +16,6 @@ namespace YuJanggi.Runtime.Input
         public abstract void RotateCamera(PlayerTeam team);
     }
 
-    public interface IBoardClickable
-    {
-        public Pos BoardPos { get; }
-    }
 }
 
 

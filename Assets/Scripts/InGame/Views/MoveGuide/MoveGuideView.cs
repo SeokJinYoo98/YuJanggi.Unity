@@ -1,8 +1,8 @@
 using UnityEngine;
-using YuJanggi.Runtime.Input;
 
 namespace YuJanggi.InGame.Views.Board
 {
+    using Core.Abstractions;
     using Engine.Domain;
 
 

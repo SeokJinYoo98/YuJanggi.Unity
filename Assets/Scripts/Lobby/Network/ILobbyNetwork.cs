@@ -4,7 +4,6 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
 using YuJanggi.Engine.Domain;
-using YuJanggi.Lobby.Matching;
 using YuJanggi.Protocol.Matching;
 
 namespace YuJanggi.Lobby.Network

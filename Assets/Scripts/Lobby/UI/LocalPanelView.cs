@@ -1,10 +1,11 @@
-
-using TMPro;
 using System;
 
 using UnityEngine;
+using TMPro;
 
-namespace YuJanggi.Runtime.UI
+using YuJanggi.UI;
+
+namespace YuJanggi.Lobby.UI
 {
     public class LocalPanelView : UIVisible
     {

@@ -104,7 +104,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3e4299a6802ae3a4d92a344c78c4554d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.Piece.PieceView
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Views.Piece.PieceView
   _moveDuration: 0.16
   _visual: {fileID: 5612040085615250774}
 --- !u!65 &2816534572589560665

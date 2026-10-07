@@ -8,7 +8,7 @@ namespace YuJanggi.InGame.Controller
     using Engine.Domain;
     using Engine.JanggiEngine;
 
-    using Runtime.Input;
+    using Core.Abstractions;
 
     using AI;
     using Data.AI;

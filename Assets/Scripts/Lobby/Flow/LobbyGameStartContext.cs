@@ -1,7 +1,8 @@
 #nullable enable
 using YuJanggi.Engine.JanggiOption;
 using YuJanggi.InGame.Controller;
-using YuJanggi.Lobby.Matching;
+
+using MatchInfo = YuJanggi.Lobby.Network.MatchInfo;
 
 namespace YuJanggi.Lobby.Flow
 {

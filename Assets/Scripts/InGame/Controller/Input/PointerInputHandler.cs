@@ -2,9 +2,10 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace YuJanggi.Runtime.Input
+namespace YuJanggi.InGame.Controller.Input
 {
     using Engine.Domain;
+    using Core.Abstractions;
 
     public class PointerInputHandler : InputHandlerBehaviour
     {

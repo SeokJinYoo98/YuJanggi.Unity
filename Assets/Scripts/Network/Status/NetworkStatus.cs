@@ -1,9 +1,10 @@
 #nullable enable
 using System;
 
+using MatchingState = YuJanggi.Lobby.Network.MatchingState;
+
 namespace YuJanggi.Network.Status
 {
-    using Lobby.Matching;
     public readonly struct NetworkStatus
     {
         public ConnectionState      ConnectionState { get; }

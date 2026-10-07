@@ -1,12 +1,17 @@
 using UnityEngine;
 using System;
+using TMPro;
 
-namespace YuJanggi.Runtime.UI
+
+using MatchingState = YuJanggi.Lobby.Network.MatchingState;
+
+
+namespace YuJanggi.Lobby.UI
 {
-    using TMPro;
+    using YuJanggi.UI;
+    using YuJanggi.Network.Status;
+
     using Engine.Domain;
-    using Network.Status;
-    using Lobby.Matching;
 
     public class NetworkPanelView : UIVisible
     {

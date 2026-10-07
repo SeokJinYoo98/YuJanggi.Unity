@@ -3,7 +3,7 @@ namespace YuJanggi.InGame.Session
     using Engine.JanggiEngine;
     using Engine.Domain;
 
-    using Runtime.Input;
+    using Core.Abstractions;
 
     using Controller;
     using Views;

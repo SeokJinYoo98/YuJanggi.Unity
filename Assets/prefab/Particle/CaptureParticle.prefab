@@ -45,7 +45,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1b21a1b83c57a834196c31cd1f857138, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.Particle.PooledParticle
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Views.Particle.ParticleView
   _particleSystem: {fileID: 3672824245165346718}
 --- !u!198 &3672824245165346718
 ParticleSystem:

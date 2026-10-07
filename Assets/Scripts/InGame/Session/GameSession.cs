@@ -10,7 +10,7 @@ namespace YuJanggi.InGame.Session
     using InGame.Views.Board;
 
     using Controller;
-    using Runtime.Input;
+    using Core.Abstractions;
 
 
     internal interface ISessionTransition

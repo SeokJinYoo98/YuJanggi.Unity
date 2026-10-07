@@ -7,7 +7,6 @@ namespace YuJanggi.BootStrap
 {
     using Engine.Domain;
     using InGame.Handler;
-    using Lobby.Matching;
     using Network;
     using Network.Status;
     using Store;

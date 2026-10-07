@@ -1,14 +1,11 @@
-
-
+using MatchInfo = YuJanggi.Lobby.Network.MatchInfo;
 
 namespace YuJanggi.Store
 {
     using Engine.Domain;
     using Engine.JanggiOption;
     using System;
-    using YuJanggi.Lobby.Matching;
 
-   
     public static class NetworkMatchInfoStore
     {
         public static MatchInfo Current;

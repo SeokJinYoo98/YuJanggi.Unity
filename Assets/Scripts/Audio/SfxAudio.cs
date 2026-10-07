@@ -9,7 +9,7 @@ namespace YuJanggi.Audio
     {
         [SerializeField] private List<AudioClip> _audios;
         private AudioSource _audio;
-
+        public float SfxVolume = 1f;
         private void Awake()
         {
             _audio = GetComponent<AudioSource>();

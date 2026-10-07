@@ -6,13 +6,14 @@ using UnityEngine;
 using YuJanggi.BootStrap;
 using YuJanggi.Engine.Domain;
 using YuJanggi.Engine.JanggiOption;
-using YuJanggi.Lobby.Matching;
+
 using YuJanggi.Lobby.Network;
 using YuJanggi.Network.Status;
-using YuJanggi.Runtime.UI;
+
 
 namespace YuJanggi.Lobby.Flow
 {
+    using UI;
     internal sealed class NetworkLobbyFlow : LocalFlow
     {
         // 의존성

@@ -1,14 +1,17 @@
 using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using YuJanggi.BootStrap;
-using YuJanggi.Data.AI;
-using YuJanggi.Lobby.Flow;
-using YuJanggi.Runtime.UI;
-using YuJanggi.Store;
+
+using YuJanggi.UI;
 
 namespace YuJanggi.Lobby
 {
+    using BootStrap;
+    using Data.AI;
+
+    using Flow;
+    using Store;
+    using UI;
     public class LobbyManager : MonoBehaviour
     {
         [SerializeField] private NetworkPanelView _networkPanel;

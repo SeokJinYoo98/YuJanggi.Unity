@@ -13,11 +13,10 @@ namespace YuJanggi.InGame
     using Views.Particle;
     using Views.Board;
 
-    using Runtime.Input;
+    using Controller.Input;
 
-    using Runtime.UI;
+    using UI;
     using Store;
-
 
     using Flow;
     using Handler;

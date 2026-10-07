@@ -1,11 +1,11 @@
 using UnityEngine;
 using DG.Tweening;
 
-using YuJanggi.Runtime.Input;
 
 
 namespace YuJanggi.InGame.Views.Piece
 {
+    using Core.Abstractions;
     using Engine.Domain;
     using Data.Board;
 

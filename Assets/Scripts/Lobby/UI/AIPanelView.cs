@@ -2,7 +2,9 @@ using UnityEngine;
 using TMPro;
 using System;
 
-namespace YuJanggi.Runtime.UI
+using YuJanggi.UI;
+
+namespace YuJanggi.Lobby.UI
 {
     using InGame.Controller;
     public class AIPanelView : UIVisible

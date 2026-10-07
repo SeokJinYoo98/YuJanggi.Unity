@@ -103,7 +103,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4c98b20fef0fd324b989949f84eb2e69, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Yujanggi.Runtime.Board.CellHighlighter
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Views.Board.MoveGuideView
   _legalMat: {fileID: 2100000, guid: d4bef937fcb12bd459cfb6f693a1440d, type: 2}
   _illegalMat: {fileID: 2100000, guid: 259e69000a3072241b7b89a96eb4bd61, type: 2}
 --- !u!65 &-4938049987073486474

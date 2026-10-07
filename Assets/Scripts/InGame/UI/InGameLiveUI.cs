@@ -2,7 +2,7 @@
 using TMPro;
 using UnityEngine;
 
-namespace YuJanggi.Runtime.UI
+namespace YuJanggi.InGame.UI
 {
     using Engine.Domain;
 

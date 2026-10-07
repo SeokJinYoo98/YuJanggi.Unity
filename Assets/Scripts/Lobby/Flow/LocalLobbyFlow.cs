@@ -2,10 +2,10 @@
 using System;
 using YuJanggi.Engine.Domain;
 using YuJanggi.Engine.JanggiOption;
-using YuJanggi.Runtime.UI;
 
 namespace YuJanggi.Lobby.Flow
 {
+    using UI;
     internal sealed class LocalLobbyFlow : LocalFlow
     {
         private readonly LocalPanelView _view;

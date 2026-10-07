@@ -1,8 +1,6 @@
 #nullable enable
 using System;
 using YuJanggi.Engine.Domain;
-using YuJanggi.Lobby.Matching;
-using YuJanggi.Protocol.Matching;
 
 namespace YuJanggi.Lobby.Network
 {

@@ -2,7 +2,7 @@ using TMPro;
 
 namespace YuJanggi.InGame.Views
 {
-    using Runtime.UI;
+    using UI;
 
     internal static class InGameViewFactory
     {
