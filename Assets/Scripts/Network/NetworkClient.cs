@@ -15,10 +15,69 @@ namespace YuJanggi.Network
     /// 프로토콜 메시지의 송수신을 처리하는 전송 계층 클라이언트입니다.
     /// </summary>
 
-    public sealed class TcpTransport : IDisposable
+    public sealed class NetworkClient : IDisposable
     {
-        public async UniTask Panel_ConnectAsync(
-            CancellationToken cancellationToken)
+        private TcpClient?              _client;
+        private NetworkStream?          _stream;
+        private readonly SemaphoreSlim  _sendLock;
+
+        private readonly string _host;
+        private readonly int    _port;
+        private bool            _disposed;
+
+        public NetworkClient(string host, int port)
+        {
+            if (string.IsNullOrWhiteSpace(host))
+                throw new ArgumentException("서버 호스트가 필요합니다.", nameof(host));
+            if (port is < 1 or > 65535)
+                throw new ArgumentOutOfRangeException(nameof(port));
+
+            _disposed = false;
+            _host = host; _port = port;
+            _sendLock    = new SemaphoreSlim(1, 1);
+        }
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+
+            _stream?.Dispose();
+            _client?.Dispose();
+
+            _sendLock.Dispose();
+        }
+        public void Disconnect()
+        {
+            _stream?.Dispose();
+            _stream = null;
+
+            _client?.Dispose();
+            _client = null;
+        }
+
+        /// <summary>
+        /// 이미 Dispose된 객체를 다시 쓰려고 하면 예외 발생
+        /// </summary>
+        /// <exception cref="ObjectDisposedException"></exception>
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(
+                    nameof(NetworkClient));
+            }
+        }
+
+        /// <summary>
+        /// 서버에 TCP 연결을 시도합니다.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public async UniTask ConnectAsync(
+            CancellationToken cancellationToken = default)
         {
             ThrowIfDisposed();
 
@@ -89,114 +148,6 @@ namespace YuJanggi.Network
             }
         }
 
-
-
-
-        private TcpClient?              _client;
-        private NetworkStream?          _stream;
-        private readonly SemaphoreSlim  _sendLock;
-
-        private readonly string _host;
-        private readonly int    _port;
-        private bool            _disposed;
-
-        /// <summary>
-        /// 현재 TCP 연결 상태를 반환합니다.
-        /// </summary>
-        public bool IsConnected =>
-            _client is not null &&
-            _stream is not null &&
-            _client.Connected;
-
-        public TcpTransport(string host, int port)
-        {
-            if (string.IsNullOrWhiteSpace(host))
-                throw new ArgumentException("서버 호스트가 필요합니다.", nameof(host));
-            if (port is < 1 or > 65535)
-                throw new ArgumentOutOfRangeException(nameof(port));
-
-            _disposed = false;
-            _host = host; _port = port;
-            _sendLock    = new SemaphoreSlim(1, 1);
-        }
-        public void Dispose()
-        {
-            if (_disposed)
-                return;
-
-            _disposed = true;
-
-            _stream?.Dispose();
-            _client?.Dispose();
-
-            _sendLock.Dispose();
-        }
-        public void Disconnect()
-        {
-            _stream?.Dispose();
-            _stream = null;
-
-            _client?.Dispose();
-            _client = null;
-        }
-
-        /// <summary>
-        /// 이미 Dispose된 객체를 다시 쓰려고 하면 예외 발생
-        /// </summary>
-        /// <exception cref="ObjectDisposedException"></exception>
-        private void ThrowIfDisposed()
-        {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(
-                    nameof(TcpTransport));
-            }
-        }
-
-        /// <summary>
-        /// 서버에 TCP 연결을 시도합니다.
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        /// <exception cref="InvalidOperationException"></exception>
-        public async UniTask ConnectAsync(
-            CancellationToken cancellationToken = default)
-        {
-            ThrowIfDisposed();
-
-            if (_client is not null)
-            {
-                throw new InvalidOperationException(
-                    "이미 TCP 클라이언트가 생성되어 있습니다.");
-            }
-
-            var client = new TcpClient();
-
-            try
-            {
-                using (cancellationToken.Register(client.Dispose))
-                {
-                    await client.ConnectAsync(_host, _port);
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-
-                _client = client;
-                _stream = client.GetStream();
-            }
-            catch
-            {
-                client.Dispose();
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// 클라이언트 메시지를 서버로 전송합니다.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
         public async UniTask SendAsync(
             ClientMessage message,
             CancellationToken cancellationToken = default)
@@ -257,7 +208,7 @@ namespace YuJanggi.Network
             }
             finally
             {
-                
+
             }
 
         }
@@ -302,5 +253,3 @@ namespace YuJanggi.Network
 
     }
 }
-
-

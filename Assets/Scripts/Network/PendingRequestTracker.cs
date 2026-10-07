@@ -1,11 +1,10 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using YuJanggi.Protocol.Messages;
 
 namespace YuJanggi.Network
 {
+    using YuJanggi.Protocol.Messages;
     public sealed class PendingRequestTracker
     {
         private sealed class PendingRequest
@@ -32,33 +31,15 @@ namespace YuJanggi.Network
             
         }
 
-        public void Add(
+        public UniTask<ServerMessage> Add(
             string requestId,
             ServerMessageType expectedResponseType)
         {
             ValidateRequestId(requestId);
 
-            _pendingRequests.Add(
-                requestId,
-                new PendingRequest(expectedResponseType));
-        }
-
-        public async UniTask<ServerMessage> WaitAsync(
-            string requestId,
-            CancellationToken cancellationToken = default)
-        {
-            ValidateRequestId(requestId);
-
-            if (!_pendingRequests.TryGetValue(
-                requestId,
-                out var pendingRequest))
-            {
-                throw new InvalidOperationException(
-                    $"대기 중인 요청이 없습니다. RequestId: {requestId}");
-            }
-
-            return await pendingRequest.CompletionSource.Task
-                .AttachExternalCancellation(cancellationToken);
+            var pendingRequest = new PendingRequest(expectedResponseType);
+            _pendingRequests.Add(requestId, pendingRequest);
+            return pendingRequest.CompletionSource.Task;
         }
 
         public bool Remove(string requestId)
@@ -94,10 +75,11 @@ namespace YuJanggi.Network
 
             if (pendingRequest.ExpectedResponseType != serverMsg.Type)
             {
-                throw new InvalidOperationException(
+                pendingRequest.CompletionSource.TrySetException(new InvalidOperationException(
                     $"응답 타입이 일치하지 않습니다. " +
                     $"Expected: {pendingRequest.ExpectedResponseType}, " +
-                    $"Actual: {serverMsg.Type}");
+                    $"Actual: {serverMsg.Type}"));
+                return;
             }
 
             pendingRequest.CompletionSource

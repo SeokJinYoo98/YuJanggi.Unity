@@ -207,8 +207,8 @@ namespace YuJanggi.InGame
             if (GameMode == GameModeType.Network)
             {
                 var networkManager = YuJanggiBootStrap.Instance.NetworkManager;
-                networkManager.ResetMatchState();
-                networkManager.Disconnect();
+                //networkManager.ResetMatchState();
+                //networkManager.Disconnect();
             }
             SceneManager.LoadScene("LobbyScene");
         }

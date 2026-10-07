@@ -11,26 +11,19 @@ namespace YuJanggi.Lobby.Panel
 
     public class NetworkPanel : Panel, IGameStartPanel
     {
-        [SerializeField] private TMP_Text _statusText;
-        [SerializeField] private TMP_Text _statusDetailText;
-        [SerializeField] private TMP_Dropdown _formationDropDown;
+        [SerializeField] private TMP_Text       _statusText;
+        [SerializeField] private TMP_Text       _statusDetailText;
+        [SerializeField] private TMP_Dropdown   _formationDropDown;
 
         private NetworkManager           _network;
         private LobbyNetworkHandler      _handler;
         private CancellationTokenSource  _panelCts;
 
-        private bool _online = false;
 
-        void OnEnable()
-        {
-            _network = YuJanggiBootStrap.Instance.NetworkManager;
-        }
-        void OnDisable()
-        {
-            _network = null;
-        }
         protected override void OnOpen()
         {
+            _network = YuJanggiBootStrap.Instance.NetworkManager;
+            _handler = _network.Lobby;
             HandleOpenPanel();
             ConnectAsync().Forget();
         }
@@ -41,53 +34,86 @@ namespace YuJanggi.Lobby.Panel
             _panelCts = null;
 
             _handler = null;
+            _network = null;
         }
         public UniTask<bool>    PrepareGameAsync()
         {
             // StartMatchMaking
             throw new NotImplementedException();
         }
-        private async UniTask   ConnectAsync()
+        private async UniTask ConnectAsync()
         {
-            _handler = _network.Lobby;
+            var network = _network;
+            var handler = _handler;
 
+            _panelCts?.Cancel();
             _panelCts?.Dispose();
-            _panelCts = new CancellationTokenSource();
 
-            var token = _panelCts.Token;
+            var cts = new CancellationTokenSource();
+            var token = cts.Token;
 
-            _online = false;
+            _panelCts = cts;
 
             try
             {
-                var connected = await _handler.Panel_ConnectAsync(token);
-
-                if (!HandleConnectResult(connected))
+                if (!await ConnectNetworkAsync(network, token))
                     return;
 
-                var handshaked = await _handler.Panel_HandshakeAsync(token);
-
-                if (!HandleHandshakeResult(handshaked))
-                    return;
-
-                _network.Panel_StartReceiveLoop();
-
-                _online = true;
+                await HandshakeAsync(network, handler, token);
             }
             catch (OperationCanceledException)
             {
-                // 패널이 닫혀 연결 작업이 취소됨
+                // 패널 작업 취소입니다.
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                if (ReferenceEquals(_panelCts, cts))
+                    HandleHandshakeResult(false);
             }
             finally
             {
-                if (!_online)
-                {
-                    _handler?.Panel_Disconnect();
-
-                    _panelCts?.Dispose();
+                if (ReferenceEquals(_panelCts, cts))
                     _panelCts = null;
-                }
+                cts.Dispose();
             }
+        }
+
+        private async UniTask<bool> ConnectNetworkAsync(
+            NetworkManager network,
+            CancellationToken token)
+        {
+            var result = await network.Panel_ConnectAsync(token);
+            HandleConnectResult(result);
+
+            if (HandleConnectResult(result))
+                return true;
+
+            token.ThrowIfCancellationRequested();
+            return false;
+        }
+
+        private async UniTask<bool> HandshakeAsync(
+            NetworkManager network, 
+            LobbyNetworkHandler handler,
+            CancellationToken token)
+        {
+            try
+            {
+                token.ThrowIfCancellationRequested();
+                var result = await handler.Panel_HandshakeAsync(token);
+                token.ThrowIfCancellationRequested();
+                if (HandleHandshakeResult(result))
+                    return true;
+            }
+            catch
+            {
+                await network.Panel_DisconnectAsync();
+                throw;
+            }
+
+            await network.Panel_DisconnectAsync();
+            return false;
         }
 
         private void HandleOpenPanel()
@@ -95,20 +121,27 @@ namespace YuJanggi.Lobby.Panel
             _statusText.SetText("Offline");
             _statusDetailText.SetText("Connecting In Progress");
         }
-        private bool HandleConnectResult(bool result)
+        private bool HandleConnectResult(ConnectingResult result)
         {
-            if (result)
+            switch (result)
             {
-                _statusText.SetText("Connecting");
-                _statusDetailText.SetText("Handshaking In Progress");
+                case ConnectingResult.Success:
+                    _statusText.SetText("Connecting");
+                    _statusDetailText.SetText("Handshaking In Progress");
+                    return true;
+                case ConnectingResult.AlreadyConnecting:
+                    _statusText.SetText("Connecting");
+                    _statusDetailText.SetText("Connection Already In Progress");
+                    return false;
+                case ConnectingResult.AlreadyConnected:
+                    _statusText.SetText("Connected");
+                    _statusDetailText.SetText("Already Connected");
+                    return false;
+                default:
+                    _statusText.SetText("Offline");
+                    _statusDetailText.SetText("Connection Failed");
+                    return false;
             }
-            else
-            {
-                _statusText.SetText("Offline");
-                _statusDetailText.SetText("Connection Failed");
-            }
-
-            return result;
         }
         private bool HandleHandshakeResult(bool result)
         {

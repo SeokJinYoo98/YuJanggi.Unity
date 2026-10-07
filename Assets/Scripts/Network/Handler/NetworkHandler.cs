@@ -1,10 +1,10 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
-using YuJanggi.Protocol.Messages;
 
 namespace YuJanggi.Network.Handler
 {
+    using YuJanggi.Protocol.Messages;
     internal interface INetworkHandler : IDisposable
     {
         void HandleMessage(ServerMessage message);
@@ -12,9 +12,8 @@ namespace YuJanggi.Network.Handler
 
     internal abstract class NetworkHandler : INetworkHandler
     {
-        protected NetworkConnection Connection => _connection;
         #region Fields
-        private readonly NetworkConnection _connection;
+        private readonly NetworkClient _client;
         private readonly ISendOnlyRequestDispatcher _requests;
 
         private bool _disposed;
@@ -22,11 +21,11 @@ namespace YuJanggi.Network.Handler
 
         #region Constructors
         protected NetworkHandler(
-            NetworkConnection connection,
+            NetworkClient client,
             RequestDispatcher requests)
         {
-            _connection = connection;
-            _requests = requests;
+            _client = client ?? throw new ArgumentNullException(nameof(client));
+            _requests = requests ?? throw new ArgumentNullException(nameof(requests));
         }
         #endregion
 
@@ -52,6 +51,15 @@ namespace YuJanggi.Network.Handler
         #endregion
 
         #region Protected Methods
+        protected async UniTask SendAsync(
+            ClientMessage message,
+            CancellationToken token = default)
+        {
+            EnsureAvailable(token);
+            await _client.SendAsync(message, token);
+            token.ThrowIfCancellationRequested();
+        }
+
         /// <summary>
         /// Handler별 서버 이벤트 처리
         /// </summary>
@@ -63,27 +71,19 @@ namespace YuJanggi.Network.Handler
         protected async UniTask SendAsync<TPayload>(
             ClientMessageType messageType,
             TPayload payload,
-            CancellationToken cancellationToken = default)
+            CancellationToken token = default)
         {
-            EnsureConnected(cancellationToken);
-
-            int version = _connection.Version;
-
-            using var cts =
-                CancellationTokenSource.CreateLinkedTokenSource(
-                    cancellationToken,
-                    _connection.LifetimeToken);
+            EnsureAvailable(token);
 
             var message = ClientMessageFactory.Create(
                 messageType,
                 payload);
 
-            await _connection.SendAsync(
+            await _client.SendAsync(
                 message,
-                cts.Token);
+                token);
 
-            cts.Token.ThrowIfCancellationRequested();
-            _connection.EnsureCurrentConnection(version);
+            token.ThrowIfCancellationRequested();
         }
 
         /// <summary>
@@ -93,40 +93,36 @@ namespace YuJanggi.Network.Handler
             ClientMessageType requestType,
             TPayload payload,
             ServerMessageType responseType,
-            CancellationToken cancellationToken = default)
+            CancellationToken token = default)
         {
-            var response = await _requests.SendRequestAsync(
+            EnsureAvailable(token);
+
+            var request = ClientMessageFactory.CreateRequest(
                 requestType,
-                payload,
+                payload);
+
+            var response = await _requests.SendRequestAsync(
+                request,
                 responseType,
-                cancellationToken);
+                token);
+
             return response;
         }
 
-        /// <summary>
-        /// Handler별 종료 처리
-        /// </summary>
+
         protected virtual void OnDispose()
         {
         }
-        /// <summary>
-        /// Handler가 이미 Dispose됐는가? → 그러면 예외 
-        /// 요청이 이미 취소됐는가? → 그러면 OperationCanceledException
-        /// 서버에 연결되어 있는가?→ 아니면 연결 관련 예외
-        ///  전부 정상 → 요청 전송
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="ObjectDisposedException"></exception>
-        protected void EnsureConnected(
-            CancellationToken cancellationToken = default)
+
+        protected void EnsureAvailable(
+            CancellationToken token = default)
         {
             
             if (_disposed)
                 throw new ObjectDisposedException(GetType().Name);
 
-            cancellationToken.ThrowIfCancellationRequested();
+            token.ThrowIfCancellationRequested();
 
-            _connection.EnsureOnline();
         }
         #endregion
     }
