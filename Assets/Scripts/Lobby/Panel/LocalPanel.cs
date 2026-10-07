@@ -7,7 +7,7 @@ using YuJanggi.UI;
 
 namespace YuJanggi.Lobby.UI
 {
-    public class LocalPanelView : UIVisible
+    public class LocalPanel : UIVisible
     {
         [SerializeField] private TMP_Dropdown _choFormationDropdown;
         [SerializeField] private TMP_Dropdown _hanFormationDropdown;
@@ -17,7 +17,8 @@ namespace YuJanggi.Lobby.UI
         public int TurnTime => _timeDropdown.value;
 
         public event Action StartRequested;
-        public void RequestStart() => StartRequested?.Invoke();
+        public void RequestStart()
+            => StartRequested?.Invoke();
 
 
     }

@@ -14,9 +14,18 @@ namespace YuJanggi.Lobby
     using UI;
     public class LobbyManager : MonoBehaviour
     {
-        [SerializeField] private NetworkPanelView _networkPanel;
-        [SerializeField] private AIPanelView _aiPanel;
-        [SerializeField] private LocalPanelView _localPanel;
+        private enum PanelType
+        {
+            Local = 0,
+            AI = 1,
+            Network = 2,
+            Option = 3,
+            Quit = 4
+        }
+
+        [SerializeField] private NetworkPanel _networkPanel;
+        [SerializeField] private AIPanel _aiPanel;
+        [SerializeField] private LocalPanel _localPanel;
         private AudioManager _audioManager;
 
         private UIVisible _curr;
@@ -114,27 +123,7 @@ namespace YuJanggi.Lobby
             _curr?.Show();
         }
 
-        public void HandleOpenPanel(int type)
-        {
 
-        }
-        public void HandleOptionPanel()
-        {
-
-        }
-        public void HandleAIPanel()
-        {
-            _audioManager.PlayButton();
-            if (_curr != null) return;
-            ChangePanel(_aiPanel, _aiPanel.RequestStart);
-        }
-
-        public void HandleLocalPanel()
-        {
-            _audioManager.PlayButton();
-            if (_curr != null) return;
-            ChangePanel(_localPanel, _localPanel.RequestStart);
-        }
 
         public void HandleGameStart()
         {
@@ -146,12 +135,6 @@ namespace YuJanggi.Lobby
         {
             _audioManager.PlayButton();
             ChangePanel();
-        }
-
-        public void HandleNetworkButton()
-        {
-            _audioManager.PlayButton();
-            _networkPanel.RequestConnect();
         }
 
         public void HandleMatchMakingButton()

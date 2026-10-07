@@ -17,7 +17,7 @@ namespace YuJanggi.Lobby.Flow
     internal sealed class NetworkLobbyFlow : LocalFlow
     {
         // 의존성
-        private readonly NetworkPanelView _view;
+        private readonly NetworkPanel _view;
         private readonly ILobbyNetwork _network;
         private readonly NetworkManager _connection;
         private readonly LobbyNetworkTimer _timer = new();
@@ -35,7 +35,7 @@ namespace YuJanggi.Lobby.Flow
         // Manager가 현재 패널을 선택하고 교체한다.
         public event Action<bool>? PanelRequested;
 
-        internal NetworkLobbyFlow(NetworkPanelView view, ILobbyNetwork network,
+        internal NetworkLobbyFlow(NetworkPanel view, ILobbyNetwork network,
             NetworkManager connection)
         {
             _view = view;

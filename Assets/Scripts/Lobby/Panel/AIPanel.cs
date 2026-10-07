@@ -7,7 +7,7 @@ using YuJanggi.UI;
 namespace YuJanggi.Lobby.UI
 {
     using InGame.Controller;
-    public class AIPanelView : UIVisible
+    public class AIPanel : UIVisible
     {
         [SerializeField] private TMP_Dropdown _teamDropdown;
         [SerializeField] private TMP_Dropdown _timeDropdown;

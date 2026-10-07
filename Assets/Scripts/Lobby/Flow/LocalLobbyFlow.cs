@@ -8,10 +8,10 @@ namespace YuJanggi.Lobby.Flow
     using UI;
     internal sealed class LocalLobbyFlow : LocalFlow
     {
-        private readonly LocalPanelView _view;
+        private readonly LocalPanel _view;
         private readonly Func<bool> _canStart;
 
-        internal LocalLobbyFlow(LocalPanelView view, Func<bool> canStart)
+        internal LocalLobbyFlow(LocalPanel view, Func<bool> canStart)
         {
             _view = view;
             _canStart = canStart;

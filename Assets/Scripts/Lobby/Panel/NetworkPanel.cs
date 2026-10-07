@@ -13,7 +13,7 @@ namespace YuJanggi.Lobby.UI
 
     using Engine.Domain;
 
-    public class NetworkPanelView : UIVisible
+    public class NetworkPanel : UIVisible
     {
         [SerializeField] private TMP_Text _statusText;
         [SerializeField] private TMP_Text _statusDetailText;
