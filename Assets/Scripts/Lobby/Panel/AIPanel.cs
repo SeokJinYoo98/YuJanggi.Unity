@@ -4,7 +4,7 @@ using System;
 
 using YuJanggi.UI;
 
-namespace YuJanggi.Lobby.UI
+namespace YuJanggi.Lobby.Panel
 {
     using InGame.Controller;
     public class AIPanel : UIVisible

@@ -14,6 +14,7 @@ using YuJanggi.Network.Status;
 namespace YuJanggi.Lobby.Flow
 {
     using UI;
+    using Panel;
     internal sealed class NetworkLobbyFlow : LocalFlow
     {
         // 의존성

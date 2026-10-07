@@ -6,7 +6,7 @@ using TMPro;
 using MatchingState = YuJanggi.Lobby.Network.MatchingState;
 
 
-namespace YuJanggi.Lobby.UI
+namespace YuJanggi.Lobby.Panel
 {
     using YuJanggi.UI;
     using YuJanggi.Network.Status;

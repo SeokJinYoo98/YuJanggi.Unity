@@ -24,6 +24,47 @@ namespace YuJanggi.Store
         }
 
     }
+    public static class JanggiOptionFactory
+    {
+        public static JanggiOptions CreateLocal(
+            int choFormation,
+            int hanFormation,
+            int turnTime)
+        {
+            return new JanggiOptions
+            {
+                GameMode        = GameModeType.Local,
+
+                PlayerCho       = PlayerType.Local,
+                ChoFormation    = ToFormation(choFormation),
+
+                PlayerHan       = PlayerType.Local,
+                HanFormation    = ToFormation(hanFormation),
+
+                TurnTime        = ToTurnTime(turnTime)
+            };
+        }
+
+        private static int ToTurnTime(int value)
+            => value switch
+            {
+                0 => 0,
+                1 => 10,
+                2 => 20,
+                3 => 30,
+                4 => 40,
+                5 => 50,
+                6 => 60,
+                _ => 30
+            };
+
+        private static Formation ToFormation(int value)
+            => (Formation)value;
+
+        private static PlayerTeam ToTeam(int value)
+            => (PlayerTeam)value;
+    }
+
 
     #region Fields
     // 내부 상태와 참조를 저장하는 변수

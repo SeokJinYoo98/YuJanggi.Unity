@@ -1,24 +1,23 @@
-
 using System;
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
+
 using UnityEngine;
-using YuJanggi.BootStrap;
-using YuJanggi.Lobby.UI;
-using YuJanggi.UI;
+using UnityEngine.SceneManagement;
+
 
 namespace YuJanggi.Lobby
 {
+    using BootStrap;
+    using UI;
     using Audio;
+    using Panel;
+    using Core.Panel;
 
     public class LobbyPanelManager : MonoBehaviour
     {
-        private enum LobbyPanelType
-        {
-            Local   = 0,
-            AI      = 1,
-            Network = 2,
-            Option  = 3,
-            Quit    = 4
-        }
+        private enum PanelType { Local, AI, Network, Option, Quit }
+
         [Header("Lobby Panels")]
         [SerializeField] private LocalPanel     _localPanel;
         [SerializeField] private AIPanel        _aiPanel;
@@ -26,84 +25,89 @@ namespace YuJanggi.Lobby
         [SerializeField] private OptionPanel    _optionPanel;
         [SerializeField] private QuitPanel      _quitPanel;
 
-        private UIVisible    _currPanel = null;
-        private AudioManager _audio = null;
-        private Action _requestStart;
-        private Action _requestQuit;
+        private AudioManager    _audio      = null;
+        private UIVisible       _currPanel  = null;
 
-        public void Initialize(AudioManager audio, Action requestQuit)
+        private Dictionary<PanelType, UIVisible> _uis;
+        private bool _isEnteringGame;
+
+        private void Start()
         {
-            _audio = audio;
-            _requestQuit = requestQuit;
+            _uis = new()
+            {
+                { PanelType.Local,   _localPanel },
+                { PanelType.AI,      _aiPanel },
+                { PanelType.Network, _networkPanel },
+                { PanelType.Option,  _optionPanel },
+                { PanelType.Quit,    _quitPanel }
+            };
+
+            _audio = YuJanggiBootStrap.Instance.AudioManager;
         }
+ 
         public void HandleOpenPanel(int type)
         {
-            if (!Enum.IsDefined(typeof(LobbyPanelType), type))
+            _audio.PlayUI(UISfx.Button);
+            if (!Enum.IsDefined(typeof(PanelType), type))
             {
                 Debug.LogWarning($"Lobby: 잘못된 패널 타입입니다. ({type})");
                 return;
             }
-            if ((LobbyPanelType)type == LobbyPanelType.Option) return;
-            if ((LobbyPanelType)type == LobbyPanelType.Quit)
-            {
-                _requestQuit?.Invoke();
-                return;
-            }
-
-            _audio.PlayUI(UISfx.Button);
-            ChangePanelView((LobbyPanelType)type);
+            ChangePanelView((PanelType)type);
         }
         public void HandleClosePanel()
         {
             _audio.PlayUI(UISfx.Button);
-            ChangePanel();
+            ClosePanel();
         }
-
-        private void ChangePanelView(LobbyPanelType type)
+        public void HandleQuitGame()
         {
-            switch (type)
+            _audio.PlayUI(UISfx.Button);
+            Application.Quit();
+        }
+        public void HandleStartGame()
+            => StartGameAsync().Forget();
+
+        #region Private Methods
+        // 클래스 내부에서 사용하는 보조 로직
+        private async UniTask StartGameAsync()
+        {
+            if (_isEnteringGame)
+                return;
+
+            if (_currPanel is not IGameStartPanel gameStartPanel)
+                return;
+
+            _isEnteringGame = true;
+
+            if (!await gameStartPanel.PrepareGameAsync())
             {
-                case LobbyPanelType.Local:
-                    if (_currPanel != null) return;
-                    ChangePanel(_localPanel, _localPanel.RequestStart);
-                    break;
-                case LobbyPanelType.AI:
-                    if (_currPanel != null) return;
-                    ChangePanel(_aiPanel, _aiPanel.RequestStart);
-                    break;
-                case LobbyPanelType.Network:
-                    _networkPanel.RequestConnect();
-                    break;
+                _isEnteringGame = false;
+                return;
             }
-        }
-        private void ChangePanel(UIVisible next)
-        {
 
+            ClosePanel();
+            SceneManager.LoadScene("JanggiScene");
         }
-        private void ChangePanel(UIVisible next = null, Action requestStart = null)
+        private void ClosePanel()
         {
-            if (_currPanel == next) return;
-            _currPanel?.Close();
-            _currPanel = next;
-            _requestStart = requestStart;
-            _currPanel?.Open();
-        }
-
-        public void SetNetworkPanelVisible(bool show)
-        {
-            if (show)
-                ChangePanel(_networkPanel, _networkPanel.RequestStart);
-            else if (_currPanel == _networkPanel)
-                ChangePanel();
-        }
-
-        public void RequestStart()
-            => _requestStart?.Invoke();
-
-        public void ClearSelection()
-        {
+            // CTS 정리 및 정리할거 정리시키기
+            _currPanel.Close();
             _currPanel = null;
-            _requestStart = null;
         }
+        private void ChangePanelView(PanelType type)
+        {
+            if (_currPanel != null)
+                ClosePanel();
+
+            if (!_uis.TryGetValue(type, out var panel))
+                return;
+
+            _currPanel = panel;
+            _currPanel.Open();
+        }
+        #endregion
+        ////////////////////////////////////////////////////////////
+
     }
 }

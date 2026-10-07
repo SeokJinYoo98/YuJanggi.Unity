@@ -5,7 +5,7 @@ using YuJanggi.Engine.JanggiOption;
 
 namespace YuJanggi.Lobby.Flow
 {
-    using UI;
+    using Panel;
     internal sealed class LocalLobbyFlow : LocalFlow
     {
         private readonly LocalPanel _view;
@@ -19,27 +19,27 @@ namespace YuJanggi.Lobby.Flow
 
         protected override void OnBindEvents()
         {
-            _view.StartRequested += HandleStartRequested;
+           
         }
 
         protected override void OnUnBindEvents()
         {
-            _view.StartRequested -= HandleStartRequested;
+            
         }
 
         private void HandleStartRequested()
         {
-            if (!IsBound || !_canStart()) return;
-            var options = new JanggiOptions
-            {
-                GameMode = GameModeType.Local,
-                PlayerCho = PlayerType.Local,
-                PlayerHan = PlayerType.Local,
-                ChoFormation = (Formation)_view.ChoFormation,
-                HanFormation = (Formation)_view.HanFormation,
-                TurnTime = LobbyOptionValues.TurnTime(_view.TurnTime)
-            };
-            RaiseGameStartReady(new LobbyGameStartContext(options));
+            //if (!IsBound || !_canStart()) return;
+            //var options = new JanggiOptions
+            //{
+            //    GameMode = GameModeType.Local,
+            //    PlayerCho = PlayerType.Local,
+            //    PlayerHan = PlayerType.Local,
+            //    ChoFormation = (Formation)_view.ChoFormation,
+            //    HanFormation = (Formation)_view.HanFormation,
+            //    TurnTime = LobbyOptionValues.TurnTime(_view.TurnTime)
+            //};
+            //RaiseGameStartReady(new LobbyGameStartContext(options));
         }
     }
 }

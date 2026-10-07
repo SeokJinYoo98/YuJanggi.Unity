@@ -1,4 +1,4 @@
-namespace YuJanggi.Lobby.UI
+namespace YuJanggi.Lobby.Panel
 {
     using YuJanggi.UI;
 

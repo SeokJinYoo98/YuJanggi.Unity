@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace YuJanggi.Lobby.UI
+namespace YuJanggi.Lobby.Panel
 {
     using Audio;
     using YuJanggi.BootStrap;

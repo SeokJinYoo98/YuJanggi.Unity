@@ -5,7 +5,7 @@ using YuJanggi.Engine.JanggiOption;
 
 namespace YuJanggi.Lobby.Flow
 {
-    using UI;
+    using Panel;
 
     internal sealed class AILobbyFlow : LocalFlow
     {

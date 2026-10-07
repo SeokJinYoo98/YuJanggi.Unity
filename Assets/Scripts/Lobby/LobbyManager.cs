@@ -9,7 +9,7 @@ namespace YuJanggi.Lobby
 
     using Flow;
     using Store;
-    using UI;
+    using Panel;
     using Audio;
     public class LobbyManager : MonoBehaviour
     {
@@ -29,7 +29,7 @@ namespace YuJanggi.Lobby
             var bootstrap = YuJanggiBootStrap.Instance;
 
             _audioManager = bootstrap.AudioManager;
-            _panelManager.Initialize(_audioManager, HandleQuitGame);
+    
             var networkManager = bootstrap.NetworkManager;
 
             _networkFlow = new NetworkLobbyFlow(
@@ -88,22 +88,20 @@ namespace YuJanggi.Lobby
             if (context.AIStrategy.HasValue)
                 AISessionSettings.Strategy = context.AIStrategy.Value;
             _audioManager.PlayUI(UISfx.Button);
-            _panelManager.ClearSelection();
+
             SceneManager.LoadScene("JanggiScene");
         }
 
         private void HandleNetworkPanelRequested(bool show)
         {
-            if (_isEnteringGame) return;
-            _panelManager.SetNetworkPanelVisible(show);
+
         }
 
 
 
         public void HandleGameStart()
         {
-            if (!_isEnteringGame)
-                _panelManager.RequestStart();
+
         }
 
         public void HandleMatchMakingButton()
