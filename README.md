@@ -79,7 +79,7 @@ GameSession은 Engine과 View를 연결해 대국·리플레이·종료 상태�
 - **Unity 자동화**: 이 저장소에는 현재 별도 CI/CD Workflow가 없음
 
 주요 의존성은 UniTask, Input System, uGUI / TextMeshPro, URP, DOTween입니다.<br>
-Protocol의 JSON 직렬화에 필요한 DLL은 `Assets/Plugins/YuJanggiCommon`에 포함되어 있습니다.
+Protocol의 JSON 직렬화에 필요한 DLL은 `Assets/Plugins/SystemTextJson`에 포함되어 있습니다.
 
 ## Project Structure
 
