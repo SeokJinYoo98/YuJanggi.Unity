@@ -1,8 +1,6 @@
-using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-using YuJanggi.UI;
 
 namespace YuJanggi.Lobby
 {
@@ -14,22 +12,11 @@ namespace YuJanggi.Lobby
     using UI;
     public class LobbyManager : MonoBehaviour
     {
-        private enum PanelType
-        {
-            Local = 0,
-            AI = 1,
-            Network = 2,
-            Option = 3,
-            Quit = 4
-        }
-
+        [SerializeField] private LobbyPanelManager _panelManager;
         [SerializeField] private NetworkPanel _networkPanel;
         [SerializeField] private AIPanel _aiPanel;
         [SerializeField] private LocalPanel _localPanel;
         private AudioManager _audioManager;
-
-        private UIVisible _curr;
-        private Action _requestStart;
 
         private ILobbyFlow[] _flows;
         private NetworkLobbyFlow _networkFlow;
@@ -41,6 +28,7 @@ namespace YuJanggi.Lobby
             var bootstrap = YuJanggiBootStrap.Instance;
 
             _audioManager = bootstrap.AudioManager;
+            _panelManager.Initialize(_audioManager, HandleQuitGame);
             var networkManager = bootstrap.NetworkManager;
 
             _networkFlow = new NetworkLobbyFlow(
@@ -100,27 +88,14 @@ namespace YuJanggi.Lobby
             if (context.AIStrategy.HasValue)
                 AISessionSettings.Strategy = context.AIStrategy.Value;
             _audioManager.PlayButton();
-            _curr = null;
-            _requestStart = null;
+            _panelManager.ClearSelection();
             SceneManager.LoadScene("JanggiScene");
         }
 
         private void HandleNetworkPanelRequested(bool show)
         {
             if (_isEnteringGame) return;
-            if (show)
-                ChangePanel(_networkPanel, _networkPanel.RequestStart);
-            else if (_curr == _networkPanel)
-                ChangePanel();
-        }
-
-        private void ChangePanel(UIVisible next = null, Action requestStart = null)
-        {
-            if (_curr == next) return;
-            _curr?.Hide();
-            _curr = next;
-            _requestStart = requestStart;
-            _curr?.Show();
+            _panelManager.SetNetworkPanelVisible(show);
         }
 
 
@@ -128,13 +103,7 @@ namespace YuJanggi.Lobby
         public void HandleGameStart()
         {
             if (!_isEnteringGame)
-                _requestStart?.Invoke();
-        }
-
-        public void HandleClosePanel()
-        {
-            _audioManager.PlayButton();
-            ChangePanel();
+                _panelManager.RequestStart();
         }
 
         public void HandleMatchMakingButton()

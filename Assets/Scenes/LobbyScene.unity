@@ -202,8 +202,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
+      - m_Target: {fileID: 476586248}
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyPanelManager, Assembly-CSharp
         m_MethodName: HandleOpenPanel
         m_Mode: 3
         m_Arguments:
@@ -1222,8 +1222,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
+      - m_Target: {fileID: 476586248}
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyPanelManager, Assembly-CSharp
         m_MethodName: HandleClosePanel
         m_Mode: 1
         m_Arguments:
@@ -5701,8 +5701,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
+      - m_Target: {fileID: 476586248}
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyPanelManager, Assembly-CSharp
         m_MethodName: HandleClosePanel
         m_Mode: 1
         m_Arguments:
@@ -12946,8 +12946,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
+      - m_Target: {fileID: 476586248}
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyPanelManager, Assembly-CSharp
         m_MethodName: HandleClosePanel
         m_Mode: 1
         m_Arguments:
@@ -13303,8 +13303,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
+      - m_Target: {fileID: 476586248}
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyPanelManager, Assembly-CSharp
         m_MethodName: HandleOpenPanel
         m_Mode: 3
         m_Arguments:
@@ -13979,6 +13979,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c611b8831211c18469a76b62e233a5af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LobyScene
+  _panelManager: {fileID: 476586248}
   _networkPanel: {fileID: 1601440936}
   _aiPanel: {fileID: 5352754}
   _localPanel: {fileID: 1392650274}
@@ -16699,8 +16700,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
+      - m_Target: {fileID: 476586248}
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyPanelManager, Assembly-CSharp
         m_MethodName: HandleOpenPanel
         m_Mode: 3
         m_Arguments:
@@ -19653,8 +19654,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
+      - m_Target: {fileID: 476586248}
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyPanelManager, Assembly-CSharp
         m_MethodName: HandleOpenPanel
         m_Mode: 3
         m_Arguments:
@@ -26025,8 +26026,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
+      - m_Target: {fileID: 476586248}
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyPanelManager, Assembly-CSharp
         m_MethodName: HandleOpenPanel
         m_Mode: 3
         m_Arguments:
@@ -26460,8 +26461,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 947781670}
-        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
+      - m_Target: {fileID: 476586248}
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyPanelManager, Assembly-CSharp
         m_MethodName: HandleClosePanel
         m_Mode: 1
         m_Arguments:

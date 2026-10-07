@@ -27,9 +27,13 @@ namespace YuJanggi.Lobby
 
         private UIVisible    _currPanel = null;
         private AudioManager _audio = null;
-        private void Start()
+        private Action _requestStart;
+        private Action _requestQuit;
+
+        public void Initialize(AudioManager audio, Action requestQuit)
         {
-            _audio = YuJanggiBootStrap.Instance.AudioManager;
+            _audio = audio;
+            _requestQuit = requestQuit;
         }
         public void HandleOpenPanel(int type)
         {
@@ -38,20 +42,64 @@ namespace YuJanggi.Lobby
                 Debug.LogWarning($"Lobby: 잘못된 패널 타입입니다. ({type})");
                 return;
             }
+            if ((LobbyPanelType)type == LobbyPanelType.Option) return;
+            if ((LobbyPanelType)type == LobbyPanelType.Quit)
+            {
+                _requestQuit?.Invoke();
+                return;
+            }
+
             _audio.PlayButton();
             ChangePanelView((LobbyPanelType)type);
         }
         public void HandleClosePanel()
         {
-
+            _audio.PlayButton();
+            ChangePanel();
         }
 
         private void ChangePanelView(LobbyPanelType type)
         {
-            if (_currPanel != null)
-                HandleClosePanel();
+            switch (type)
+            {
+                case LobbyPanelType.Local:
+                    if (_currPanel != null) return;
+                    ChangePanel(_localPanel, _localPanel.RequestStart);
+                    break;
+                case LobbyPanelType.AI:
+                    if (_currPanel != null) return;
+                    ChangePanel(_aiPanel, _aiPanel.RequestStart);
+                    break;
+                case LobbyPanelType.Network:
+                    _networkPanel.RequestConnect();
+                    break;
+            }
+        }
 
+        private void ChangePanel(UIVisible next = null, Action requestStart = null)
+        {
+            if (_currPanel == next) return;
+            _currPanel?.Hide();
+            _currPanel = next;
+            _requestStart = requestStart;
+            _currPanel?.Show();
+        }
 
+        public void SetNetworkPanelVisible(bool show)
+        {
+            if (show)
+                ChangePanel(_networkPanel, _networkPanel.RequestStart);
+            else if (_currPanel == _networkPanel)
+                ChangePanel();
+        }
+
+        public void RequestStart()
+            => _requestStart?.Invoke();
+
+        public void ClearSelection()
+        {
+            _currPanel = null;
+            _requestStart = null;
         }
     }
 }
