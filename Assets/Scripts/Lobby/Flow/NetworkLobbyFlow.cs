@@ -46,57 +46,57 @@ namespace YuJanggi.Lobby.Flow
 
         protected override void OnBindEvents()
         {
-            _readyRaised = false;
+            //_readyRaised = false;
 
-            _lifetimeCts = new CancellationTokenSource();
-            _lifetimeToken = _lifetimeCts.Token;
+            //_lifetimeCts = new CancellationTokenSource();
+            //_lifetimeToken = _lifetimeCts.Token;
 
-            _view.ConnectRequested += HandleConnectRequested;
-            _view.MatchingRequested += HandleMatchingRequested;
-            _view.CloseRequested += HandleCloseRequested;
-            _view.StartRequested += HandleStartRequested;
+            //_view.ConnectRequested += HandleConnectRequested;
+            //_view.MatchingRequested += HandleMatchingRequested;
+            //_view.CloseRequested += HandleCloseRequested;
+            //_view.StartRequested += HandleStartRequested;
 
-            _connection.OnNetworkChanged += HandleNetworkChanged;
+            //_connection.OnNetworkChanged += HandleNetworkChanged;
 
-            _network.MatchFound += HandleMatchFound;
-            _network.GameReadyReceived += HandleGameReady;
+            //_network.MatchFound += HandleMatchFound;
+            //_network.GameReadyReceived += HandleGameReady;
 
-            HandleNetworkChanged();
+            //HandleNetworkChanged();
         }
 
         protected override void OnUnBindEvents()
         {
-            _view.ConnectRequested -= HandleConnectRequested;
-            _view.MatchingRequested -= HandleMatchingRequested;
-            _view.CloseRequested -= HandleCloseRequested;
-            _view.StartRequested -= HandleStartRequested;
+            //_view.ConnectRequested -= HandleConnectRequested;
+            //_view.MatchingRequested -= HandleMatchingRequested;
+            //_view.CloseRequested -= HandleCloseRequested;
+            //_view.StartRequested -= HandleStartRequested;
 
-            _connection.OnNetworkChanged -= HandleNetworkChanged;
+            //_connection.OnNetworkChanged -= HandleNetworkChanged;
 
-            _network.MatchFound -= HandleMatchFound;
-            _network.GameReadyReceived -= HandleGameReady;
+            //_network.MatchFound -= HandleMatchFound;
+            //_network.GameReadyReceived -= HandleGameReady;
 
-            if (_formationAttempted && !_network.IsFormationSubmitted)
-                _formationFailure ??= "포진 제출이 취소되었습니다.";
+            //if (_formationAttempted && !_network.IsFormationSubmitted)
+            //    _formationFailure ??= "포진 제출이 취소되었습니다.";
 
-            var lifetime = _lifetimeCts;
-            _lifetimeCts = null;
-            lifetime?.Cancel();
-            lifetime?.Dispose();
+            //var lifetime = _lifetimeCts;
+            //_lifetimeCts = null;
+            //lifetime?.Cancel();
+            //lifetime?.Dispose();
         }
 
         public void Tick()
         {
-            if (!IsBound || _readyRaised || _formationAttempted ||
-                _network.IsFormationSubmitting || _network.IsFormationSubmitted)
-                return;
+            //if (!IsBound || _readyRaised || _formationAttempted ||
+            //    _network.IsFormationSubmitting || _network.IsFormationSubmitted)
+            //    return;
 
-            if (!_timer.TryGetChangedSeconds(Time.realtimeSinceStartupAsDouble, out int seconds))
-                return;
+            //if (!_timer.TryGetChangedSeconds(Time.realtimeSinceStartupAsDouble, out int seconds))
+            //    return;
 
-            _view.UpdateTimer(_timer.State, seconds);
-            if (_timer.State == MatchingState.Matched && seconds == 0)
-                SubmitSelectedFormationAsync(_lifetimeToken).Forget();
+            //_view.UpdateTimer(_timer.State, seconds);
+            //if (_timer.State == MatchingState.Matched && seconds == 0)
+            //    SubmitSelectedFormationAsync(_lifetimeToken).Forget();
         }
 
         private void HandleConnectRequested()
@@ -206,73 +206,73 @@ namespace YuJanggi.Lobby.Flow
 
         private void HandleNetworkChanged()
         {
-            if (!IsBound || _readyRaised) return;
-            var status = _connection.Status;
-            var match = _network.Match;
-            if (_timer.MatchId != match?.MatchId || status.MatchingState != MatchingState.Matched)
-            {
-                _formationFailure = null;
-                _formationAttempted = false;
-            }
-            if (_network.IsGameReady)
-            {
-                HandleStartRequested();
-                if (_readyRaised) return;
-            }
-            _timer.Update(status, match?.MatchId, Time.realtimeSinceStartupAsDouble);
-            // 실패 문구는 남기고 정상 연결 해제 시 패널을 닫는다.
-            if ((status.Error ?? NetworkError.None) == NetworkError.None &&
-                status.ConnectionState == ConnectionState.Disconnected)
-                PanelRequested?.Invoke(false);
+            //if (!IsBound || _readyRaised) return;
+            //var status = _connection.Status;
+            //var match = _network.Match;
+            //if (_timer.MatchId != match?.MatchId || status.MatchingState != MatchingState.Matched)
+            //{
+            //    _formationFailure = null;
+            //    _formationAttempted = false;
+            //}
+            //if (_network.IsGameReady)
+            //{
+            //    HandleStartRequested();
+            //    if (_readyRaised) return;
+            //}
+            //_timer.Update(status, match?.MatchId, Time.realtimeSinceStartupAsDouble);
+            //// 실패 문구는 남기고 정상 연결 해제 시 패널을 닫는다.
+            //if ((status.Error ?? NetworkError.None) == NetworkError.None &&
+            //    status.ConnectionState == ConnectionState.Disconnected)
+            //    PanelRequested?.Invoke(false);
 
-            int? seconds = _timer.GetSecondsForDisplay(Time.realtimeSinceStartupAsDouble);
-            _view.ChangeMessage(status, match?.Team ?? PlayerTeam.None, seconds);
-            if (status.ConnectionState == ConnectionState.Connected &&
-                _network.State == MatchingState.Matched &&
-                (_formationAttempted || _network.IsFormationSubmitting || _network.IsFormationSubmitted))
-            {
-                _view.ShowFormationProgress(_formationFailure ??
-                    (_network.IsFormationSubmitted
-                        ? "포진 전송 완료 · 서버 준비 대기 중"
-                        : "포진 제출 중"));
-            }
-            if (_timer.State == MatchingState.Matched && seconds == 0)
-                SubmitSelectedFormationAsync(_lifetimeToken).Forget();
+            //int? seconds = _timer.GetSecondsForDisplay(Time.realtimeSinceStartupAsDouble);
+            //_view.ChangeMessage(status, match?.Team ?? PlayerTeam.None, seconds);
+            //if (status.ConnectionState == ConnectionState.Connected &&
+            //    _network.State == MatchingState.Matched &&
+            //    (_formationAttempted || _network.IsFormationSubmitting || _network.IsFormationSubmitted))
+            //{
+            //    _view.ShowFormationProgress(_formationFailure ??
+            //        (_network.IsFormationSubmitted
+            //            ? "포진 전송 완료 · 서버 준비 대기 중"
+            //            : "포진 제출 중"));
+            //}
+            //if (_timer.State == MatchingState.Matched && seconds == 0)
+            //    SubmitSelectedFormationAsync(_lifetimeToken).Forget();
         }
 
         private async UniTask SubmitSelectedFormationAsync(CancellationToken token)
         {
-            string? matchId = _network.Match?.MatchId;
-            if (!IsCurrent(token) || _readyRaised || !_connection.IsOnline ||
-                string.IsNullOrWhiteSpace(matchId) || _network.State != MatchingState.Matched ||
-                _formationAttempted || _network.IsFormationSubmitting || _network.IsFormationSubmitted)
-                return;
+            //string? matchId = _network.Match?.MatchId;
+            //if (!IsCurrent(token) || _readyRaised || !_connection.IsOnline ||
+            //    string.IsNullOrWhiteSpace(matchId) || _network.State != MatchingState.Matched ||
+            //    _formationAttempted || _network.IsFormationSubmitting || _network.IsFormationSubmitted)
+            //    return;
 
-            // 전송 알림이 await 복귀보다 먼저 와도 자동 재전송하지 않는다.
-            _formationAttempted = true;
-            _formationFailure = null;
-            var formation = (Formation)_view.Selected;
-            _view.ShowFormationProgress("포진 제출 중");
-            try
-            {
-                await _network.SubmitFormationAsync(formation, token);
-            }
-            catch (OperationCanceledException)
-            {
-                if (IsCurrent(token) && _network.Match?.MatchId == matchId)
-                    _formationFailure = "포진 제출이 취소되었습니다.";
-            }
-            catch (Exception exception)
-            {
-                if (IsCurrent(token) && _network.Match?.MatchId == matchId)
-                {
-                    _formationFailure = "포진 제출에 실패했습니다.";
-                    Debug.LogException(exception);
-                }
-            }
-            // 실패 시 서버 접수 여부가 불명확하므로 기존처럼 자동 재제출하지 않는다.
-            if (IsCurrent(token) && !_readyRaised && _network.Match?.MatchId == matchId)
-                HandleNetworkChanged();
+            //// 전송 알림이 await 복귀보다 먼저 와도 자동 재전송하지 않는다.
+            //_formationAttempted = true;
+            //_formationFailure = null;
+            //var formation = (Formation)_view.Selected;
+            //_view.ShowFormationProgress("포진 제출 중");
+            //try
+            //{
+            //    await _network.SubmitFormationAsync(formation, token);
+            //}
+            //catch (OperationCanceledException)
+            //{
+            //    if (IsCurrent(token) && _network.Match?.MatchId == matchId)
+            //        _formationFailure = "포진 제출이 취소되었습니다.";
+            //}
+            //catch (Exception exception)
+            //{
+            //    if (IsCurrent(token) && _network.Match?.MatchId == matchId)
+            //    {
+            //        _formationFailure = "포진 제출에 실패했습니다.";
+            //        Debug.LogException(exception);
+            //    }
+            //}
+            //// 실패 시 서버 접수 여부가 불명확하므로 기존처럼 자동 재제출하지 않는다.
+            //if (IsCurrent(token) && !_readyRaised && _network.Match?.MatchId == matchId)
+            //    HandleNetworkChanged();
         }
 
         private bool IsCurrent(CancellationToken token)

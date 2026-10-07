@@ -14,8 +14,84 @@ namespace YuJanggi.Network
     /// TCP 연결을 관리하고
     /// 프로토콜 메시지의 송수신을 처리하는 전송 계층 클라이언트입니다.
     /// </summary>
+
     public sealed class TcpTransport : IDisposable
     {
+        public async UniTask Panel_ConnectAsync(
+            CancellationToken cancellationToken)
+        {
+            ThrowIfDisposed();
+
+            TcpClient? client = null;
+            CancellationTokenRegistration cancellationRegistration = default;
+            bool connected = false;
+
+            try
+            {
+                if (_client is not null)
+                {
+                    throw new InvalidOperationException(
+                        "이미 TCP 클라이언트가 생성되어 있습니다.");
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                client = new TcpClient();
+
+                cancellationRegistration =
+                    cancellationToken.Register(client.Dispose);
+
+                await client.ConnectAsync(
+                    _host,
+                    _port);
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var stream = client.GetStream();
+
+                _client = client;
+                _stream = stream;
+
+                connected = true;
+            }
+            catch (OperationCanceledException)
+            {
+                throw; // 연결 취소
+            }
+            catch (ObjectDisposedException)
+                when (cancellationToken.IsCancellationRequested)
+            {
+                throw new OperationCanceledException(
+                    cancellationToken); // Dispose로 종료된 연결 취소
+            }
+            catch (ObjectDisposedException)
+            {
+                throw; // 이미 Dispose된 객체 사용
+            }
+            catch (SocketException)
+            {
+                throw; // TCP 연결 실패
+            }
+            catch (InvalidOperationException)
+            {
+                throw; // 잘못된 연결 상태
+            }
+            catch
+            {
+                throw; // 기타 연결 오류
+            }
+            finally
+            {
+                cancellationRegistration.Dispose();
+
+                if (!connected)
+                    client?.Dispose();
+            }
+        }
+
+
+
+
         private TcpClient?              _client;
         private NetworkStream?          _stream;
         private readonly SemaphoreSlim  _sendLock;

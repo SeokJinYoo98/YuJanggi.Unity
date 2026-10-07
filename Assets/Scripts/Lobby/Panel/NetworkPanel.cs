@@ -1,145 +1,130 @@
-using UnityEngine;
 using System;
 using TMPro;
-
-
-using MatchingState = YuJanggi.Lobby.Network.MatchingState;
-
+using UnityEngine;
 
 namespace YuJanggi.Lobby.Panel
 {
-    using YuJanggi.UI;
-    using YuJanggi.Network.Status;
+    using Cysharp.Threading.Tasks;
+    using System.Threading;
+    using YuJanggi.BootStrap;
+    using YuJanggi.Lobby.Network;
 
-    using Engine.Domain;
-
-    public class NetworkPanel : Panel
+    public class NetworkPanel : Panel, IGameStartPanel
     {
-
         [SerializeField] private TMP_Text _statusText;
         [SerializeField] private TMP_Text _statusDetailText;
         [SerializeField] private TMP_Dropdown _formationDropDown;
 
-        public int Selected
-            => _formationDropDown.value;
+        private NetworkManager           _network;
+        private LobbyNetworkHandler      _handler;
+        private CancellationTokenSource  _panelCts;
 
-        public event Action ConnectRequested;
-        public event Action MatchingRequested;
-        public event Action CloseRequested;
-        public event Action StartRequested;
+        private bool _online = false;
 
-        public void RequestConnect() => ConnectRequested?.Invoke();
-        public void RequestMatching() => MatchingRequested?.Invoke();
-        public void RequestClose() => CloseRequested?.Invoke();
-        public void RequestStart() => StartRequested?.Invoke();
-        private void ClearText()
+        void OnEnable()
         {
-            _statusText.SetText(string.Empty);
-            _statusDetailText.SetText(string.Empty);
+            _network = YuJanggiBootStrap.Instance.NetworkManager;
         }
-        public void ChangeMessage(in NetworkStatus status, PlayerTeam team, int? timerSeconds = null)
+        void OnDisable()
         {
-
-            ClearText();
-            NetworkError error = status.Error ?? NetworkError.None;
-            bool failed = error != NetworkError.None;
-            _formationDropDown.interactable = !failed &&
-                status.ConnectionState == ConnectionState.Connected && status.MatchingState == MatchingState.Matched;
-
-            string title = !failed && status.ConnectionState == ConnectionState.Connected
-                ? "Online" : "Offline";
-            if (!failed && status.ConnectionState == ConnectionState.Connected &&
-                status.MatchingState == MatchingState.Matched)
-                title = team is PlayerTeam.Cho or PlayerTeam.Han
-                    ? $"선택된 진영: {team}"
-                    : "선택된 진영: 확인 불가";
-            string detail = failed
-                ? GetFailureReason(error)
-                : timerSeconds.HasValue
-                    ? GetTimerText(status.MatchingState, timerSeconds.Value)
-                    : GetConnectionStage(status);
-
-            _statusText.SetText(title);
-            _statusDetailText.SetText(detail);
-
-            if (failed)
-                Debug.LogWarning($"Client: {title} - {detail} ({error}) {status.Message}");
-            else
-                Debug.Log($"Client: {title} - {detail}");
+            _network = null;
         }
-
-        /// <summary>로비가 계산한 매칭 대기 시간 또는 게임 진입 카운트다운을 표시합니다.</summary>
-        public void UpdateTimer(MatchingState state, int seconds)
+        protected override void OnOpen()
         {
-            _statusDetailText.SetText(GetTimerText(state, seconds));
+            HandleOpenPanel();
+            ConnectAsync().Forget();
         }
-
-        /// <summary>로비에서 전달한 포진 제출·서버 준비 상태를 표시합니다.</summary>
-        public void ShowFormationProgress(string message)
+        protected override void OnClose()
         {
-            _formationDropDown.interactable = false;
-            _statusDetailText.SetText(message);
+            _panelCts?.Cancel();
+            _panelCts?.Dispose();
+            _panelCts = null;
+
+            _handler = null;
         }
-
-        private static string GetTimerText(MatchingState state, int seconds)
+        public UniTask<bool>    PrepareGameAsync()
         {
-            if (state == MatchingState.Matching)
-                return $"매칭: {seconds / 60:00}분{seconds % 60:00}초";
-
-            return $"남은 시간: {seconds}초";
+            // StartMatchMaking
+            throw new NotImplementedException();
         }
-        private static string GetConnectionStage(in NetworkStatus status)
+        private async UniTask   ConnectAsync()
         {
-            if (status.ConnectionState == ConnectionState.Connected)
+            _handler = _network.Lobby;
+
+            _panelCts?.Dispose();
+            _panelCts = new CancellationTokenSource();
+
+            var token = _panelCts.Token;
+
+            _online = false;
+
+            try
             {
-                return status.MatchingState switch
-                {
-                    MatchingState.Requesting => "매칭 신청 중",
-                    MatchingState.Matching => "매칭 중",
-                    MatchingState.Matched => "매칭 완료",
-                    _ => "연결 완료"
-                };
+                var connected = await _handler.Panel_ConnectAsync(token);
+
+                if (!HandleConnectResult(connected))
+                    return;
+
+                var handshaked = await _handler.Panel_HandshakeAsync(token);
+
+                if (!HandleHandshakeResult(handshaked))
+                    return;
+
+                _network.Panel_StartReceiveLoop();
+
+                _online = true;
             }
-            return status.ConnectionState switch
+            catch (OperationCanceledException)
             {
-                ConnectionState.Disconnected => "연결 해제",
-                ConnectionState.Connecting => "연결 중",
-                ConnectionState.Handshaking => "버전 확인 중",
-                ConnectionState.Connected => "연결 완료",
-                _ => "상태 확인 불가"
-            };
+                // 패널이 닫혀 연결 작업이 취소됨
+            }
+            finally
+            {
+                if (!_online)
+                {
+                    _handler?.Panel_Disconnect();
+
+                    _panelCts?.Dispose();
+                    _panelCts = null;
+                }
+            }
         }
 
-        private static string GetFailureReason(NetworkError error)
+        private void HandleOpenPanel()
         {
-            bool coreMismatch = (error & NetworkError.CoreVersionMismatch) != 0;
-            bool protocolMismatch = (error & NetworkError.ProtocolVersionMismatch) != 0;
-            if (coreMismatch && protocolMismatch)
-                return "게임·통신 버전 불일치";
-            if (coreMismatch)
-                return "게임 버전 불일치";
-            if (protocolMismatch)
-                return "통신 버전 불일치";
-
-            if ((error & NetworkError.AuthenticationFailed) != 0)
-                return "인증 실패";
-            if ((error & NetworkError.ServerError) != 0)
-                return "서버 오류";
-            if ((error & NetworkError.ConnectionLost) != 0)
-                return "연결 끊김";
-            return "서버 연결 실패";
+            _statusText.SetText("Offline");
+            _statusDetailText.SetText("Connecting In Progress");
         }
-
-        #region Refactoring
-
-
-        public void HandleMatchMaking()
+        private bool HandleConnectResult(bool result)
         {
+            if (result)
+            {
+                _statusText.SetText("Connecting");
+                _statusDetailText.SetText("Handshaking In Progress");
+            }
+            else
+            {
+                _statusText.SetText("Offline");
+                _statusDetailText.SetText("Connection Failed");
+            }
 
+            return result;
         }
+        private bool HandleHandshakeResult(bool result)
+        {
+            if (result)
+            {
+                _statusText.SetText("Online");
+                _statusDetailText.SetText("Handshaking Completed");
+            }
+            else
+            {
+                _statusText.SetText("Offline");
+                _statusDetailText.SetText("Handshaking Failed");
+            }
 
-        #endregion
-
+            return result;
+        }
     }
 }
 

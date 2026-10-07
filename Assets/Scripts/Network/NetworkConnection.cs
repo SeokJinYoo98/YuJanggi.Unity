@@ -18,7 +18,23 @@ namespace YuJanggi.Network
     /// <summary>TCP 연결, Handshake 및 수신 루프의 수명주기를 관리합니다.</summary>
     public sealed class NetworkConnection : IDisposable
     {
+        public TcpTransport Client
+            => _tcpClient;
         private readonly TcpTransport _tcpClient;
+        public async UniTask Panel_ConnectAsync(CancellationToken token)
+        {
+            await _tcpClient.ConnectAsync();
+        }
+
+
+
+
+
+
+
+
+
+
         private CancellationTokenSource? _lifetimeCts;
         private int _connectionVersion;
         private bool _disposed;

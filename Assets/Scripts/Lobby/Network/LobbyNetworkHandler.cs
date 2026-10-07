@@ -1,18 +1,126 @@
 #nullable enable
 using Cysharp.Threading.Tasks;
 using System;
+using System.Net.Sockets;
 using System.Threading;
 using YuJanggi.Engine.Domain;
 using YuJanggi.Network;
 using YuJanggi.Network.Handler;
+using YuJanggi.Protocol.Connection;
 using YuJanggi.Protocol.Matching;
 using YuJanggi.Protocol.Messages;
 
 namespace YuJanggi.Lobby.Network
 {
-
     internal sealed class LobbyNetworkHandler : NetworkHandler, ILobbyNetwork
     {
+        private RequestDispatcher _dispatcher;
+        TcpTransport _transport
+            => Connection.Client;
+        public async UniTask<bool> Panel_ConnectAsync(
+            CancellationToken token)
+        {
+            try
+            {
+                await _transport.ConnectAsync(token);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                throw; // 연결 취소
+            }
+            catch (ObjectDisposedException)
+            {
+                return false; // 이미 Dispose된 객체 사용
+            }
+            catch (SocketException)
+            {
+                return false; // TCP 연결 실패
+            }
+            catch (InvalidOperationException)
+            {
+                return false; // 잘못된 연결 상태
+            }
+            catch (ArgumentException)
+            {
+                return false; // 잘못된 연결 인수
+            }
+            catch
+            {
+                return false; // 기타 연결 오류
+            }
+        }
+        public async UniTask<bool> Panel_HandshakeAsync(
+            CancellationToken token)
+        {
+            try
+            {
+                var msgType = ClientMessageType.HandshakeRequest;
+                var payload = new ProtocolHandshakeRequest
+                {
+                    YuJanggiProtocolVersion = Protocol.Version.Version.Current,
+                    YuJanggiCoreVersion = Engine.Version.Version.Current
+                };
+
+                
+
+                await SendAsync(
+                    msgType,
+                    )
+
+                var response = await _transport.ReceiveAsync(
+                    token);
+
+                if (response.Type != ServerMessageType.HandshakeResponse)
+                    return false; // 잘못된 응답 타입
+
+                if (request.RequestId != response.RequestId)
+                    return false; // RequestId 불일치
+
+                var handshake =
+                    response.GetPayload<ProtocolHandshakeResponse>();
+
+                return handshake.Result ==
+                       ProtocolHandshakeResult.Success;
+            }
+            catch (OperationCanceledException)
+            {
+                throw; // 핸드셰이크 취소
+            }
+            catch
+            {
+                return false; // 핸드셰이크 실패
+            }
+        }
+        public void Panel_Disconnect()
+        {
+            _transport.Disconnect();
+        }
+        public async UniTask Panel_MatchRequestAsync(
+            CancellationToken token)
+        {
+            try
+            {
+                await SendRequestAsync(
+                    ClientMessageType.MatchingStartRequest,
+                    new MatchingStartRequest(),
+                    ServerMessageType.MatchingStartResponse,
+                    token);
+
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
         #region Fields
         private readonly LobbyNetworkService _service = new();
         private readonly object        _requestSync = new();

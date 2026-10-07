@@ -18,6 +18,14 @@ namespace YuJanggi.Network
     /// <summary>RequestId로 응답을 연결하고 요청 대기와 취소를 관리합니다.</summary>
     public sealed class RequestDispatcher : ISendOnlyRequestDispatcher
     {
+        public void Panel_Clear()
+        {
+            if (_disposed)
+                return;
+
+            _pendingRequestTracker.Clear();
+        }
+
         private readonly NetworkConnection _connection;
         private readonly PendingRequestTracker _pendingRequestTracker = new();
         private bool _disposed;

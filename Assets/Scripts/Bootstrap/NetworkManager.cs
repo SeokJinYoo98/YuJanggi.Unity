@@ -22,12 +22,13 @@ namespace YuJanggi.BootStrap
     /// </summary>
     public sealed class NetworkManager : MonoBehaviour
     {
-     
+        private CancellationTokenSource? _receiveCts;
+        private TcpTransport? _transport
+            => _connection?.Client;
         private LobbyNetworkHandler? _lobbyNetworkHandler;
-
         private InGameHandler? _inGameHandler;
 
-        internal ILobbyNetwork Lobby
+        internal LobbyNetworkHandler Lobby
             => _lobbyNetworkHandler
                ?? throw new InvalidOperationException(
                    "NetworkManager가 초기화되지 않았습니다.");
@@ -55,8 +56,46 @@ namespace YuJanggi.BootStrap
                     break;
             }
         }
+        public void Panel_StartReceiveLoop()
+        {
+            if (_transport is null)
+                throw new InvalidOperationException(
+                    "TcpTransport가 초기화되지 않았습니다.");
 
+            _receiveCts?.Cancel();
+            _receiveCts?.Dispose();
 
+            _receiveCts = new CancellationTokenSource();
+
+            Panel_ReceiveLoopAsync(
+                _transport,
+                _receiveCts.Token).Forget();
+        }
+        private async UniTask Panel_ReceiveLoopAsync(
+            TcpTransport transport,
+            CancellationToken token)
+        {
+            try
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    var message = await transport.ReceiveAsync(token);
+
+                    HandleMessage(message);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // ReceiveLoop 취소
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+
+                _requests?.Panel_Clear();
+                transport.Disconnect();
+            }
+        }
 
 
 

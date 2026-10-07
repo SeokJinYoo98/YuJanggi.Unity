@@ -1769,9 +1769,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
-        m_MethodName: HandleCloseNetworkPanel
+      - m_Target: {fileID: 1144934031}
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyPanelManager, Assembly-CSharp
+        m_MethodName: HandleClosePanel
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3190,9 +3190,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
-        m_MethodName: HandleMatchMakingButton
+      - m_Target: {fileID: 1144934031}
+        m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyPanelManager, Assembly-CSharp
+        m_MethodName: HandleStartGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
