@@ -159,7 +159,7 @@ namespace YuJanggi.Lobby.Flow
             PanelRequested?.Invoke(false);
         }
 
-        private void HandleMatchFound(MatchInfo match)
+        private void HandleMatchFound(NetworkSetting match)
         {
             if (!IsBound ||
                 _network.Match?.MatchId != match.MatchId)

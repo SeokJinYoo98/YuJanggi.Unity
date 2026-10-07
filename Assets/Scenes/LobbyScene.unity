@@ -347,10 +347,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7a6fe5f3ba41d842ae685e04b5f3ce4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.Lobby.UI.AIPanel
-  _teamDropdown: {fileID: 503984917}
-  _timeDropdown: {fileID: 874578574}
-  _formationDropdown: {fileID: 2031032175}
-  _strategyDropdown: {fileID: 123476636}
+  _team: {fileID: 503984917}
+  _time: {fileID: 874578574}
+  _form: {fileID: 2031032175}
+  _strategy: {fileID: 123476636}
 --- !u!1 &15211430
 GameObject:
   m_ObjectHideFlags: 0
@@ -4942,7 +4942,7 @@ GameObject:
   - component: {fileID: 503984918}
   - component: {fileID: 503984917}
   m_Layer: 5
-  m_Name: TeamDropdown
+  m_Name: AI_Team
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6832,7 +6832,7 @@ GameObject:
   - component: {fileID: 874578575}
   - component: {fileID: 874578574}
   m_Layer: 5
-  m_Name: TimeDropdown
+  m_Name: AI_Time
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15849,7 +15849,7 @@ GameObject:
   - component: {fileID: 2031032176}
   - component: {fileID: 2031032175}
   m_Layer: 5
-  m_Name: FormationDropdown
+  m_Name: AI_Form
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

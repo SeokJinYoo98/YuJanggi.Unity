@@ -13,7 +13,7 @@ namespace YuJanggi.Lobby.Network
         private (Formation Cho, Formation Han)? _readyFormations;
 
         public MatchingState State { get; private set; } = MatchingState.Idle;
-        public MatchInfo? Match { get; private set; }
+        public NetworkSetting? Match { get; private set; }
         public Formation? SelectedFormation { get; private set; }
         public Formation? SubmittedFormation { get; private set; }
         public bool IsFormationSubmitting { get; private set; }
@@ -57,7 +57,7 @@ namespace YuJanggi.Lobby.Network
 
         public void EndCancel() => _cancelInProgress = false;
 
-        public void MatchingFound(MatchInfo match)
+        public void MatchingFound(NetworkSetting match)
         {
             if (State == MatchingState.Matching)
             {

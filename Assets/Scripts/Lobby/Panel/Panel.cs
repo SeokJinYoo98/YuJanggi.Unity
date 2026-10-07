@@ -14,6 +14,10 @@ namespace YuJanggi.Lobby.Panel
     }
     public abstract class Panel : MonoBehaviour, IPanel
     {
+        void Start()
+        {
+            gameObject.SetActive(false);
+        }
         public void Open()
         {
             gameObject.SetActive(true);

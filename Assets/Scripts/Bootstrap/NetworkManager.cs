@@ -73,7 +73,7 @@ namespace YuJanggi.BootStrap
        
         #endregion
         #region Properties
-        public MatchInfo? NetworkInfo
+        public NetworkSetting? NetworkInfo
             => _lobbyNetworkHandler?.Match;
         public string? MatchId
         {

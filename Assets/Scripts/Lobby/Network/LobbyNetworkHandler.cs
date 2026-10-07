@@ -30,7 +30,7 @@ namespace YuJanggi.Lobby.Network
         #region Properties
         public MatchingState State
             => _service.State;
-        public MatchInfo? Match => _service.Match;
+        public NetworkSetting? Match => _service.Match;
         public bool IsFormationSubmitting
             => _service.IsFormationSubmitting;
         public bool IsFormationSubmitted
@@ -40,7 +40,7 @@ namespace YuJanggi.Lobby.Network
         #endregion
 
         #region Events
-        public event Action<MatchInfo>? MatchFound;
+        public event Action<NetworkSetting>? MatchFound;
         public event Action<string, Formation, Formation>? GameReadyReceived;
         public event Action? OnDataChanged
         {
@@ -343,7 +343,7 @@ namespace YuJanggi.Lobby.Network
             if (found.Opponent is null)
                 throw new InvalidOperationException("매칭 상대 정보가 없습니다.");
 
-            var match = new MatchInfo(
+            var match = new NetworkSetting(
                 found.MatchId,
                 LobbyProtocolMapper.ToPlayerTeam(found.MyTeam),
                 found.Opponent.PlayerId,

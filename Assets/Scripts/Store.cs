@@ -1,28 +1,35 @@
-using MatchInfo = YuJanggi.Lobby.Network.MatchInfo;
+using NetworkSetting = YuJanggi.Lobby.Network.NetworkSetting;
 
 namespace YuJanggi.Store
 {
     using Engine.Domain;
     using Engine.JanggiOption;
     using System;
+    using YuJanggi.AI.Data;
 
     public static class NetworkMatchInfoStore
     {
-        public static MatchInfo Current;
+        public static NetworkSetting Current;
     }
     public static class JanggiOptionStore
     {
-        public static JanggiOptions Current { get; private set; }
+        public static JanggiOptions         JanggiSetting { get; private set; }
+        public static AIMoveStrategyType?   AISetting { get; private set; }
+        public static void Set(
+            JanggiOptions options,
+            AIMoveStrategyType? aiStrategy = null)
+        {
+            JanggiSetting = options
+                ?? throw new ArgumentNullException(nameof(options));
 
-        public static void SetOptions(JanggiOptions options)
-            => Current = options ?? throw new ArgumentNullException(nameof(options));
+            AISetting = aiStrategy;
+        }
 
         public static void ClearNetworkOptions()
         {
-            if (Current?.GameMode == GameModeType.Network)
-                Current = null;
+            if (JanggiSetting?.GameMode == GameModeType.Network)
+                JanggiSetting = null;
         }
-
     }
     public static class JanggiOptionFactory
     {
@@ -44,8 +51,33 @@ namespace YuJanggi.Store
                 TurnTime        = ToTurnTime(turnTime)
             };
         }
+        public static JanggiOptions CreateAI(
+            int playerTeam,
+            int playerFormation,
+            int turnTime)
+        {
+            bool isPlayerCho = playerTeam == (int)PlayerTeam.Cho;
 
-        private static int ToTurnTime(int value)
+            var  cho = isPlayerCho ? PlayerType.Local : PlayerType.AI;
+            var  choForm  = isPlayerCho ? ToFormation(playerFormation) : ToFormation(GenerateAIFormation());
+
+            var  han = isPlayerCho ? PlayerType.AI : PlayerType.Local;
+            var  hanForm  = isPlayerCho ? ToFormation(GenerateAIFormation()) : ToFormation(playerFormation);
+
+            return new JanggiOptions
+            {
+                GameMode     = GameModeType.AI,
+
+                PlayerCho    = cho,
+                ChoFormation = choForm,
+
+                PlayerHan    = han,
+                HanFormation = hanForm,
+
+                TurnTime     = ToTurnTime(turnTime)
+            };
+        }
+        private static int                  ToTurnTime(int value)
             => value switch
             {
                 0 => 0,
@@ -57,12 +89,14 @@ namespace YuJanggi.Store
                 6 => 60,
                 _ => 30
             };
-
-        private static Formation ToFormation(int value)
+        private static Formation            ToFormation(int value)
             => (Formation)value;
 
-        private static PlayerTeam ToTeam(int value)
-            => (PlayerTeam)value;
+        private static int                  GenerateAIFormation()
+        {
+            return UnityEngine.Random.Range(
+                0, Enum.GetValues(typeof(Formation)).Length);
+        }
     }
 
 

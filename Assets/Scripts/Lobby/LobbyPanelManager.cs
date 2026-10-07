@@ -24,9 +24,9 @@ namespace YuJanggi.Lobby
         [SerializeField] private OptionPanel    _optionPanel;
         [SerializeField] private QuitPanel      _quitPanel;
 
-        private AudioManager    _audio      = null;
-        private IPanel          _currPanel  = null;
+        private AudioManager _audio = null;
 
+        private IPanel _currPanel = null;
         private Dictionary<PanelType, IPanel> _uis;
         private bool _isEnteringGame;
 

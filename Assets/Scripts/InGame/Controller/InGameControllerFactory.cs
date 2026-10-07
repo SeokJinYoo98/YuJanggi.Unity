@@ -4,12 +4,12 @@ namespace YuJanggi.InGame.Controller
 {
     using Engine.Domain;
     using Engine.JanggiEngine;
-
-    using YuJanggi.InGame.Abstractions;
-
     using YuJanggi.AI.Data;
     using YuJanggi.AI.Service;
     using YuJanggi.AI.Strategy;
+    using YuJanggi.Engine.JanggiOption;
+    using YuJanggi.InGame.Abstractions;
+    using YuJanggi.Store;
 
     internal static class InGameControllerFactory
     {
@@ -54,7 +54,7 @@ namespace YuJanggi.InGame.Controller
                 team,
                 query,
                 new AIMoveService(aiPositions,
-                    AIMoveStrategyFactory.Create(AISessionSettings.Strategy)));
+                    AIMoveStrategyFactory.Create(JanggiOptionStore.AISetting.Value)));
         private static IInGameController CreateRemoteController(
                 PlayerTeam team)
             => new InGameRemoteController(team);

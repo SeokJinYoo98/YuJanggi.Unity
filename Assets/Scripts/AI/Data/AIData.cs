@@ -1,10 +1,5 @@
 namespace YuJanggi.AI.Data
 {
-    public static class AISessionSettings
-    {
-        public static AIMoveStrategyType Strategy { get; set; } = AIMoveStrategyType.Random;
-    }
-
     public enum AIMoveStrategyType
     {
         Random,

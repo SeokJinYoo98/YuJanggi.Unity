@@ -11,13 +11,13 @@ namespace YuJanggi.Lobby.Network
     internal interface ILobbyNetwork
     {
         MatchingState State { get; }
-        MatchInfo? Match { get; }
+        NetworkSetting? Match { get; }
 
         bool IsFormationSubmitting { get; }
         bool IsFormationSubmitted { get; }
         bool IsGameReady { get; }
 
-        event Action<MatchInfo>? MatchFound;
+        event Action<NetworkSetting>? MatchFound;
         event Action<string, Formation, Formation>? GameReadyReceived;
         event Action? OnDataChanged;
 

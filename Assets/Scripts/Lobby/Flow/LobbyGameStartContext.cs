@@ -2,7 +2,7 @@
 using YuJanggi.Engine.JanggiOption;
 using YuJanggi.InGame.Controller;
 
-using MatchInfo = YuJanggi.Lobby.Network.MatchInfo;
+using NetworkSetting = YuJanggi.Lobby.Network.NetworkSetting;
 
 namespace YuJanggi.Lobby.Flow
 {
@@ -12,10 +12,10 @@ namespace YuJanggi.Lobby.Flow
     {
         public JanggiOptions Options { get; }
         public AIMoveStrategyType? AIStrategy { get; }
-        public MatchInfo? NetworkMatch { get; }
+        public NetworkSetting? NetworkMatch { get; }
 
         public LobbyGameStartContext(JanggiOptions options,
-            AIMoveStrategyType? aiStrategy = null, MatchInfo? networkMatch = null)
+            AIMoveStrategyType? aiStrategy = null, NetworkSetting? networkMatch = null)
         {
             Options = options;
             AIStrategy = aiStrategy;

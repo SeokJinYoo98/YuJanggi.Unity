@@ -20,7 +20,7 @@ namespace YuJanggi.InGame.Session
             LiveView liveView, ReplayPlayback replayPlayback, BoardView boardView)
 
         {
-            var options = JanggiOptionStore.Current;
+            var options = JanggiOptionStore.JanggiSetting;
 
             IInGameController cho = InGameControllerFactory.CreateController(
                 options.PlayerCho, PlayerTeam.Cho,
