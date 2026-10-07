@@ -8,7 +8,7 @@ namespace YuJanggi.Lobby.Panel
     using YuJanggi.UI;
     using YuJanggi.UI.Volume;
 
-    public class OptionPanel : UIVisible
+    public class OptionPanel : Panel
     {
         [Header("Sliders")]
         [SerializeField] private VolumeSlider _masterSlider;

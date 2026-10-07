@@ -2,14 +2,11 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using TMPro;
 
-using YuJanggi.UI;
-
 namespace YuJanggi.Lobby.Panel
 {
-    using Core.Panel;
     using Store;
 
-    public class LocalPanel : UIVisible, IGameStartPanel
+    public class LocalPanel : Panel, IGameStartPanel
     {
         [SerializeField] private TMP_Dropdown _choForm;
         [SerializeField] private TMP_Dropdown _hanForm;

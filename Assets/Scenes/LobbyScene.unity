@@ -1769,7 +1769,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 947781670}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
         m_MethodName: HandleCloseNetworkPanel
         m_Mode: 1
@@ -3190,7 +3190,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 947781670}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: YuJanggi.Lobby.LobbyManager, Assembly-CSharp
         m_MethodName: HandleMatchMakingButton
         m_Mode: 1
@@ -7826,54 +7826,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 941384818}
   m_CullTransparentMesh: 1
---- !u!1 &947781668
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 947781669}
-  - component: {fileID: 947781670}
-  m_Layer: 0
-  m_Name: LobbyManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &947781669
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 947781668}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 149.82372, y: 0, z: -1558.6361}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &947781670
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 947781668}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c611b8831211c18469a76b62e233a5af, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LobyScene
-  _panelManager: {fileID: 1144934031}
-  _networkPanel: {fileID: 1601440936}
-  _aiPanel: {fileID: 5352754}
-  _localPanel: {fileID: 1392650274}
 --- !u!1 &963847788
 GameObject:
   m_ObjectHideFlags: 0
@@ -16850,5 +16802,4 @@ SceneRoots:
   - {fileID: 476586245}
   - {fileID: 721515407}
   - {fileID: 155725353}
-  - {fileID: 947781669}
   - {fileID: 1144934030}

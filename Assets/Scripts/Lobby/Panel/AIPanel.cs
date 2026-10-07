@@ -8,11 +8,9 @@ using TMPro;
 
 namespace YuJanggi.Lobby.Panel
 {
-    using UI;
     using YuJanggi.AI.Data;
-    using Core.Panel;
 
-    public class AIPanel : UIVisible, IGameStartPanel
+    public class AIPanel : Panel, IGameStartPanel
     {
 
 

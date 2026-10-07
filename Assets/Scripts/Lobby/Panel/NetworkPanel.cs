@@ -13,7 +13,7 @@ namespace YuJanggi.Lobby.Panel
 
     using Engine.Domain;
 
-    public class NetworkPanel : UIVisible
+    public class NetworkPanel : Panel
     {
 
         [SerializeField] private TMP_Text _statusText;

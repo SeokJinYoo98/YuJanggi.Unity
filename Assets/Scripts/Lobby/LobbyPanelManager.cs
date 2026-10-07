@@ -5,14 +5,13 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-
 namespace YuJanggi.Lobby
 {
     using BootStrap;
     using UI;
     using Audio;
     using Panel;
-    using Core.Panel;
+    
 
     public class LobbyPanelManager : MonoBehaviour
     {
@@ -26,9 +25,9 @@ namespace YuJanggi.Lobby
         [SerializeField] private QuitPanel      _quitPanel;
 
         private AudioManager    _audio      = null;
-        private UIVisible       _currPanel  = null;
+        private IPanel          _currPanel  = null;
 
-        private Dictionary<PanelType, UIVisible> _uis;
+        private Dictionary<PanelType, IPanel> _uis;
         private bool _isEnteringGame;
 
         private void Start()
