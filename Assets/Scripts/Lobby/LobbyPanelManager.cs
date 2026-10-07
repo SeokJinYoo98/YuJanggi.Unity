@@ -49,12 +49,12 @@ namespace YuJanggi.Lobby
                 return;
             }
 
-            _audio.PlayButton();
+            _audio.PlayUI(UISfx.Button);
             ChangePanelView((LobbyPanelType)type);
         }
         public void HandleClosePanel()
         {
-            _audio.PlayButton();
+            _audio.PlayUI(UISfx.Button);
             ChangePanel();
         }
 
@@ -75,14 +75,17 @@ namespace YuJanggi.Lobby
                     break;
             }
         }
+        private void ChangePanel(UIVisible next)
+        {
 
+        }
         private void ChangePanel(UIVisible next = null, Action requestStart = null)
         {
             if (_currPanel == next) return;
-            _currPanel?.Hide();
+            _currPanel?.Close();
             _currPanel = next;
             _requestStart = requestStart;
-            _currPanel?.Show();
+            _currPanel?.Open();
         }
 
         public void SetNetworkPanelVisible(bool show)

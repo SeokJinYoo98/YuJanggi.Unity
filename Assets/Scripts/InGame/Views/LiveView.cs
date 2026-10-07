@@ -26,21 +26,21 @@ namespace YuJanggi.InGame.Views
 
         public void CheckOccured(PlayerTeam team)
         {
-            _audioManager.PlaySfxOneShot(JanggiSfx.Check);
+            _audioManager.PlaySfx(JanggiSfx.Check);
             _liveUI.PlayJanggun(team);
         }
 
         public void CheckReleased()
-            => _audioManager.PlaySfxOneShot(JanggiSfx.UnCheck);
+            => _audioManager.PlaySfx(JanggiSfx.UnCheck);
 
         public void OnGameEnded(in GameResultInfo info, bool loserIsLocal)
         {
-            _audioManager.PlaySfxOneShot(loserIsLocal ? JanggiSfx.Lose : JanggiSfx.Win);
+            _audioManager.PlaySfx(loserIsLocal ? JanggiSfx.Lose : JanggiSfx.Win);
             _resultUI.EndGame(info);
         }
 
-        public void ShowResultUI() => _resultUI.Show();
-        public void HideResultUI() => _resultUI.Hide();
+        public void ShowResultUI() => _resultUI.Open();
+        public void HideResultUI() => _resultUI.Close();
 
         public void ShowReplayMode() => _displayModeText.SetText("기보 보기");
         public void ShowLiveMode() => _displayModeText.SetText("라이브 보기");
@@ -62,11 +62,11 @@ namespace YuJanggi.InGame.Views
         public void UpdateTurnInfo(PlayerTeam next, bool isLocal)
         {
             if (isLocal)
-                _audioManager.PlaySfxOneShot(JanggiSfx.TurnAlert);
+                _audioManager.PlaySfx(JanggiSfx.TurnAlert);
 
             _liveUI.UpdateTurn(next);
         }
 
-        public void ResetGame() => _resultUI.Hide();
+        public void ResetGame() => _resultUI.Close();
     }
 }

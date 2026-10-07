@@ -7,7 +7,7 @@ namespace YuJanggi.Data.Board
 
     using InGame.Views.Piece;
 
-    [CreateAssetMenu(fileName = "PieceDataBase", menuName = "Piece/PieceDataBase")]
+    [CreateAssetMenu(fileName = "PieceDataBase", menuName = "YuJanggi/Piece/PieceDataBase")]
     public class PieceDataBase : ScriptableObject
     {
         [SerializeField] private List<PieceView>    _prefabs;

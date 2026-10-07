@@ -182,27 +182,27 @@ namespace YuJanggi.InGame
             => _session.StartGame();
         public void HandleGiveUp()
         {
-            _audioManager.PlayButton();
+            _audioManager.PlayUI(UISfx.Button);
             _session.GiveUp();
         }
         public void HandleResetGame()
         {
-            _audioManager.PlayButton();
+            _audioManager.PlayUI(UISfx.Button);
             _session.ResetGame();
         }
         public void HandleHandicap()
         {
-            _audioManager.PlayButton();
+            _audioManager.PlayUI(UISfx.Button);
             _session.Handicap();
         }
         public void HandleUndo()
         {
-            _audioManager.PlayButton();
+            _audioManager.PlayUI(UISfx.Button);
             _session.UnDo();
         }
         public void HandleMainLobby()
         {
-            _audioManager.PlayButton();
+            _audioManager.PlayUI(UISfx.Button);
             if (GameMode == GameModeType.Network)
             {
                 var networkManager = YuJanggiBootStrap.Instance.NetworkManager;
@@ -213,17 +213,17 @@ namespace YuJanggi.InGame
         }
         public void HandleReplayModeEnter()
         {
-            _resultUI.Hide();
+            _resultUI.Close();
             HandleReplayBackward();
         }
         public void HandleReplayForward()
         {
-            _audioManager.PlayButton();
+            _audioManager.PlayUI(UISfx.Button);
             _session.StepForward();
         }
         public void HandleReplayBackward()
         {
-            _audioManager.PlayButton();
+            _audioManager.PlayUI(UISfx.Button);
             _session.StepBackward();
 
         }

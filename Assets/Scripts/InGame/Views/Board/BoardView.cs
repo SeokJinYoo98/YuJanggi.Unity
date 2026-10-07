@@ -67,13 +67,13 @@ namespace YuJanggi.InGame.Views.Board
                     new Vector3(from.X, 1f, from.Z),
                     new Vector3(to.X, 1f, to.Z));
             MovePiece(record.MovedPiece.Id, to);
-            if (playAudio) Audio.PlaySfxOneShot(JanggiSfx.Move);
+            if (playAudio) Audio.PlaySfx(JanggiSfx.Move);
 
             if (record.IsCapture)
             {
                 if (playParticle) _particle.PlayCapture(new Vector3(to.X, 0f, to.Z));
                 PlaceCapturedPiece(record.CapturedPiece.Id, record.CapturedPiece.Team);
-                if (playAudio) Audio.PlaySfxOneShot(JanggiSfx.Capture);
+                if (playAudio) Audio.PlaySfx(JanggiSfx.Capture);
             }
         }
 
@@ -99,7 +99,7 @@ namespace YuJanggi.InGame.Views.Board
             _currPiece = piece;
             _currPiece.SelectPiece();
 
-            if (playAudio) Audio.PlaySfxOneShot(JanggiSfx.Select);
+            if (playAudio) Audio.PlaySfx(JanggiSfx.Select);
         }
 
         public void UnSelectPiece()

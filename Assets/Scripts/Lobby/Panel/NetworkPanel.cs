@@ -15,6 +15,7 @@ namespace YuJanggi.Lobby.UI
 
     public class NetworkPanel : UIVisible
     {
+
         [SerializeField] private TMP_Text _statusText;
         [SerializeField] private TMP_Text _statusDetailText;
         [SerializeField] private TMP_Dropdown _formationDropDown;
@@ -128,6 +129,17 @@ namespace YuJanggi.Lobby.UI
                 return "연결 끊김";
             return "서버 연결 실패";
         }
+
+        #region Refactoring
+
+
+        public void HandleMatchMaking()
+        {
+
+        }
+
+        #endregion
+
     }
 }
 

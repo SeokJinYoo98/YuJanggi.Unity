@@ -8,12 +8,28 @@ namespace YuJanggi.UI
     {
         private void Awake()
         {
-            Hide();
+            Close();
         }
-        public virtual void Show()
-            => gameObject.SetActive(true);
-        public virtual void Hide()
-            => gameObject.SetActive(false);
+
+        public void Open()
+        {
+            gameObject.SetActive(true);
+            OnOpen();
+        }
+
+        public void Close()
+        {
+            OnClose();
+            gameObject.SetActive(false);
+        }
+
+        protected virtual void OnOpen()
+        {
+        }
+
+        protected virtual void OnClose()
+        {
+        }
     }
 }
 

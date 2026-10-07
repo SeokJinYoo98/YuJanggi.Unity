@@ -78,7 +78,6 @@ namespace YuJanggi.Lobby
                 flow.UnBindEvents();
             }
         }
-
         private void HandleGameStartReady(LobbyGameStartContext context)
         {
             if (!_eventsBound || _isEnteringGame) return;
@@ -87,7 +86,7 @@ namespace YuJanggi.Lobby
             NetworkMatchInfoStore.Current = context.NetworkMatch;
             if (context.AIStrategy.HasValue)
                 AISessionSettings.Strategy = context.AIStrategy.Value;
-            _audioManager.PlayButton();
+            _audioManager.PlayUI(UISfx.Button);
             _panelManager.ClearSelection();
             SceneManager.LoadScene("JanggiScene");
         }
@@ -108,19 +107,19 @@ namespace YuJanggi.Lobby
 
         public void HandleMatchMakingButton()
         {
-            _audioManager.PlayButton();
+            _audioManager.PlayUI(UISfx.Button);
             _networkPanel.RequestMatching();
         }
 
         public void HandleCloseNetworkPanel()
         {
-            _audioManager.PlayButton();
+            _audioManager.PlayUI(UISfx.Button);
             _networkPanel.RequestClose();
         }
 
         public void HandleQuitGame()
         {
-            _audioManager.PlayButton();
+            _audioManager.PlayUI(UISfx.Button);
             Application.Quit();
         }
     }

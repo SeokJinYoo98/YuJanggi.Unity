@@ -3,7 +3,7 @@ using YuJanggi.Engine.Domain;
 namespace YuJanggi.Data.Board
 {
 
-    [CreateAssetMenu(fileName = "PieceData", menuName = "Piece/PieceData")]
+    [CreateAssetMenu(fileName = "PieceData", menuName = "YuJanggi/Piece/PieceData")]
     public class PieceData : ScriptableObject
     {
         [SerializeField] private PlayerTeam      _playerType;

@@ -17,8 +17,9 @@ namespace YuJanggi.BootStrap
         public AudioManager AudioManager { get; private set; } = null!;
 
         [Header("Audio Settings")]
-        [SerializeField] private float _sfxVolume = 1.0f;
-        [SerializeField] private float _uiVolume  = 1.0f;
+        [SerializeField] private float _sfxVolume    = 1.0f;
+        [SerializeField] private float _uiVolume     = 1.0f;
+        [SerializeField] private float _masterVolume = 1.0f;
 
         private const string _host = "127.0.0.1";
         private const int    _port = 7777;
@@ -58,8 +59,6 @@ namespace YuJanggi.BootStrap
                 ? parsedPort
                 : _port;
 
-            Debug.Log($"Server endpoint: {host}:{port}");
-
             return (host, port);
         }
         private async UniTask InitializeAsync()
@@ -72,6 +71,7 @@ namespace YuJanggi.BootStrap
 
 
             AudioManager.Initialize(
+                _masterVolume,
                 _sfxVolume,
                 _uiVolume);
 
@@ -86,6 +86,22 @@ namespace YuJanggi.BootStrap
 
             Instance = null!;
         }
+    }
+    public enum JanggiSfx
+    {
+        Select,
+        Move,
+        Capture,
+        Check,
+        UnCheck,
+        CheckMate,
+        TurnAlert,
+        Win,
+        Lose
+    }
+    public enum UISfx
+    {
+        Button
     }
 }
 
