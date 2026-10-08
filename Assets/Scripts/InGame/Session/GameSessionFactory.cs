@@ -17,7 +17,7 @@ namespace YuJanggi.InGame.Session
         internal static GameSession CreateSession(
             IJanggiEngine engine,
             IInputHandler inputHandler,
-            LiveView liveView, ReplayPlayback replayPlayback, BoardView boardView)
+            GameView liveView, ReplayPlayback replayPlayback, BoardView boardView)
 
         {
             var options = JanggiOptionStore.JanggiSetting;

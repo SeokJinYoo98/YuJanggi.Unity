@@ -1,35 +1,25 @@
 
 
 using UnityEngine;
+using YuJanggi.Audio;
+using YuJanggi.BootStrap;
 
 namespace YuJanggi.UI
 {
     public class UIVisible : MonoBehaviour
     {
-        private void Awake()
+        private void Start()
         {
             Close();
         }
-
         public void Open()
-        {
-            gameObject.SetActive(true);
-            OnOpen();
-        }
+            => gameObject.SetActive(true);
 
         public void Close()
-        {
-            OnClose();
-            gameObject.SetActive(false);
-        }
+            => gameObject.SetActive(false);
 
-        protected virtual void OnOpen()
-        {
-        }
-
-        protected virtual void OnClose()
-        {
-        }
+        protected static AudioManager Audio
+            => YuJanggiBootStrap.Instance.AudioManager;
     }
 }
 

@@ -16,7 +16,18 @@ namespace YuJanggi.InGame.Controller
 
         public void BeginTurn() { }
         public void EndTurn() { }
-        public void BindEvents(IGameInputReceiver receiver) { }
-        public void UnBindEvents(IGameInputReceiver receiver) { }
+        public void BindEvents()
+        {
+    
+        }
+
+        public void UnBindEvents()
+        {
+        }
+
+        public void Initialize(IGameInputReceiver receiver)
+        {
+           
+        }
     }
 }

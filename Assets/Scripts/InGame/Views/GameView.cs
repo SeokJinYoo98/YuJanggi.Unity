@@ -7,16 +7,19 @@ namespace YuJanggi.InGame.Views
     using Audio;
     using BootStrap;
     using UI;
-
     /// <summary>게임 UI와 HUD, Live/Replay 모드 표시를 담당합니다.</summary>
-    public class LiveView
+    public class GameView
     {
-        private readonly ResultUI _resultUI;
-        private readonly MatchUI _liveUI;
-        private readonly AudioManager _audioManager;
+        private readonly ResultView _resultUI;
+        private readonly LiveView   _liveUI;
         private readonly TMP_Text _displayModeText;
+        private readonly AudioManager _audioManager;
 
-        public LiveView(ResultUI resultUI, MatchUI matchUI, TMP_Text displayMode)
+
+        public GameView(
+            ResultView resultUI,
+            LiveView matchUI,
+            TMP_Text displayMode)
         {
             _resultUI = resultUI;
             _liveUI = matchUI;
@@ -27,7 +30,7 @@ namespace YuJanggi.InGame.Views
         public void CheckOccured(PlayerTeam team)
         {
             _audioManager.PlaySfx(JanggiSfx.Check);
-            _liveUI.PlayJanggun(team);
+            //_liveUI.PlayJanggun(team);
         }
 
         public void CheckReleased()
@@ -36,7 +39,7 @@ namespace YuJanggi.InGame.Views
         public void OnGameEnded(in GameResultInfo info, bool loserIsLocal)
         {
             _audioManager.PlaySfx(loserIsLocal ? JanggiSfx.Lose : JanggiSfx.Win);
-            _resultUI.EndGame(info);
+            //_resultUI.EndGame(info);
         }
 
         public void ShowResultUI() => _resultUI.Open();
@@ -64,7 +67,7 @@ namespace YuJanggi.InGame.Views
             if (isLocal)
                 _audioManager.PlaySfx(JanggiSfx.TurnAlert);
 
-            _liveUI.UpdateTurn(next);
+            // _liveUI.UpdateTurn(next);
         }
 
         public void ResetGame() => _resultUI.Close();

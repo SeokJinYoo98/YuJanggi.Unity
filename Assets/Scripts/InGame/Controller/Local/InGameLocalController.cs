@@ -4,10 +4,11 @@ using System.Collections.Generic;
 namespace YuJanggi.InGame.Controller
 {
     using Engine.Domain;
+    using Unity.Android.Gradle.Manifest;
     using YuJanggi.Engine.JanggiEngine;
     using YuJanggi.InGame.Abstractions;
     internal class InGameLocalController
-        : IInGameController, IInGameLocalController
+        : IInGameController
     {
         #region Fields
         // 내부 상태와 참조를 저장하는 변수
@@ -31,12 +32,12 @@ namespace YuJanggi.InGame.Controller
         private bool HasSelection
             => _selectedPos != Pos.Invalid;
 
+        private IGameInputReceiver _receiver;
         #endregion
 
         #region Events
         // 상태 변화나 특정 동작을 외부에 알리는 이벤트
-        public event OnSelectPiece  OnSelectionChanged;
-        public event MoveRequestHandler       OnMoveRequest;
+
         #endregion
 
         #region Constructors
@@ -55,24 +56,25 @@ namespace YuJanggi.InGame.Controller
 
         #region Public Methods
         // 외부에서 호출하는 기능
-        public virtual void BindEvents(IGameInputReceiver receiver)
+        public void BindEvents()
         {
             _input.OnBoardClicked += HandleBoardClicked;
             _input.OnEmptyClicked += HandleEmptyClicked;
-            OnSelectionChanged    += receiver.SelectPiece;
-            OnMoveRequest         += receiver.RequestMove;
         }
-        public virtual void UnBindEvents(IGameInputReceiver receiver)
+
+        public void UnBindEvents()
         {
             if (_input != null)
             {
                 _input.OnBoardClicked -= HandleBoardClicked;
                 _input.OnEmptyClicked -= HandleEmptyClicked;
             }
-
-            OnSelectionChanged    -= receiver.SelectPiece;
-            OnMoveRequest         -= receiver.RequestMove;
         }
+        public virtual void Initialize(IGameInputReceiver receiver)
+        {
+            _receiver = receiver;
+        }
+ 
         public void BeginTurn()
         {
 
@@ -126,7 +128,7 @@ namespace YuJanggi.InGame.Controller
             if (!_legal.Contains(toPos))
                 return false;
 
-            OnMoveRequest(_selectedPos, toPos);
+            _receiver.RequestMove(_selectedPos, toPos);
 
             ResetSelection();
             return true;
@@ -154,7 +156,7 @@ namespace YuJanggi.InGame.Controller
         {
             ResetSelection();
 
-            OnSelectionChanged?.Invoke(
+            _receiver.SelectPiece(
                 null,
                 _legal,
                 _illegal);
@@ -168,11 +170,12 @@ namespace YuJanggi.InGame.Controller
                 _legal,
                 _illegal);
 
-            OnSelectionChanged?.Invoke(
+            _receiver.SelectPiece(
                 idx,
                 _legal,
                 _illegal);
         }
+
         #endregion
     }
 }

@@ -33,7 +33,7 @@ namespace YuJanggi.InGame.Session
         private readonly IInGameController  _playerCho;
         private readonly IInGameController  _playerHan;
 
-        private readonly LiveView   _liveView;
+        private readonly GameView   _liveView;
         private readonly ReplayPlayback _replayPlayback;
         private readonly BoardView _boardView;
 
@@ -57,7 +57,7 @@ namespace YuJanggi.InGame.Session
             IJanggiEngine engine,
             IInputHandler localInput,
             IInGameController cho, IInGameController han,
-            LiveView liveView, ReplayPlayback replayPlayback, BoardView boardView)
+            GameView liveView, ReplayPlayback replayPlayback, BoardView boardView)
         {
             _engine     = engine;
             _localInput = localInput;
@@ -118,8 +118,8 @@ namespace YuJanggi.InGame.Session
             events.OnGameEnded     += OnGameEnded;
             events.OnTurnChanged   += OnTurnChanged;
 
-            _playerCho.BindEvents(inputReceiver);
-            _playerHan.BindEvents(inputReceiver);
+            _playerCho.BindEvents();
+            _playerHan.BindEvents();
         }
         public void UnBindEvents(IGameInputReceiver inputReceiver)
         {
@@ -133,8 +133,9 @@ namespace YuJanggi.InGame.Session
             events.OnTurnChanged   -= OnTurnChanged;
             events.OnGameEnded     -= OnGameEnded;
 
-            _playerCho.UnBindEvents(inputReceiver);
-            _playerHan.UnBindEvents(inputReceiver);
+            _playerCho.UnBindEvents();
+            _playerHan.UnBindEvents();
+
         }
 
         public void Tick(float deltaTime)

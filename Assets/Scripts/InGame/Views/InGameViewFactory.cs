@@ -6,7 +6,13 @@ namespace YuJanggi.InGame.Views
 
     internal static class InGameViewFactory
     {
-        internal static LiveView CreateLiveView(ResultUI resultUI, MatchUI matchUI, TMP_Text displayMode)
-            => new(resultUI, matchUI, displayMode);
+        internal static GameView CreateLiveView(
+            ResultView resultUI,
+            LiveView matchUI,
+            TMP_Text displayMode)
+
+            => new(resultUI,
+                matchUI,
+                displayMode);
     }
 }

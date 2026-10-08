@@ -16,10 +16,7 @@ namespace YuJanggi.InGame.Controller
             IReadOnlyList<Pos> illegalWays);
     internal delegate void MoveRequestHandler(Pos from, Pos to);
 
-    internal interface IInGameLocalController
-    {
-        event OnSelectPiece OnSelectionChanged;
-    }
+
     internal interface IInGameController
     {
         PlayerTeam Team { get; }
@@ -27,8 +24,8 @@ namespace YuJanggi.InGame.Controller
 
         void BeginTurn();
         void EndTurn();
-
-        void BindEvents(IGameInputReceiver receiver);
-        void UnBindEvents(IGameInputReceiver receiver);
+        void Initialize(IGameInputReceiver receiver);
+        void BindEvents();
+        void UnBindEvents();
     }
 }

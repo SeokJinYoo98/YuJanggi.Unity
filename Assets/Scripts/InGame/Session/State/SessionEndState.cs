@@ -58,14 +58,14 @@ namespace YuJanggi.InGame.Session
     internal sealed class SessionEndState : SessionStateBase
     {
         private readonly IGameResultContext _resultCtx;
-        private readonly LiveView          _liveView;
+        private readonly GameView          _liveView;
         private readonly BoardView         _boardView;
         public SessionEndState(
             ISessionTransition sessionFsm, 
             IGameResultContext sessionResult,
             IInGameController cho, IInGameController han, 
             ISessionEngine engine,
-            LiveView liveView, BoardView boardView)
+            GameView liveView, BoardView boardView)
             : base(sessionFsm, cho, han, engine)
         {
             _resultCtx  = sessionResult;

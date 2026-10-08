@@ -25,7 +25,8 @@ namespace YuJanggi.InGame.Views.Board
         private int _deathCnt;
         private Vector3 _deathPos = new Vector3(4, 0, -2);
 
-        private AudioManager Audio => YuJanggiBootStrap.Instance.AudioManager;
+        private AudioManager Audio
+            => YuJanggiBootStrap.Instance.AudioManager;
 
         public void InitPieces(IReadOnlyBoard model)
             => _piece.SpawnPieces(model);
@@ -38,7 +39,8 @@ namespace YuJanggi.InGame.Views.Board
             _piece.ResetViews(boardModel);
         }
 
-        public void MovePiece(int id, Pos to) => _piece.DoMove(id, to);
+        public void MovePiece(int id, Pos to)
+            => _piece.DoMove(id, to);
 
         public void PlaceCapturedPiece(int id, PlayerTeam team)
         {
@@ -56,18 +58,26 @@ namespace YuJanggi.InGame.Views.Board
         public void ApplyMovement(MoveRecord record, bool playAudio = true,
             bool playParticle = true, bool clearSelection = true, bool lowerSelectedPiece = false)
         {
-            if (clearSelection) ClearSelection();
-            if (lowerSelectedPiece && _piece.TryGetPiece(record.MovedPiece.Id, out var selected)
-                && selected == _currPiece)
+            if (clearSelection)
+                ClearSelection();
+
+            if (lowerSelectedPiece
+                    && _piece.TryGetPiece(record.MovedPiece.Id, out var selected)
+                    && selected == _currPiece)
                 selected.ShowMovementPose();
+
             var from = record.From;
             var to = record.To;
+
             if (playParticle)
                 _particle.PlayMovementParticle(
                     new Vector3(from.X, 1f, from.Z),
                     new Vector3(to.X, 1f, to.Z));
+
             MovePiece(record.MovedPiece.Id, to);
-            if (playAudio) Audio.PlaySfx(JanggiSfx.Move);
+
+            if (playAudio)
+                Audio.PlaySfx(JanggiSfx.Move);
 
             if (record.IsCapture)
             {
@@ -80,11 +90,17 @@ namespace YuJanggi.InGame.Views.Board
         public void RevertMovement(MoveRecord record, bool clearSelection = true,
             bool restoreSelectionPose = false)
         {
-            if (clearSelection) ClearSelection();
+            if (clearSelection)
+                ClearSelection();
+
             MovePiece(record.MovedPiece.Id, record.From);
+
             if (record.IsCapture)
-                RestoreCapturedPiece(record.CapturedPiece.Id, record.CapturedPiece.Team, record.To);
-            if (restoreSelectionPose && _piece.TryGetPiece(record.MovedPiece.Id, out var selected)
+                RestoreCapturedPiece(
+                    record.CapturedPiece.Id, record.CapturedPiece.Team, record.To);
+
+            if (restoreSelectionPose
+                && _piece.TryGetPiece(record.MovedPiece.Id, out var selected)
                 && selected == _currPiece)
                 selected.ShowHighlightPose();
         }

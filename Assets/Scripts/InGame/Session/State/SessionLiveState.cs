@@ -11,13 +11,13 @@ namespace YuJanggi.InGame.Session
 
     internal sealed class SessionLiveState : SessionStateBase
     {
-        private readonly LiveView  _liveView;
+        private readonly GameView  _liveView;
         private readonly BoardView _boardView;
         internal SessionLiveState(
             ISessionTransition sessionFsm, 
             ISessionEngine     engine, 
             IInGameController cho, IInGameController han, 
-            LiveView liveView, BoardView boardView)
+            GameView liveView, BoardView boardView)
             : base(sessionFsm, cho, han, engine)
         {
             _liveView = liveView;

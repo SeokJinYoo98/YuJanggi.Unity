@@ -10,14 +10,14 @@ namespace YuJanggi.InGame.Session
 
     internal sealed class SessionReplayState : SessionStateBase
     {
-        private readonly LiveView   _liveView;
+        private readonly GameView   _liveView;
         private readonly ReplayPlayback _replayPlayback;
         public SessionReplayState(
             ISessionTransition      sessionFsm, 
             ISessionEngine          engine, 
             IInGameController cho, IInGameController han, 
             ReplayPlayback replayPlayback,
-            LiveView  matchView)
+            GameView  matchView)
             : base(sessionFsm, cho, han, engine)
         {
             _liveView   = matchView;

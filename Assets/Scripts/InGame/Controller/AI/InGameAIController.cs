@@ -1,14 +1,13 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
-using Cysharp.Threading.Tasks;
 
 namespace YuJanggi.InGame.Controller
 {
-    using Engine.JanggiEngine;
     using Engine.Domain;
-
+    using Engine.JanggiEngine;
+    using Unity.Android.Gradle.Manifest;
     using Unity.Profiling;
-
     using YuJanggi.AI.Abstraction;
 
     internal class InGameAIController : IInGameController
@@ -16,6 +15,7 @@ namespace YuJanggi.InGame.Controller
         private static readonly ProfilerMarker ApplyMoveMarker =
             new("AI.ApplyMove");
 
+        private IGameInputReceiver _receiver;
         private readonly IControllerQuery   _query;
         private readonly IAIMoveService _moves;
         private CancellationTokenSource _turnCancellation;
@@ -24,7 +24,6 @@ namespace YuJanggi.InGame.Controller
         private bool _restartWhenFinished;
         public PlayerTeam Team { get; }
 
-        public event MoveRequestHandler OnMoveRequest;
         public InGameAIController(
             PlayerTeam team,
             IControllerQuery query,
@@ -72,7 +71,7 @@ namespace YuJanggi.InGame.Controller
 
                 var move = selected.Value;
                 using var _ = ApplyMoveMarker.Auto();
-                OnMoveRequest?.Invoke(move.From, move.To);
+                _receiver.RequestMove(move.From, move.To);
             }
             catch (OperationCanceledException)
             {
@@ -93,9 +92,9 @@ namespace YuJanggi.InGame.Controller
             }
         }
 
-        public void BindEvents(IGameInputReceiver receiver)
+        public void Initialize(IGameInputReceiver receiver)
         {
-            OnMoveRequest += receiver.RequestMove;
+            _receiver = receiver;
             _bound = true;
         }
 
@@ -107,11 +106,16 @@ namespace YuJanggi.InGame.Controller
             cancellation?.Cancel();
         }
 
-        public void UnBindEvents(IGameInputReceiver receiver)
+
+
+        public void BindEvents()
         {
-            _bound = false;
-            EndTurn();
-            OnMoveRequest -= receiver.RequestMove;
+          
+        }
+
+        public void UnBindEvents()
+        {
+           
         }
     }
 }

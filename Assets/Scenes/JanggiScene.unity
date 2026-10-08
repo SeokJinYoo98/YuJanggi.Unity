@@ -1089,7 +1089,7 @@ GameObject:
   - component: {fileID: 320383218}
   - component: {fileID: 320383219}
   m_Layer: 2
-  m_Name: Manager_ParticleView
+  m_Name: ParticleView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1108,7 +1108,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 420409862}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &320383219
 MonoBehaviour:
@@ -1531,6 +1531,58 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 347216391}
   m_CullTransparentMesh: 1
+--- !u!1 &420409860
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 420409862}
+  - component: {fileID: 420409861}
+  m_Layer: 0
+  m_Name: InGameView
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &420409861
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 420409860}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76809f421d19c7145b90806a5d862cab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Views.InGameView
+  _resultView: {fileID: 5836437}
+  _liveView: {fileID: 1213328399}
+  _boardView: {fileID: 2126822363}
+  _janggunEffect: {fileID: 720711495}
+--- !u!4 &420409862
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 420409860}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2126822362}
+  - {fileID: 509507442}
+  - {fileID: 320383218}
+  - {fileID: 1524079746}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &486402673
 GameObject:
   m_ObjectHideFlags: 0
@@ -1950,7 +2002,7 @@ GameObject:
   - component: {fileID: 509507444}
   - component: {fileID: 509507443}
   m_Layer: 2
-  m_Name: Manager_PieceView
+  m_Name: PieceView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1971,7 +2023,7 @@ Transform:
   m_Children:
   - {fileID: 1442720190}
   - {fileID: 1161876143}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 420409862}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &509507443
 MonoBehaviour:
@@ -2011,8 +2063,9 @@ GameObject:
   - component: {fileID: 720711492}
   - component: {fileID: 720711494}
   - component: {fileID: 720711493}
+  - component: {fileID: 720711495}
   m_Layer: 2
-  m_Name: "\uC7A5\uAD70"
+  m_Name: CheckEffect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2137,6 +2190,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 720711491}
   m_CullTransparentMesh: 1
+--- !u!114 &720711495
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 720711491}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23301aad2a2a7584196f1411f23e2694, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Views.UI.CheckEffectView
+  _effectText: {fileID: 720711493}
 --- !u!1 &743290680
 GameObject:
   m_ObjectHideFlags: 0
@@ -2820,12 +2886,12 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1062954804}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1424797982}
+  m_Father: {fileID: 1213328396}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -3537,7 +3603,7 @@ GameObject:
   - component: {fileID: 1213328397}
   - component: {fileID: 1213328399}
   m_Layer: 2
-  m_Name: MatchUI
+  m_Name: LiveUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3561,6 +3627,7 @@ RectTransform:
   - {fileID: 1256041697}
   - {fileID: 2139214266}
   - {fileID: 720711492}
+  - {fileID: 1062954805}
   m_Father: {fileID: 1424797982}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3624,6 +3691,7 @@ MonoBehaviour:
   _choTimerText: {fileID: 1974558479}
   _hanScoreText: {fileID: 486402675}
   _hanTimerText: {fileID: 347216393}
+  _displayModeText: {fileID: 1062954806}
   _janggunText: {fileID: 720711493}
 --- !u!1 &1256041696
 GameObject:
@@ -4171,7 +4239,6 @@ RectTransform:
   m_Children:
   - {fileID: 1213328396}
   - {fileID: 5836434}
-  - {fileID: 1062954805}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -4354,7 +4421,7 @@ GameObject:
   - component: {fileID: 1524079746}
   - component: {fileID: 1524079747}
   m_Layer: 3
-  m_Name: Manager_MoveGuideView
+  m_Name: MoveGuideView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4373,7 +4440,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 420409862}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1524079747
 MonoBehaviour:
@@ -4916,14 +4983,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7add935fd2e3dd4f85f3edba604f8ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.InGameManager
-  _boardView: {fileID: 2126822363}
-  _moveGuideView: {fileID: 1524079747}
-  _particleView: {fileID: 320383219}
-  _resultUI: {fileID: 5836437}
-  _matchUI: {fileID: 1213328399}
-  _displayModeText: {fileID: 1062954806}
   _localInput: {fileID: 133238877}
-  _runner: {fileID: 769973063}
+  _inGameView: {fileID: 420409861}
 --- !u!1 &1841336929
 GameObject:
   m_ObjectHideFlags: 0
@@ -5564,7 +5625,7 @@ GameObject:
   - component: {fileID: 2126822360}
   - component: {fileID: 2126822363}
   m_Layer: 2
-  m_Name: View_BoardView
+  m_Name: BoardView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5635,12 +5696,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2126822358}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
   m_LocalPosition: {x: 4, y: 0, z: 4.5}
   m_LocalScale: {x: 1, y: 1, z: 1.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 420409862}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &2126822363
 MonoBehaviour:
@@ -5851,7 +5912,4 @@ SceneRoots:
   - {fileID: 135010639}
   - {fileID: 182760224}
   - {fileID: 1010390796}
-  - {fileID: 1524079746}
-  - {fileID: 320383218}
-  - {fileID: 509507442}
-  - {fileID: 2126822362}
+  - {fileID: 420409862}

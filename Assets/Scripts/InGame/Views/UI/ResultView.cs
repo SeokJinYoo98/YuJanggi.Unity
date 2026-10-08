@@ -3,21 +3,28 @@ using TMPro;
 
 using YuJanggi.UI;
 
-namespace YuJanggi.InGame.UI
+namespace YuJanggi.InGame.Views.UI
 {
     using Engine.Domain;
+    using YuJanggi.Audio;
+    using YuJanggi.BootStrap;
 
-    public class ResultUI : UIVisible
+    public class ResultView : UIVisible
     {
         [SerializeField] private TMP_Text _winner;
         [SerializeField] private TMP_Text _cnt;
         [SerializeField] private TMP_Text _result;
-
-        public void EndGame(in GameResultInfo result)
+        public void ShowResult(in GameResultInfo info, bool loserIsLocal)
         {
-            SetWinnerType(result.Loser);
-            SetWinType(result.Type);
-            SetMoveCnt(result.MoveCnt);
+            Audio.PlaySfx(loserIsLocal ? JanggiSfx.Lose : JanggiSfx.Win);
+            EndGame(in info);
+            Open();
+        }
+        private void EndGame(in GameResultInfo info)
+        {
+            SetWinnerType(info.Loser);
+            SetWinType(info.Type);
+            SetMoveCnt(info.MoveCnt);
         }
         private void SetWinnerType(PlayerTeam loser)
         {

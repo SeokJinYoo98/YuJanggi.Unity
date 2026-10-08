@@ -23,7 +23,7 @@ namespace YuJanggi.InGame.Session
         private readonly ICoroutineRunner _runner;
         private readonly IReadOnlyRecord _record;
         private readonly BoardView _board;
-        private readonly LiveView _view;
+        private readonly GameView _view;
 
         private bool _moveApplied;
         private int _currIdx = 0;
@@ -38,7 +38,7 @@ namespace YuJanggi.InGame.Session
             BoardView board,
             IReadOnlyRecord record,
             ICoroutineRunner runner,
-            LiveView view)
+            GameView view)
         {
             _board       = board;
             _record      = record;
