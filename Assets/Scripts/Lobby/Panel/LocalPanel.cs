@@ -19,7 +19,7 @@ namespace YuJanggi.Lobby.Panel
                     _hanForm.value,
                     _time.value);
 
-            JanggiOptionStore.Set(option);
+            JanggiOptionStore.SaveOptions(option);
 
             return UniTask.FromResult(true);
         }

@@ -4,38 +4,34 @@ using System.Threading;
 using TMPro;
 using UnityEngine;
 
+
+
 namespace YuJanggi.Lobby.Panel
 {
-    using Engine.Domain;
-
-    using Handler;
     using BootStrap;
+    using Engine.Domain;
+    using Handler;
+    using YuJanggi.Store;
+    using NetworkFormationData = Network.NetworkFormationData;
+  
+    using NetworkMatchingData  = Network.NetworkMatchingData;
+
     public enum NetworkState
     { Offline, Connecting, ConnectingFailed, Handshaking, HandshakeFailed, Online, Matching, Matched };
     public class NetworkPanel : Panel, IGameStartPanel
     {
-        private struct NetworkSettings
-        {
-            public NetworkState State;
-            public string MatchId;
-            public PlayerTeam Team;
-            public string OpponentPlayerId;
-            public string OpponentNickname;
-            public PlayerTeam OpponentTeam;
-        }
-
         [SerializeField] private TMP_Text _statusText;
         [SerializeField] private TMP_Text _statusDetailText;
         [SerializeField] private TMP_Dropdown _formationDropDown;
 
-        private NetworkManager _network;
+        private NetworkManager      _network;
         private LobbyNetworkHandler _handler;
 
         private CancellationTokenSource _lifecycleCts;
         private CancellationTokenSource _matchingCts;
-        private NetworkPanelView _view;
-        private NetworkSettings _settings;
 
+        private NetworkPanelView  _view;
+        private NetworkState      _state;
         protected override void Start()
         {
             _view = new(
@@ -44,7 +40,6 @@ namespace YuJanggi.Lobby.Panel
 
             base.Start();
         }
-
         protected override void OnClose()
         {
             _lifecycleCts?.Cancel();
@@ -52,11 +47,11 @@ namespace YuJanggi.Lobby.Panel
             _lifecycleCts = null;
 
             // 연결 끊으면 안됌... 다음 씬으로 넘어가서도 써야함.
-            if (_settings.State != NetworkState.Matched)
+            if (_state != NetworkState.Matched)
                 _network.DisconnectAsync().Forget();
 
-            _handler = null;
-            _network = null;
+            _handler  = null;
+            _network  = null;
         }
         protected override void OnOpen()
         {
@@ -65,12 +60,13 @@ namespace YuJanggi.Lobby.Panel
 
             _lifecycleCts = new CancellationTokenSource();
 
-            _network = YuJanggiBootStrap.Instance.NetworkManager;
-            _handler = _network.Lobby;
+            _network  = YuJanggiBootStrap.Instance.NetworkManager;
+            _handler  = _network.Lobby;
 
             ConnectAsync(_lifecycleCts.Token).Forget();
         }
 
+        #region Connection
         private async UniTask ConnectAsync(
             CancellationToken token)
         {
@@ -102,7 +98,6 @@ namespace YuJanggi.Lobby.Panel
                     ChangeState(NetworkState.Offline, token);
             }
         }
-
         private async UniTask<bool> ConnectNetworkAsync(
             NetworkManager network,
             CancellationToken token)
@@ -139,77 +134,141 @@ namespace YuJanggi.Lobby.Panel
             ChangeState(NetworkState.Online, token);
             return true;
         }
+        #endregion
 
-
+        #region MatchMaking
         public async UniTask<bool> PrepareGameAsync()
         {
-            if (!EnterPrepareGame) return false;
+            if (!EnterPrepareGame)
+                return false;
 
             var handler = _handler;
+            var network = _network;
 
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(
                 _lifecycleCts.Token);
+
             var token = cts.Token;
             _matchingCts = cts;
 
             try
             {
-                // 
                 var result = await handler.MatchRequestAsync(token);
 
                 if (result != MatchRequestResult.Success)
+                {
+                    ChangeState(NetworkState.Offline, token);
+                    await network.DisconnectAsync();
                     return false;
+                }
 
                 ChangeState(NetworkState.Matching, token);
                 _view.StartMatchingTimer(token);
-                await handler.WaitForMatchFoundEvent(token);
+
+                var networkData = await handler.WaitForMatchFoundEvent(token);
+
                 _view.StopMatchingTimer();
-
                 ChangeState(NetworkState.Matched, token);
+
                 await WaitFor10Sec(token);
-                await handler.SubmitFormation(token);
-                await handler.WaitForGameReadyEvent(token);
+ 
+                token.ThrowIfCancellationRequested();
+                var formation = (Formation)_formationDropDown.value;
 
-                SaveNetworkData();
-                SaveJanggiData();
+                await handler.SubmitFormation(
+                    networkData.MatchId,
+                    formation,
+                    token);
 
-                CanClosePanel = true;
-                return true;
+                var formData = await handler.WaitForGameReadyEvent(token);
+                token.ThrowIfCancellationRequested();
+                return TrySaveGameData(in networkData, in formData); 
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.Log("[NetworkPanel] 게임 준비 취소");
+                return false;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+
+                if (!token.IsCancellationRequested)
+                {
+                    ChangeState(NetworkState.Offline, token);
+                    await network.DisconnectAsync();
+                }
+
+                return false;
             }
             finally
             {
+                // 실패·취소 시에도 타이머를 종료합니다.
+                // 이전 작업이 새 작업의 타이머나 CTS를 정리하지 않도록 확인합니다.
                 if (ReferenceEquals(_matchingCts, cts))
+                {
+                    _view.StopMatchingTimer();
                     _matchingCts = null;
+                }
             }
-        }
-        private void SaveNetworkData()
-        {
-
-        }
-        private void SaveJanggiData()
-        {
-
         }
         private async UniTask WaitFor10Sec(
             CancellationToken token)
         {
+            for (int timer = 10; 0 <= timer; timer--)
+            {
+                token.ThrowIfCancellationRequested();
+                _view.HandleCountDown(timer);
+
+                await UniTask.Delay(
+                    TimeSpan.FromSeconds(1),
+                    ignoreTimeScale: true,
+                    cancellationToken: token);
+            }
+        }
+        private bool TrySaveGameData(
+            in NetworkMatchingData data,
+            in NetworkFormationData formData)
+        {
+            if (string.IsNullOrWhiteSpace(data.MatchId) ||
+                data.MatchId != formData.MatchId)
+                return false;
+
+            var options = JanggiOptionFactory.CreateNetwork(
+                formData,
+                data.MyTeam);
+
+            JanggiOptionStore.SaveOptions(options);
+            OnlineMatchInfoStore.SaveData(data);
+
+            CanClosePanel = true;
+            return true;
+        }
+        #endregion
+
+        #region MatchMaking Cancel
+        public void HandleMatchMakingCancel()
+        {
 
         }
+
+        #endregion
+
         private void ChangeState(
             NetworkState next,
             CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
 
-            _settings.State = next;
+            _state = next;
             _view.HandleText(next);
 
-            if (_settings.State == NetworkState.Matched)
+            if (_state == NetworkState.Matched)
                 CanClosePanel = false;
         }
 
         private bool EnterPrepareGame
-            => _settings.State == NetworkState.Online;
+            => _state == NetworkState.Online;
     }
 }
 

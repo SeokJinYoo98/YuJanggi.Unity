@@ -53,8 +53,7 @@ namespace YuJanggi.Lobby.Panel
                     break;
 
                 case NetworkState.Matched:
-                    _statusText.SetText("Online");
-                    _statusDetailText.SetText("Match Found");
+                    _statusText.SetText("Match Found");
                     break;
 
                 default:
@@ -65,7 +64,11 @@ namespace YuJanggi.Lobby.Panel
         }
 
 
-
+        public void HandleCountDown(int time)
+        {
+            _statusText.SetText("Match Found");
+            _statusDetailText.SetText("Game Starts In {0}s", time);
+        }
         public void StartMatchingTimer(
             CancellationToken token)
         {

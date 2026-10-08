@@ -24,7 +24,7 @@ namespace YuJanggi.Lobby.Panel
 
             var strategy = ToStrategy(_strategy.value);
 
-            JanggiOptionStore.Set(
+            JanggiOptionStore.SaveOptions(
                 options,
                 strategy);
 

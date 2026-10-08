@@ -8,30 +8,27 @@ using System.Threading;
 
 namespace YuJanggi.Lobby.Handler
 {
+    using Engine.Domain;
+
+    using Network;
+    using Network.Mapper;
+    using Network.Handler;
+
     using Protocol.Connection;
     using Protocol.Matching;
     using Protocol.Messages;
-
-    using Network;
-    using Network.Handler;
-
-    // Protocol 요청을 생성하고 전송한다.
-    // 응답을 해석해 Panel이 판단할 결과를 반환한다.
-    // 예상 가능한 통신·응답 오류를 실패 결과로 변환한다.
-
     public enum MatchRequestResult
         { Success, Failed, InvalidResponse }
 
     internal sealed class LobbyNetworkHandler : NetworkHandler
     {
-        private UniTaskCompletionSource _matchFound = new();
-
+        private UniTaskCompletionSource<NetworkMatchingData>  _matchFound = new();
+        private UniTaskCompletionSource<NetworkFormationData> _gameReady = new();
         public LobbyNetworkHandler(
             NetworkClient client,
             RequestDispatcher requests)
             : base(client, requests)
-        {
-        }
+        { }
 
         public async UniTask<bool> HandshakeAsync(
             CancellationToken token)
@@ -70,10 +67,10 @@ namespace YuJanggi.Lobby.Handler
         {
             EnsureAvailable(token);
 
-            var previous = _matchFound;
-            _matchFound = new UniTaskCompletionSource();
-            previous.TrySetCanceled();
- 
+            var prev = _matchFound;
+            _matchFound = new UniTaskCompletionSource<NetworkMatchingData>();
+            prev.TrySetCanceled();
+
             try
             {
                 var response = await SendRequestAsync(
@@ -93,25 +90,41 @@ namespace YuJanggi.Lobby.Handler
                 return MatchRequestResult.InvalidResponse;
             }
         }
-        public async UniTask WaitForMatchFoundEvent(
+        public async UniTask<NetworkMatchingData> WaitForMatchFoundEvent(
             CancellationToken token)
         {
             EnsureAvailable(token);
 
             var completion = _matchFound;
-
-            await completion.Task
-                .AttachExternalCancellation(token);
+            return await completion.Task.AttachExternalCancellation(token);
         }
         public async UniTask SubmitFormation(
+            string matchId,
+            Formation formation,
             CancellationToken token)
         {
+            EnsureAvailable(token);
 
+            var prev = _gameReady;
+            _gameReady = new UniTaskCompletionSource<NetworkFormationData>();
+            prev.TrySetCanceled();
+
+            await SendAsync(
+                ClientMessageType.FormationSubmit,
+                new FormationSubmit
+                {
+                    MatchId   = matchId,
+                    Formation = ProtocolMapper.ToProtocolFormation(formation)
+                },
+                token);
         }
-        public async UniTask WaitForGameReadyEvent(
+        public async UniTask<NetworkFormationData> WaitForGameReadyEvent(
             CancellationToken token)
         {
+            EnsureAvailable(token);
 
+            var completion = _gameReady;
+            return await completion.Task.AttachExternalCancellation(token);
         }
         protected override void OnHandleMessage(
             ServerMessage message)
@@ -119,34 +132,53 @@ namespace YuJanggi.Lobby.Handler
             switch (message.Type)
             {
                 case ServerMessageType.MatchingFoundEvent:
-                    _matchFound.TrySetResult();
+                    MatchFounded(message);
                     break;
-
+                case ServerMessageType.GameReadyEvent:
+                    GameReadyEvent(message);
+                    break;
                 default:
                     break;
             }
         }
+        private void GameReadyEvent(ServerMessage msg)
+        {
+            var payload = msg.GetPayload<GameReadyEvent>();
 
+            _gameReady.TrySetResult(new NetworkFormationData
+            {
+                MatchId = payload.MatchId,
+                Cho = ProtocolMapper.ToFormation(payload.ChoFormation),
+                Han = ProtocolMapper.ToFormation(payload.HanFormation)
+            });
+        }
+        private void MatchFounded(ServerMessage msg)
+        {
+            var payload = msg.GetPayload<MatchingFoundEvent>();
+
+            _matchFound.TrySetResult(new NetworkMatchingData
+            {
+                MatchId          = payload.MatchId,
+                MyTeam             = ProtocolMapper.ToPlayerTeam(payload.MyTeam),
+                OpponentPlayerId = payload.Opponent.PlayerId,
+                OpponentNickname = payload.Opponent.PlayerNickname,
+                OpponentTeam     = ProtocolMapper.ToPlayerTeam(payload.Opponent.PlayerTeam)
+            });
+        }
         protected override void OnDispose()
         {
             _matchFound.TrySetCanceled();
         }
-
         private static MatchRequestResult ToMatchRequestResult(MatchingResult result)
         {
             return result switch
             {
-                MatchingResult.Accepted
-                    => MatchRequestResult.Success,
+                MatchingResult.Accepted => MatchRequestResult.Success,
 
                 MatchingResult.AlreadyMatching
-                    => MatchRequestResult.Failed,
-
-                MatchingResult.AlreadyMatched
-                    => MatchRequestResult.Failed,
-
-                MatchingResult.HandshakeRequired
-                    => MatchRequestResult.Failed,
+                    or MatchingResult.AlreadyMatched
+                    or MatchingResult.HandshakeRequired
+                    or MatchingResult.ServerError => MatchRequestResult.Failed,
 
                 _ => MatchRequestResult.InvalidResponse
             };

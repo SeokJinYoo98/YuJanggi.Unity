@@ -5,24 +5,54 @@ namespace YuJanggi.Store
     using Engine.JanggiOption;
     using System;
     using YuJanggi.AI.Data;
-    public static class NetworkState
+    using YuJanggi.Network;
+
+    public static class OnlineMatchInfoStore
     {
-        public static bool ConnetionSuccess { get; private set; }
-    }
-    public static class OnlineMatchInfo
-    {
-        public static string        MatchId             { get; set; }
-        public static PlayerTeam    MyTeam              { get; set; }
-        public static string        OpponentPlayerId    { get; set; }
-        public static string        OpponentNickname    { get; set; }
-        public static PlayerTeam    OpponentTeam        { get; set; }
+        private struct NetworkSessionInfo
+        {
+            public PlayerTeam MyTeam;
+            public string     MatchId;
+            public string     OpponentPlayerId;
+            public string     OpponentNickname;
+        }
+        private static NetworkSessionInfo? _current;
+
+        private static NetworkSessionInfo Current
+            => _current ?? throw new InvalidOperationException(
+                "매칭 정보가 저장되지 않았습니다.");
+
+        public static bool   HasData
+            => _current.HasValue;
+        public static PlayerTeam MyTeam
+            => Current.MyTeam;
+        public static string MatchId
+            => Current.MatchId;
+        public static string OpponentPlayerId
+            => Current.OpponentPlayerId;
+        public static string OpponentNickname
+            => Current.OpponentNickname;
+        public static void SaveData(
+            in NetworkMatchingData data)
+        {
+            _current = new NetworkSessionInfo
+            {
+                MyTeam           = data.MyTeam,
+                MatchId          = data.MatchId,
+                OpponentPlayerId = data.OpponentPlayerId,
+                OpponentNickname = data.OpponentNickname
+            };
+        }
+
+        public static void Clear()
+            => _current = null;
     }
 
     public static class JanggiOptionStore
     {
         public static JanggiOptions         JanggiSetting { get; private set; }
         public static AIMoveStrategyType?   AISetting { get; private set; }
-        public static void Set(
+        public static void SaveOptions(
             JanggiOptions options,
             AIMoveStrategyType? aiStrategy = null)
         {
@@ -30,12 +60,6 @@ namespace YuJanggi.Store
                 ?? throw new ArgumentNullException(nameof(options));
 
             AISetting = aiStrategy;
-        }
-
-        public static void ClearNetworkOptions()
-        {
-            if (JanggiSetting?.GameMode == GameModeType.Network)
-                JanggiSetting = null;
         }
     }
     public static class JanggiOptionFactory
@@ -65,11 +89,11 @@ namespace YuJanggi.Store
         {
             bool isPlayerCho = playerTeam == (int)PlayerTeam.Cho;
 
-            var  cho = isPlayerCho ? PlayerType.Local : PlayerType.AI;
-            var  choForm  = isPlayerCho ? ToFormation(playerFormation) : ToFormation(GenerateAIFormation());
+            var cho = isPlayerCho ? PlayerType.Local : PlayerType.AI;
+            var choForm = isPlayerCho ? ToFormation(playerFormation) : ToFormation(GenerateAIFormation());
 
-            var  han = isPlayerCho ? PlayerType.AI : PlayerType.Local;
-            var  hanForm  = isPlayerCho ? ToFormation(GenerateAIFormation()) : ToFormation(playerFormation);
+            var han = isPlayerCho ? PlayerType.AI : PlayerType.Local;
+            var hanForm = isPlayerCho ? ToFormation(GenerateAIFormation()) : ToFormation(playerFormation);
 
             return new JanggiOptions
             {
@@ -82,6 +106,25 @@ namespace YuJanggi.Store
                 HanFormation = hanForm,
 
                 TurnTime     = ToTurnTime(turnTime)
+            };
+        }
+        public static JanggiOptions CreateNetwork(
+            in NetworkFormationData data,
+            PlayerTeam myTeam)
+        {
+            var isPlayerCho = myTeam == PlayerTeam.Cho;
+
+            return new JanggiOptions
+            {
+                GameMode     = GameModeType.Network,
+
+                PlayerCho    = isPlayerCho ? PlayerType.Network : PlayerType.Remote,
+                ChoFormation = data.Cho,
+
+                PlayerHan    = isPlayerCho ? PlayerType.Remote : PlayerType.Network,
+                HanFormation = data.Han,
+
+                TurnTime     = 60f
             };
         }
         private static int                  ToTurnTime(int value)
@@ -98,7 +141,6 @@ namespace YuJanggi.Store
             };
         private static Formation            ToFormation(int value)
             => (Formation)value;
-
         private static int                  GenerateAIFormation()
         {
             return UnityEngine.Random.Range(
