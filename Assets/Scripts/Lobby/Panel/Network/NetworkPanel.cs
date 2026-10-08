@@ -145,8 +145,9 @@ namespace YuJanggi.Lobby.Panel
             var handler = _handler;
             var network = _network;
 
+            var lifecycleToken = _lifecycleCts.Token;
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(
-                _lifecycleCts.Token);
+                lifecycleToken);
 
             var token = cts.Token;
             _matchingCts = cts;
@@ -186,7 +187,13 @@ namespace YuJanggi.Lobby.Panel
             }
             catch (OperationCanceledException)
             {
-                Debug.Log("[NetworkPanel] 게임 준비 취소");
+                // 패널이 열려 있으면 매칭 취소 후 다시 요청할 수 있도록 복구합니다.
+                if (!lifecycleToken.IsCancellationRequested &&
+                    ReferenceEquals(_matchingCts, cts))
+                {
+                    ChangeState(NetworkState.Online, lifecycleToken);
+                }
+
                 return false;
             }
             catch (Exception exception)
@@ -249,9 +256,25 @@ namespace YuJanggi.Lobby.Panel
         #region MatchMaking Cancel
         public void HandleMatchMakingCancel()
         {
-
+            RequestCancelMatch().Forget();
         }
+        private async UniTask RequestCancelMatch()
+        {
+            var matchingCts = _matchingCts;
+            if (matchingCts == null)
+                return;
 
+            var handler = _handler;
+            var token   = _lifecycleCts.Token;
+
+            if (!await handler.MatchCancelRequestAsync(token))
+                return;
+
+            token.ThrowIfCancellationRequested();
+
+            if (ReferenceEquals(_matchingCts, matchingCts))
+                matchingCts.Cancel();
+        }
         #endregion
 
         private void ChangeState(

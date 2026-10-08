@@ -70,6 +70,7 @@ namespace YuJanggi.Lobby
         // 클래스 내부에서 사용하는 보조 로직
         private async UniTask StartGameAsync()
         {
+            _audio.PlayUI(UISfx.Button);
             if (_currPanel is not IGameStartPanel gameStartPanel)
                 return;
 

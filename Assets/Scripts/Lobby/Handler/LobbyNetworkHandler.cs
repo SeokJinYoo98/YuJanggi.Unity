@@ -29,7 +29,7 @@ namespace YuJanggi.Lobby.Handler
             RequestDispatcher requests)
             : base(client, requests)
         { }
-
+        #region Connecting
         public async UniTask<bool> HandshakeAsync(
             CancellationToken token)
         {
@@ -62,6 +62,9 @@ namespace YuJanggi.Lobby.Handler
                 return false;
             }
         }
+        #endregion
+
+        #region Match
         public async UniTask<MatchRequestResult> MatchRequestAsync(
             CancellationToken token)
         {
@@ -126,21 +129,6 @@ namespace YuJanggi.Lobby.Handler
             var completion = _gameReady;
             return await completion.Task.AttachExternalCancellation(token);
         }
-        protected override void OnHandleMessage(
-            ServerMessage message)
-        {
-            switch (message.Type)
-            {
-                case ServerMessageType.MatchingFoundEvent:
-                    MatchFounded(message);
-                    break;
-                case ServerMessageType.GameReadyEvent:
-                    GameReadyEvent(message);
-                    break;
-                default:
-                    break;
-            }
-        }
         private void GameReadyEvent(ServerMessage msg)
         {
             var payload = msg.GetPayload<GameReadyEvent>();
@@ -165,6 +153,38 @@ namespace YuJanggi.Lobby.Handler
                 OpponentTeam     = ProtocolMapper.ToPlayerTeam(payload.Opponent.PlayerTeam)
             });
         }
+        #endregion
+
+        #region Cancel
+        public async UniTask<bool> MatchCancelRequestAsync(
+            CancellationToken token)
+        {
+            var response = await SendRequestAsync(
+                ClientMessageType.MatchingCancelRequest,
+                new MatchingCancelRequest(),
+                ServerMessageType.MatchingCancelResponse,
+                token);
+
+            var result = response.GetPayload<MatchingCancelResponse>().Result;
+            return result == MatchingCancelResult.Cancelled;
+        }
+        #endregion
+        protected override void OnHandleMessage(
+            ServerMessage message)
+        {
+            switch (message.Type)
+            {
+                case ServerMessageType.MatchingFoundEvent:
+                    MatchFounded(message);
+                    break;
+                case ServerMessageType.GameReadyEvent:
+                    GameReadyEvent(message);
+                    break;
+                default:
+                    break;
+            }
+        }
+
         protected override void OnDispose()
         {
             _matchFound.TrySetCanceled();
