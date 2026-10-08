@@ -1,12 +1,12 @@
-using System;
 using System.Collections.Generic;
+
+using YuJanggi.Core.InGame;
 
 namespace YuJanggi.InGame.Controller
 {
     using Engine.Domain;
-    using Unity.Android.Gradle.Manifest;
-    using YuJanggi.Engine.JanggiEngine;
-    using YuJanggi.InGame.Abstractions;
+    using Engine.JanggiEngine;
+
     internal class InGameLocalController
         : IInGameController
     {

@@ -1,10 +1,10 @@
 using UnityEngine;
 
+using YuJanggi.Core.InGame;
+
 namespace YuJanggi.InGame.Views.Board
 {
-    using YuJanggi.InGame.Abstractions;
     using Engine.Domain;
-
 
     public class MoveGuideView : MonoBehaviour, IBoardClickable
     {

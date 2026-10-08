@@ -2,13 +2,15 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
 
+using Unity.Profiling;
+
+using YuJanggi.Core.InGame;
+using YuJanggi.Core.AI;
+
 namespace YuJanggi.InGame.Controller
 {
     using Engine.Domain;
     using Engine.JanggiEngine;
-    using Unity.Android.Gradle.Manifest;
-    using Unity.Profiling;
-    using YuJanggi.AI.Abstraction;
 
     internal class InGameAIController : IInGameController
     {

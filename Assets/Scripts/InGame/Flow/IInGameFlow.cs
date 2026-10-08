@@ -1,14 +1,14 @@
-
-
 using Cysharp.Threading.Tasks;
 using System.Threading;
-using YuJanggi.InGame.Session;
-using YuJanggi.InGame.Controller;
-using YuJanggi.Engine.Domain;
 using System.Collections.Generic;
+
+using YuJanggi.Core.InGame;
 
 namespace YuJanggi.InGame.Flow
 {
+    using Engine.Domain;
+    using Session;
+
     public interface IInGameFlow : IGameInputReceiver
     {
         UniTask EnterAsync(CancellationToken cancellationToken);

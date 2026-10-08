@@ -3,9 +3,9 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Unity.Profiling;
 
+using YuJanggi.Core.AI;
 namespace YuJanggi.AI.Service
 {
-    using Abstraction;
     using Strategy;
     using Engine.Domain;
     using Engine.JanggiEngine;

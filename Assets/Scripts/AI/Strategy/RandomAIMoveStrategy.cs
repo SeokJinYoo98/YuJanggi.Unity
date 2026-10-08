@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+
+using YuJanggi.Core.AI;
+
 namespace YuJanggi.AI.Strategy
 {
     using Engine.Domain;
     using Engine.JanggiEngine;
 
-    using Abstraction;
     public sealed class RandomAIMoveStrategy : IAI
     {
         private readonly Random _random = new();

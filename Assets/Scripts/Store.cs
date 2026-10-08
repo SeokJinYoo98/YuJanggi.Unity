@@ -1,14 +1,17 @@
+using System;
 
 namespace YuJanggi.Store
 {
     using Engine.Domain;
     using Engine.JanggiOption;
-    using System;
-    using YuJanggi.AI.Data;
-    using YuJanggi.Network;
+
+    using AI.Data;
+    using Network;
+    using InGame.Input;
 
     public static class OnlineMatchInfoStore
     {
+
         private struct NetworkSessionInfo
         {
             public PlayerTeam MyTeam;
@@ -21,7 +24,7 @@ namespace YuJanggi.Store
         private static NetworkSessionInfo Current
             => _current ?? throw new InvalidOperationException(
                 "매칭 정보가 저장되지 않았습니다.");
-
+  
         public static bool   HasData
             => _current.HasValue;
         public static PlayerTeam MyTeam
@@ -50,6 +53,7 @@ namespace YuJanggi.Store
 
     public static class JanggiOptionStore
     {
+        public static GameInputType TYPE => GameInputType.Record;
         public static JanggiOptions         JanggiSetting { get; private set; }
         public static AIMoveStrategyType?   AISetting { get; private set; }
         public static void SaveOptions(

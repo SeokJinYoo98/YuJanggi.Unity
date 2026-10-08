@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using YuJanggi.Core.InGame;
 
 namespace YuJanggi.InGame.Session
 {
@@ -8,10 +9,6 @@ namespace YuJanggi.InGame.Session
 
     using InGame.Views;
     using InGame.Views.Board;
-
-    using Controller;
-    using YuJanggi.InGame.Abstractions;
-
 
     internal interface ISessionTransition
     {

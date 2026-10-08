@@ -1,6 +1,6 @@
+using YuJanggi.Core.AI;
 namespace YuJanggi.AI.Strategy
 {
-    using Abstraction;
     using Engine.Domain;
     using Engine.JanggiEngine;
     using Search;

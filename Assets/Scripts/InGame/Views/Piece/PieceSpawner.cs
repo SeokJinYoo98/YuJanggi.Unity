@@ -4,7 +4,7 @@ namespace YuJanggi.InGame.Views.Piece
 {
     using Engine.JanggiBoard;
     using Engine.Domain;
-    using YuJanggi.InGame.Data;
+    using Data;
 
     public class PieceSpawner : MonoBehaviour
     {

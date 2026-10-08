@@ -1,62 +1,60 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 namespace YuJanggi.InGame
 {
-    using Controller.Input;
-    using Views;
     using Mode;
-
+    using Views;
+    using Input;
     public class InGameManager : MonoBehaviour
     {
         #region Fields
         [Header("Inputs")]
-        [SerializeField] private InputHandlerBehaviour _localInput;
-        [SerializeField] private InGameView            _inGameView;
-        [SerializeField] private RecordInputHandler    _recordInput;
-        #endregion
+        [SerializeField] private InputPrefabs _inputs;
+        [SerializeField] private Camera       _inputCamera;
+
+        [Header("View")]
+        [SerializeField] private InGameView   _inGameView;
 
         private LocalMode _mode;
-        private bool _useRecordInput;
+
+        private InputHandler _activeInput;
         private bool _started;
+        #endregion
+
+
         private void Awake()
         {
-            _useRecordInput = _recordInput != null && _recordInput.isActiveAndEnabled;
-            _mode = new LocalMode(_inGameView, _localInput,
-                _useRecordInput ? _recordInput.CreateOptions() : null);
+            if (!_activeInput.Initialize(_inputCamera))
+            {
+                enabled = false;
+                return;
+            }
+            _mode = new LocalMode(_inGameView, _activeInput);
         }
         private void OnEnable()
         {
             _mode?.BindEvents();
-            if (_useRecordInput && _started)
-            {
-                _localInput.Deactivate();
-                _recordInput.StartPlayback();
-            }
+            if (_started)
+                _activeInput.Activate();
         }
         private void OnDisable()
         {
-            if (_useRecordInput)
-                _recordInput.StopPlayback();
+            _activeInput?.Deactivate();
             _mode?.UnBindEvents();
         }
         private void Start()
         {
             _mode.Initialize();
-            if (_useRecordInput)
-            {
-                _localInput.Deactivate();
-                if (!_mode.InitializeRecordInput(_recordInput))
-                    return;
-            }
+            _mode.BindInput(_activeInput);
             _mode.StartGame();
             _started = true;
-            if (_useRecordInput)
-                _recordInput.StartPlayback();
+            _activeInput.Activate();
         }
         private void OnDestroy()
         {
-            if (_useRecordInput)
-                _recordInput.Release();
+            if (_activeInput == null)
+                return;
+            _activeInput.Release();
+            Destroy(_activeInput.gameObject);
         }
         private void Update()
             => _mode?.Tick(Time.deltaTime);

@@ -1,3 +1,5 @@
+using YuJanggi.Core.InGame;
+
 namespace YuJanggi.InGame.Controller
 {
     using Engine.Domain;

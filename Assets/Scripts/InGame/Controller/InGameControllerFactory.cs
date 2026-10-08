@@ -1,4 +1,5 @@
 using System;
+using YuJanggi.Core.InGame;
 
 namespace YuJanggi.InGame.Controller
 {
@@ -8,7 +9,7 @@ namespace YuJanggi.InGame.Controller
     using YuJanggi.AI.Service;
     using YuJanggi.AI.Strategy;
     using YuJanggi.Engine.JanggiOption;
-    using YuJanggi.InGame.Abstractions;
+
     using YuJanggi.Store;
 
     internal static class InGameControllerFactory

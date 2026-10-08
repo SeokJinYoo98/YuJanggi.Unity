@@ -1,12 +1,11 @@
 using UnityEngine;
-
+using YuJanggi.Core.InGame;
 namespace YuJanggi.InGame.Session
 {
     using Engine.Domain;
 
     using InGame.Views;
     using YuJanggi.Engine.JanggiEngine;
-    using YuJanggi.InGame.Controller;
 
     internal sealed class SessionReplayState : SessionStateBase
     {

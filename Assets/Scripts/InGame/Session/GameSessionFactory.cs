@@ -1,9 +1,10 @@
+
+using YuJanggi.Core.InGame;
+
 namespace YuJanggi.InGame.Session
 {
     using Engine.JanggiEngine;
     using Engine.Domain;
-
-    using YuJanggi.InGame.Abstractions;
 
     using Controller;
     using Views;

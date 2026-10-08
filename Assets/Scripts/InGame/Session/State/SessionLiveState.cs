@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-
+using YuJanggi.Core.InGame;
 namespace YuJanggi.InGame.Session
 {
     using Engine.Domain;
@@ -7,7 +7,6 @@ namespace YuJanggi.InGame.Session
     using InGame.Views;
     using InGame.Views.Board;
     using YuJanggi.Engine.JanggiEngine;
-    using YuJanggi.InGame.Controller;
 
     internal sealed class SessionLiveState : SessionStateBase
     {

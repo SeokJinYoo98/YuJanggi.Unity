@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+
+using YuJanggi.Core.AI;
 namespace YuJanggi.AI.Strategy
 {
-    using Abstraction;
     using Utilities;
   
     using Engine.Domain;

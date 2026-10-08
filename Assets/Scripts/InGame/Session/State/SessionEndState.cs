@@ -1,6 +1,6 @@
-using System;
 using UnityEngine;
 
+using YuJanggi.Core.InGame;
 
 namespace YuJanggi.InGame.Session
 {
@@ -8,7 +8,7 @@ namespace YuJanggi.InGame.Session
     using InGame.Views;
     using InGame.Views.Board;
     using YuJanggi.Engine.JanggiEngine;
-    using YuJanggi.InGame.Controller;
+
 
     internal sealed class SessionEndReplayState : SessionStateBase
     {

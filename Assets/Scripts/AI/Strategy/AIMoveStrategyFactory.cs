@@ -1,8 +1,8 @@
 
+using YuJanggi.Core.AI;
 
 namespace YuJanggi.AI.Strategy
 {
-    using Abstraction;
     using Data;
 
     public static class AIMoveStrategyFactory

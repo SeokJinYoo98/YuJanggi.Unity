@@ -1,17 +1,17 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+using YuJanggi.Core.InGame;
+
 namespace YuJanggi.InGame.Mode
 {
     using Engine.JanggiEngine;
     using Engine.Domain;
 
-    using Abstractions;
     using Controller;
     using Views;
     using Store;
-    using Engine.JanggiOption;
-    using Controller.Input;
+    using Input;
 
     internal interface IGameMode
     {
@@ -34,14 +34,14 @@ namespace YuJanggi.InGame.Mode
             InGameView    gameView,
             IInputHandler localInput,
             PlayerType    choType,
-            PlayerType    hanType,
-            JanggiOptions options = null)
+            PlayerType    hanType)
         {
             _gameView   = gameView;
+
             _localInput = localInput;
 
             _engine = JanggiEngineFactory.CreateEngine(
-                options ?? JanggiOptionStore.JanggiSetting);
+                JanggiOptionStore.JanggiSetting);
 
             _playerCho = InGameControllerFactory.CreateController(
                 choType,
@@ -64,8 +64,8 @@ namespace YuJanggi.InGame.Mode
             _engine.InitEngine();
             _gameView.Initialize(_engine.Board);
         }
-        public bool InitializeRecordInput(RecordInputHandler input)
-            => input.Initialize(this, _engine);
+        public void BindInput(InputHandler input)
+            => input.Bind(this, _engine);
         public void BindEvents()
         {
             _engine.BindEvents();

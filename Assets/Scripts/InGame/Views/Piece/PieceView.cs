@@ -2,12 +2,11 @@ using UnityEngine;
 using DG.Tweening;
 
 
-
+using YuJanggi.Core.InGame;
 namespace YuJanggi.InGame.Views.Piece
 {
-    using YuJanggi.InGame.Abstractions;
     using Engine.Domain;
-    using YuJanggi.InGame.Data;
+    using Data;
 
     public interface IPieceView
     {
