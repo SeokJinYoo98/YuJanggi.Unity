@@ -38,12 +38,11 @@ namespace YuJanggi.InGame.Handler
         #region Constructors
         // 순수 C#
         public InGameHandler(
-            NetworkConnection connection,
+            NetworkClient client,
             RequestDispatcher requests)
-            : base(connection, requests)
+            : base(client, requests)
         {
             _service = new InGameService();
-            Connection.ConnectionClosed += HandleConnectionClosed;
         }
         #endregion
 
@@ -52,7 +51,7 @@ namespace YuJanggi.InGame.Handler
         public UniTask WaitUntilGameStartedAsync(
             CancellationToken cancellationToken = default)
         {
-            EnsureConnected(cancellationToken);
+            // EnsureConnected(cancellationToken);
             return _service.WaitUntilGameStartedAsync(cancellationToken);
         }
 
@@ -133,7 +132,6 @@ namespace YuJanggi.InGame.Handler
 
         protected override void OnDispose()
         {
-            Connection.ConnectionClosed -= HandleConnectionClosed;
             _service.Reset();
         }
         #endregion

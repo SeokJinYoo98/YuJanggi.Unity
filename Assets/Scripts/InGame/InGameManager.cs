@@ -56,7 +56,7 @@ namespace YuJanggi.InGame
         #region Properties
         // 상태를 조회하거나 변경하는 접근 속성
         public GameModeType GameMode
-            => JanggiOptionStore.Current.GameMode;
+            => JanggiOptionStore.JanggiSetting.GameMode;
 
         #endregion
 
@@ -111,7 +111,7 @@ namespace YuJanggi.InGame
                     _inGameFlow = InGameFlowFactory.CreateNetwork(
                         _session,
                         _inGameHandler,
-                        NetworkMatchInfoStore.Current.Team,
+                        OnlineMatchInfoStore.MyTeam,
                         YuJanggiBootStrap.Instance.NetworkManager);
                     break;
 
@@ -129,7 +129,7 @@ namespace YuJanggi.InGame
         private void CreateInGameSession()
         {
             var options =
-                JanggiOptionStore.Current;
+                JanggiOptionStore.JanggiSetting;
 
             var engine =
                 JanggiEngineFactory.CreateEngine(
@@ -159,7 +159,7 @@ namespace YuJanggi.InGame
 
         private void SetCamera()
         {
-            var option = JanggiOptionStore.Current;
+            var option = JanggiOptionStore.JanggiSetting;
 
             if (option.GameMode == GameModeType.Local)
                 return;
@@ -207,8 +207,8 @@ namespace YuJanggi.InGame
             if (GameMode == GameModeType.Network)
             {
                 var networkManager = YuJanggiBootStrap.Instance.NetworkManager;
-                networkManager.ResetMatchState();
-                networkManager.Disconnect();
+                //networkManager.ResetMatchState();
+                //networkManager.Disconnect();
             }
             SceneManager.LoadScene("LobbyScene");
         }

@@ -42,8 +42,8 @@ namespace YuJanggi.InGame.Flow
 
         public override void PrepareReturnToLobby()
         {
-            _networkManager.ResetMatchState();
-            _networkManager.Disconnect();
+            // _networkManager.ResetMatchState();
+            // _networkManager.Disconnect();
         }
 
         public override void RequestMove(Pos from, Pos to)

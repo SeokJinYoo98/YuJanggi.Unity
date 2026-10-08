@@ -1,14 +1,14 @@
 using UnityEngine;
 
 
-namespace YuJanggi.Lobby.UI
+namespace YuJanggi.Lobby.Panel
 {
     using Audio;
     using YuJanggi.BootStrap;
     using YuJanggi.UI;
     using YuJanggi.UI.Volume;
 
-    public class OptionPanel : UIVisible
+    public class OptionPanel : Panel
     {
         [Header("Sliders")]
         [SerializeField] private VolumeSlider _masterSlider;

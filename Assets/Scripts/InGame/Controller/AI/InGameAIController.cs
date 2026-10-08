@@ -6,15 +6,10 @@ namespace YuJanggi.InGame.Controller
 {
     using Engine.JanggiEngine;
     using Engine.Domain;
-    using AI;
+
     using Unity.Profiling;
 
-    public enum AIMoveStrategyType
-    {
-        Random,
-        Greedy,
-        Minimax
-    }
+    using YuJanggi.AI.Abstraction;
 
     internal class InGameAIController : IInGameController
     {

@@ -1,38 +1,39 @@
-using UnityEngine;
-using TMPro;
+using Cysharp.Threading.Tasks;
 using System;
+using TMPro;
+using UnityEngine;
 
-using YuJanggi.UI;
-
-namespace YuJanggi.Lobby.UI
+namespace YuJanggi.Lobby.Panel
 {
-    using InGame.Controller;
-    public class AIPanel : UIVisible
+    using AI.Data;
+    using Store;
+
+    public class AIPanel : Panel, IGameStartPanel
     {
-        [SerializeField] private TMP_Dropdown _teamDropdown;
-        [SerializeField] private TMP_Dropdown _timeDropdown;
-        [SerializeField] private TMP_Dropdown _formationDropdown;
-        [SerializeField] private TMP_Dropdown _strategyDropdown;
-
-
-        public int LocalPlayer          => _teamDropdown.value;
-        public int TurnTime             => _timeDropdown.value;
-        public int LocalPlayerFormation => _formationDropdown.value;
-        public event Action StartRequested;
-        public void RequestStart() => StartRequested?.Invoke();
-        public AIMoveStrategyType Strategy
+        [SerializeField] private TMP_Dropdown _team;
+        [SerializeField] private TMP_Dropdown _time;
+        [SerializeField] private TMP_Dropdown _form;
+        [SerializeField] private TMP_Dropdown _strategy;
+      
+        public UniTask<bool> PrepareGameAsync()
         {
-            get
-            {
-                if (_strategyDropdown == null ||
-                    _strategyDropdown.value < (int)AIMoveStrategyType.Random ||
-                    _strategyDropdown.value > (int)AIMoveStrategyType.Minimax)
-                    return AIMoveStrategyType.Random;
+            var options = JanggiOptionFactory.CreateAI(
+                _team.value,
+                _form.value,
+                _time.value);
 
-                return (AIMoveStrategyType)_strategyDropdown.value;
-            }
+            var strategy = ToStrategy(_strategy.value);
+
+            JanggiOptionStore.SaveOptions(
+                options,
+                strategy);
+
+            return UniTask.FromResult(true);
         }
-    
+
+        private static AIMoveStrategyType ToStrategy(int value)
+          => Enum.IsDefined(typeof(AIMoveStrategyType), value)
+              ? (AIMoveStrategyType)value : AIMoveStrategyType.Random;
     }
 
 }

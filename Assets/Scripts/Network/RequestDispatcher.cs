@@ -2,69 +2,59 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
-using YuJanggi.Protocol.Messages;
-using YuJanggi.Network.Status;
 
 namespace YuJanggi.Network
 {
+    using YuJanggi.Protocol.Messages;
+
     internal interface ISendOnlyRequestDispatcher : IDisposable
     {
-        UniTask<ServerMessage> SendRequestAsync<TPayload>(
-            ClientMessageType requestType,
-            TPayload payload,
+        UniTask<ServerMessage> SendRequestAsync(
+            ClientMessage request,
             ServerMessageType expectedResponseType,
             CancellationToken cancellationToken = default);
     }
-    /// <summary>RequestId로 응답을 연결하고 요청 대기와 취소를 관리합니다.</summary>
+
+    /// <summary>전달받은 요청을 보내고 RequestId에 대응하는 응답을 반환합니다.</summary>
     public sealed class RequestDispatcher : ISendOnlyRequestDispatcher
     {
-        private readonly NetworkConnection _connection;
+        private readonly NetworkClient _client;
         private readonly PendingRequestTracker _pendingRequestTracker = new();
         private bool _disposed;
 
-        public RequestDispatcher(NetworkConnection connection)
+        public RequestDispatcher(NetworkClient client)
         {
-            _connection = connection;
-            _connection.OnDataChanged += HandleConnectionChanged;
+            _client = client
+                ?? throw new ArgumentNullException(nameof(client));
         }
 
-        public void HandleMessage(ServerMessage message)
-        {
-            if (message.RequestId is not null)
-                _pendingRequestTracker.Complete(message);
-        }
-        public void Dispose()
-        {
-            if (_disposed) return;
-            _disposed = true;
-            _connection.OnDataChanged -= HandleConnectionChanged;
-            _pendingRequestTracker.Clear();
-        }
-        public async UniTask<ServerMessage> SendRequestAsync<TPayload>(
-            ClientMessageType requestType,
-            TPayload payload,
+        public async UniTask<ServerMessage> SendRequestAsync(
+            ClientMessage request,
             ServerMessageType expectedResponseType,
-            CancellationToken cancellationToken = default)
+            CancellationToken token = default)
         {
-            EnsureAvailable(cancellationToken);
+            EnsureAvailable(token);
 
-            var request = CreateRequest(requestType, payload);
-            string requestId = GetRequestId(request);
-            int version = _connection.Version;
+            if (request is null)
+                throw new ArgumentNullException(nameof(request));
 
-            using var requestCts = CreateRequestCts(cancellationToken);
-            var requestToken = requestCts.Token;
+            if (string.IsNullOrWhiteSpace(request.RequestId))
+                throw new ArgumentException(
+                    "RequestId가 없는 요청입니다.",
+                    nameof(request));
 
-            _pendingRequestTracker.Add(requestId, expectedResponseType);
-
+            string requestId = request.RequestId;
+            var responseTask = _pendingRequestTracker.Add(
+                requestId,
+                expectedResponseType);
             try
             {
-                await SendAsync(request, version, requestToken);
+                await _client.SendAsync(request, token);
+                token.ThrowIfCancellationRequested();
 
-                return await WaitResponseAsync(
-                    requestId,
-                    version,
-                    requestToken);
+                var response = await responseTask.AttachExternalCancellation(token);
+                token.ThrowIfCancellationRequested();
+                return response;
             }
             finally
             {
@@ -72,75 +62,41 @@ namespace YuJanggi.Network
             }
         }
 
-        private void EnsureAvailable(CancellationToken cancellationToken)
+        public void HandleMessage(ServerMessage message)
         {
             if (_disposed)
-                throw new ObjectDisposedException(nameof(RequestDispatcher));
+                return;
 
-            cancellationToken.ThrowIfCancellationRequested();
+            if (message is null)
+                throw new ArgumentNullException(
+                    nameof(message));
+
+            if (!string.IsNullOrWhiteSpace(message.RequestId))
+                _pendingRequestTracker.Complete(message);
         }
 
-        private static ClientMessage CreateRequest<TPayload>(
-            ClientMessageType requestType,
-            TPayload payload)
+        public void Clear()
         {
-            return ClientMessageFactory.CreateRequest(
-                requestType,
-                payload);
-        }
-
-        private static string GetRequestId(ClientMessage request)
-        {
-            return request.RequestId
-                ?? throw new InvalidOperationException(
-                    "RequestId가 생성되지 않았습니다.");
-        }
-
-        private CancellationTokenSource CreateRequestCts(
-            CancellationToken cancellationToken)
-        {
-            return CancellationTokenSource.CreateLinkedTokenSource(
-                cancellationToken,
-                _connection.LifetimeToken);
-        }
-
-        private async UniTask SendAsync(
-            ClientMessage request,
-            int version,
-            CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            await _connection.SendAsync(
-                request,
-                cancellationToken);
-
-            cancellationToken.ThrowIfCancellationRequested();
-            _connection.EnsureCurrentConnection(version);
-        }
-
-        private async UniTask<ServerMessage> WaitResponseAsync(
-            string requestId,
-            int version,
-            CancellationToken cancellationToken)
-        {
-            var response =
-                await _pendingRequestTracker.WaitAsync(
-                    requestId,
-                    cancellationToken);
-
-            cancellationToken.ThrowIfCancellationRequested();
-            _connection.EnsureCurrentConnection(version);
-
-            return response;
-        }
-        private void HandleConnectionChanged()
-        {
-            if (_connection.State == ConnectionState.Disconnected)
+            if (!_disposed)
                 _pendingRequestTracker.Clear();
         }
 
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+            _disposed = true;
+            _pendingRequestTracker.Clear();
+        }
+
+        private void EnsureAvailable(
+            CancellationToken token)
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(
+                    nameof(RequestDispatcher));
+
+            token.ThrowIfCancellationRequested();
+        }
     }
 }
-
-

@@ -5,7 +5,7 @@ namespace YuJanggi.InGame.Controller
 {
     using Engine.Domain;
     using YuJanggi.Engine.JanggiEngine;
-    using Core.Abstractions;
+    using YuJanggi.InGame.Abstractions;
     internal class InGameLocalController
         : IInGameController, IInGameLocalController
     {

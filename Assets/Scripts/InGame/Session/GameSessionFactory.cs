@@ -3,7 +3,7 @@ namespace YuJanggi.InGame.Session
     using Engine.JanggiEngine;
     using Engine.Domain;
 
-    using Core.Abstractions;
+    using YuJanggi.InGame.Abstractions;
 
     using Controller;
     using Views;
@@ -20,7 +20,7 @@ namespace YuJanggi.InGame.Session
             LiveView liveView, ReplayPlayback replayPlayback, BoardView boardView)
 
         {
-            var options = JanggiOptionStore.Current;
+            var options = JanggiOptionStore.JanggiSetting;
 
             IInGameController cho = InGameControllerFactory.CreateController(
                 options.PlayerCho, PlayerTeam.Cho,
