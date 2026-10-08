@@ -61,6 +61,12 @@ namespace YuJanggi.Store
 
             AISetting = aiStrategy;
         }
+
+        public static void Clear()
+        {
+            JanggiSetting = default;
+            AISetting = null;
+        }
     }
     public static class JanggiOptionFactory
     {

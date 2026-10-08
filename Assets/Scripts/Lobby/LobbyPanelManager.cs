@@ -1,17 +1,15 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
-
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace YuJanggi.Lobby
 {
-    using BootStrap;
-    using UI;
     using Audio;
+    using BootStrap;
     using Panel;
-    
+    using Store;
 
     public class LobbyPanelManager : MonoBehaviour
     {
@@ -29,6 +27,11 @@ namespace YuJanggi.Lobby
         private IPanel _currPanel = null;
         private Dictionary<PanelType, IPanel> _uis;
 
+        private void OnEnable()
+        {
+            JanggiOptionStore.Clear();
+            OnlineMatchInfoStore.Clear();
+        }
         private void Start()
         {
             _uis = new()
