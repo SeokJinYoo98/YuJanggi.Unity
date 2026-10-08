@@ -28,7 +28,6 @@ namespace YuJanggi.Lobby
 
         private IPanel _currPanel = null;
         private Dictionary<PanelType, IPanel> _uis;
-        private bool _isEnteringGame;
 
         private void Start()
         {
@@ -71,19 +70,11 @@ namespace YuJanggi.Lobby
         // 클래스 내부에서 사용하는 보조 로직
         private async UniTask StartGameAsync()
         {
-            if (_isEnteringGame)
-                return;
-
             if (_currPanel is not IGameStartPanel gameStartPanel)
                 return;
 
-            _isEnteringGame = true;
-
             if (!await gameStartPanel.PrepareGameAsync())
-            {
-                _isEnteringGame = false;
                 return;
-            }
 
             ClosePanel();
             SceneManager.LoadScene("JanggiScene");

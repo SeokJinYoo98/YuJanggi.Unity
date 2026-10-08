@@ -1,4 +1,3 @@
-using NetworkSetting = YuJanggi.Lobby.Network.NetworkSetting;
 
 namespace YuJanggi.Store
 {
@@ -6,11 +5,19 @@ namespace YuJanggi.Store
     using Engine.JanggiOption;
     using System;
     using YuJanggi.AI.Data;
-
-    public static class NetworkMatchInfoStore
+    public static class NetworkState
     {
-        public static NetworkSetting Current;
+        public static bool ConnetionSuccess { get; private set; }
     }
+    public static class OnlineMatchInfo
+    {
+        public static string        MatchId             { get; set; }
+        public static PlayerTeam    MyTeam              { get; set; }
+        public static string        OpponentPlayerId    { get; set; }
+        public static string        OpponentNickname    { get; set; }
+        public static PlayerTeam    OpponentTeam        { get; set; }
+    }
+
     public static class JanggiOptionStore
     {
         public static JanggiOptions         JanggiSetting { get; private set; }
@@ -161,3 +168,24 @@ namespace YuJanggi.Store
 
 
 
+/*
+ * OperationCanceledException
+ * - Cancel()은 신호를 보내고, 
+ * - Token을 확인하거나 사용 중인 비동기 작업이 OperationCanceledException으로 취소를 전파합니다.
+ * 
+ * - Level3 → OperationCanceledException
+ * - Level2 → await에서 예외 발생 → 이후 코드 실행 안 함 → catch 없으므로 Level1로 전파
+ * - Level1 → catch에서 처리
+ * 
+ * 
+ * [Handler]
+ * JsonException
+ * - 데이터는 받았는데 JSON을 내가 기대한 타입으로 해석할 수 없다
+ * 
+ * ObjectDisposedException
+ * - Dispose()된 객체를 다시 사용하려고 할 때 발생하는 예외입니다.
+ *
+ *
+ *
+ 
+ */

@@ -57,10 +57,7 @@ namespace YuJanggi.Network
             _client = null;
         }
 
-        /// <summary>
-        /// 이미 Dispose된 객체를 다시 쓰려고 하면 예외 발생
-        /// </summary>
-        /// <exception cref="ObjectDisposedException"></exception>
+
         private void ThrowIfDisposed()
         {
             if (_disposed)
@@ -69,99 +66,71 @@ namespace YuJanggi.Network
                     nameof(NetworkClient));
             }
         }
+        private void ThrowIfConnected()
+        {
+            if (_client is not null)
+            {
+                throw new InvalidOperationException(
+                    "이미 TCP 클라이언트가 생성되어 있습니다.");
+            }
+        }
 
-        /// <summary>
-        /// 서버에 TCP 연결을 시도합니다.
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        /// <exception cref="InvalidOperationException"></exception>
         public async UniTask ConnectAsync(
-            CancellationToken cancellationToken = default)
+            CancellationToken token = default)
         {
             ThrowIfDisposed();
+            ThrowIfConnected();
 
-            TcpClient? client = null;
-            CancellationTokenRegistration cancellationRegistration = default;
-            bool connected = false;
+            token.ThrowIfCancellationRequested();
+
+            TcpClient? client = new();
+            CancellationTokenRegistration registration = default;
 
             try
             {
-                if (_client is not null)
-                {
-                    throw new InvalidOperationException(
-                        "이미 TCP 클라이언트가 생성되어 있습니다.");
-                }
+                registration =
+                    token.Register(client.Dispose);
 
-                cancellationToken.ThrowIfCancellationRequested();
+                await client.ConnectAsync(_host, _port);
 
-                client = new TcpClient();
-
-                cancellationRegistration =
-                    cancellationToken.Register(client.Dispose);
-
-                await client.ConnectAsync(
-                    _host,
-                    _port);
-
-                cancellationToken.ThrowIfCancellationRequested();
+                token.ThrowIfCancellationRequested();
 
                 var stream = client.GetStream();
 
                 _client = client;
                 _stream = stream;
 
-                connected = true;
-            }
-            catch (OperationCanceledException)
-            {
-                throw; // 연결 취소
+                client = null;
             }
             catch (ObjectDisposedException)
-                when (cancellationToken.IsCancellationRequested)
+                when (token.IsCancellationRequested)
             {
-                throw new OperationCanceledException(
-                    cancellationToken); // Dispose로 종료된 연결 취소
-            }
-            catch (ObjectDisposedException)
-            {
-                throw; // 이미 Dispose된 객체 사용
-            }
-            catch (SocketException)
-            {
-                throw; // TCP 연결 실패
-            }
-            catch (InvalidOperationException)
-            {
-                throw; // 잘못된 연결 상태
-            }
-            catch
-            {
-                throw; // 기타 연결 오류
+                throw new OperationCanceledException(token);
             }
             finally
             {
-                cancellationRegistration.Dispose();
-
-                if (!connected)
-                    client?.Dispose();
+                registration.Dispose();
+                client?.Dispose();
             }
         }
 
         public async UniTask SendAsync(
             ClientMessage message,
-            CancellationToken cancellationToken = default)
+            CancellationToken token = default)
         {
             ThrowIfDisposed();
 
             var stream = GetConnectedStream();
 
+            token.ThrowIfCancellationRequested();
+
             byte[] body =
                 MessageSerializer.Serialize(message);
+
             byte[] packet =
                 MessageFramer.Encode(body);
 
-            await _sendLock.WaitAsync(cancellationToken);
+            await _sendLock.WaitAsync(token);
 
             try
             {
@@ -169,7 +138,7 @@ namespace YuJanggi.Network
                     packet,
                     0,
                     packet.Length,
-                    cancellationToken);
+                    token);
             }
             finally
             {
@@ -177,40 +146,30 @@ namespace YuJanggi.Network
             }
         }
 
-        /// <summary>
-        /// 서버에서 메시지를 수신합니다.
-        /// </summary>
         public async UniTask<ServerMessage>ReceiveAsync(
-            CancellationToken cancellationToken = default)
+            CancellationToken token = default)
         {
             ThrowIfDisposed();
 
-            try
-            {
-                var stream = GetConnectedStream();
+            var stream = GetConnectedStream();
 
-                byte[] header =
-                    new byte[MessageFramer.HeaderSize];
-                await ReadExactlyAsync(
-                    stream,
-                    header,
-                    cancellationToken);
+            byte[] header =
+                new byte[MessageFramer.HeaderSize];
 
-                byte[] body =
-                     new byte[MessageFramer.DecodeBodyLength(header)];
-                await ReadExactlyAsync(
-                    stream,
-                    body,
-                    cancellationToken);
+            await ReadExactlyAsync(
+                stream,
+                header,
+                token);
 
-                return MessageSerializer.Deserialize
-                    <ServerMessage>(body);
-            }
-            finally
-            {
+            byte[] body =
+                new byte[MessageFramer.DecodeBodyLength(header)];
 
-            }
+            await ReadExactlyAsync(
+                stream,
+                body,
+                token);
 
+            return MessageSerializer.Deserialize<ServerMessage>(body);
         }
 
         private NetworkStream GetConnectedStream()
@@ -250,6 +209,5 @@ namespace YuJanggi.Network
                 offset += read;
             }
         }
-
     }
 }

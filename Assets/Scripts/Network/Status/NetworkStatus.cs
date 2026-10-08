@@ -1,45 +1,45 @@
 #nullable enable
 using System;
 
-using MatchingState = YuJanggi.Lobby.Network.MatchingState;
+//using MatchingState = YuJanggi.Lobby.Network.MatchingState;
 
 namespace YuJanggi.Network.Status
 {
-    public readonly struct NetworkStatus
-    {
-        public ConnectionState      ConnectionState { get; }
-        public NetworkError?        Error { get; }
-        public string?              Message { get; }
-        public MatchingState        MatchingState { get; }
+    //public readonly struct NetworkStatus
+    //{
+    //    public ConnectionState      ConnectionState { get; }
+    //    public NetworkError?        Error { get; }
+    //    public string?              Message { get; }
+    //    public MatchingState        MatchingState { get; }
 
-        public NetworkStatus(
-            ConnectionState connectionState,
-            NetworkError?   error,
-            string?         message,
-            MatchingState   matchingState = MatchingState.Idle)
-        {
-            ConnectionState = connectionState;
-            Error           = error;
-            Message         = message;
-            MatchingState   = matchingState;
-        }
-    }
-    public enum ConnectionState
-    {
-        Disconnected, Connecting, Handshaking, Connected,
-    }
+    //    public NetworkStatus(
+    //        ConnectionState connectionState,
+    //        NetworkError?   error,
+    //        string?         message,
+    //        MatchingState   matchingState = MatchingState.Idle)
+    //    {
+    //        ConnectionState = connectionState;
+    //        Error           = error;
+    //        Message         = message;
+    //        MatchingState   = matchingState;
+    //    }
+    //}
+    //public enum ConnectionState
+    //{
+    //    Disconnected, Connecting, Handshaking, Connected,
+    //}
 
-    [Flags]
-    public enum NetworkError
-    {
-        None = 0,
-        ConnectionFailed = 1 << 0,
-        ConnectionLost = 1 << 1,
-        CoreVersionMismatch = 1 << 2,
-        ProtocolVersionMismatch = 1 << 3,
-        AuthenticationFailed = 1 << 4,
-        ServerError = 1 << 5
-    }
+    //[Flags]
+    //public enum NetworkError
+    //{
+    //    None = 0,
+    //    ConnectionFailed = 1 << 0,
+    //    ConnectionLost = 1 << 1,
+    //    CoreVersionMismatch = 1 << 2,
+    //    ProtocolVersionMismatch = 1 << 3,
+    //    AuthenticationFailed = 1 << 4,
+    //    ServerError = 1 << 5
+    //}
 }
 
 

@@ -111,7 +111,7 @@ namespace YuJanggi.InGame
                     _inGameFlow = InGameFlowFactory.CreateNetwork(
                         _session,
                         _inGameHandler,
-                        NetworkMatchInfoStore.Current.Team,
+                        OnlineMatchInfo.MyTeam,
                         YuJanggiBootStrap.Instance.NetworkManager);
                     break;
 

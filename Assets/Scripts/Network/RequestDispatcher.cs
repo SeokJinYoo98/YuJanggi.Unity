@@ -24,29 +24,36 @@ namespace YuJanggi.Network
 
         public RequestDispatcher(NetworkClient client)
         {
-            _client = client ?? throw new ArgumentNullException(nameof(client));
+            _client = client
+                ?? throw new ArgumentNullException(nameof(client));
         }
 
         public async UniTask<ServerMessage> SendRequestAsync(
             ClientMessage request,
             ServerMessageType expectedResponseType,
-            CancellationToken cancellationToken = default)
+            CancellationToken token = default)
         {
-            EnsureAvailable(cancellationToken);
+            EnsureAvailable(token);
+
             if (request is null)
                 throw new ArgumentNullException(nameof(request));
+
             if (string.IsNullOrWhiteSpace(request.RequestId))
-                throw new ArgumentException("RequestId가 없는 요청입니다.", nameof(request));
+                throw new ArgumentException(
+                    "RequestId가 없는 요청입니다.",
+                    nameof(request));
 
             string requestId = request.RequestId;
-            var responseTask = _pendingRequestTracker.Add(requestId, expectedResponseType);
+            var responseTask = _pendingRequestTracker.Add(
+                requestId,
+                expectedResponseType);
             try
             {
-                await _client.SendAsync(request, cancellationToken);
-                cancellationToken.ThrowIfCancellationRequested();
+                await _client.SendAsync(request, token);
+                token.ThrowIfCancellationRequested();
 
-                var response = await responseTask.AttachExternalCancellation(cancellationToken);
-                cancellationToken.ThrowIfCancellationRequested();
+                var response = await responseTask.AttachExternalCancellation(token);
+                token.ThrowIfCancellationRequested();
                 return response;
             }
             finally
@@ -59,8 +66,11 @@ namespace YuJanggi.Network
         {
             if (_disposed)
                 return;
+
             if (message is null)
-                throw new ArgumentNullException(nameof(message));
+                throw new ArgumentNullException(
+                    nameof(message));
+
             if (!string.IsNullOrWhiteSpace(message.RequestId))
                 _pendingRequestTracker.Complete(message);
         }
@@ -79,11 +89,14 @@ namespace YuJanggi.Network
             _pendingRequestTracker.Clear();
         }
 
-        private void EnsureAvailable(CancellationToken cancellationToken)
+        private void EnsureAvailable(
+            CancellationToken token)
         {
             if (_disposed)
-                throw new ObjectDisposedException(nameof(RequestDispatcher));
-            cancellationToken.ThrowIfCancellationRequested();
+                throw new ObjectDisposedException(
+                    nameof(RequestDispatcher));
+
+            token.ThrowIfCancellationRequested();
         }
     }
 }

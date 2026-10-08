@@ -14,7 +14,8 @@ namespace YuJanggi.Lobby.Panel
     }
     public abstract class Panel : MonoBehaviour, IPanel
     {
-        void Start()
+        protected bool CanClosePanel = true;
+        protected virtual void Start()
         {
             gameObject.SetActive(false);
         }
@@ -26,6 +27,9 @@ namespace YuJanggi.Lobby.Panel
 
         public void Close()
         {
+            if (CanClosePanel is false)
+                return;
+
             OnClose();
             gameObject.SetActive(false);
         }

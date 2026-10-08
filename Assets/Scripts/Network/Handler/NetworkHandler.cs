@@ -13,8 +13,8 @@ namespace YuJanggi.Network.Handler
     internal abstract class NetworkHandler : INetworkHandler
     {
         #region Fields
-        private readonly NetworkClient _client;
-        private readonly ISendOnlyRequestDispatcher _requests;
+        private readonly NetworkClient      _client;
+        private readonly RequestDispatcher  _requests;
 
         private bool _disposed;
         #endregion
@@ -24,8 +24,11 @@ namespace YuJanggi.Network.Handler
             NetworkClient client,
             RequestDispatcher requests)
         {
-            _client = client ?? throw new ArgumentNullException(nameof(client));
-            _requests = requests ?? throw new ArgumentNullException(nameof(requests));
+            _client = client
+                ?? throw new ArgumentNullException(nameof(client));
+
+            _requests = requests
+                ?? throw new ArgumentNullException(nameof(requests));
         }
         #endregion
 
@@ -56,8 +59,8 @@ namespace YuJanggi.Network.Handler
             CancellationToken token = default)
         {
             EnsureAvailable(token);
+
             await _client.SendAsync(message, token);
-            token.ThrowIfCancellationRequested();
         }
 
         /// <summary>
@@ -82,8 +85,6 @@ namespace YuJanggi.Network.Handler
             await _client.SendAsync(
                 message,
                 token);
-
-            token.ThrowIfCancellationRequested();
         }
 
         /// <summary>
@@ -117,12 +118,10 @@ namespace YuJanggi.Network.Handler
         protected void EnsureAvailable(
             CancellationToken token = default)
         {
-            
             if (_disposed)
                 throw new ObjectDisposedException(GetType().Name);
 
             token.ThrowIfCancellationRequested();
-
         }
         #endregion
     }

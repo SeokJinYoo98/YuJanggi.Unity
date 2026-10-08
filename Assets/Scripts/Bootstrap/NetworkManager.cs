@@ -7,7 +7,7 @@ using UnityEngine;
 namespace YuJanggi.BootStrap
 {
     using YuJanggi.InGame.Handler;
-    using YuJanggi.Lobby.Network;
+    using YuJanggi.Lobby.Handler;
     using YuJanggi.Network;
     using YuJanggi.Protocol.Messages;
 
@@ -97,7 +97,7 @@ namespace YuJanggi.BootStrap
             }
         }
 
-        public async UniTask<ConnectingResult> Panel_ConnectAsync(
+        public async UniTask<ConnectingResult> ConnectAsync(
             CancellationToken token)
         {
             if (!await _connectLock.WaitAsync(0, token))
@@ -112,7 +112,7 @@ namespace YuJanggi.BootStrap
                 {
                     await _client.ConnectAsync(token);
                     token.ThrowIfCancellationRequested();
-                    Panel_StartReceiveLoop();
+                    StartReceiveLoop();
                     return ConnectingResult.Success;
                 }
                 catch (OperationCanceledException)
@@ -133,7 +133,7 @@ namespace YuJanggi.BootStrap
             }
         }
 
-        public async UniTask Panel_DisconnectAsync()
+        public async UniTask DisconnectAsync()
         {
             await _connectLock.WaitAsync();
             try
@@ -161,13 +161,13 @@ namespace YuJanggi.BootStrap
                 }
                 finally
                 {
-                    await Panel_StopReceiveLoopAsync();
+                    await StopReceiveLoopAsync();
                 }
             }
         }
 
         // TCP 연결 성공 직후 시작해 Handshake Response도 라우팅합니다.
-        public void Panel_StartReceiveLoop()
+        public void StartReceiveLoop()
         {
  
             if (_receiveCts is not null)
@@ -184,7 +184,12 @@ namespace YuJanggi.BootStrap
                 .Forget();
         }
 
-        public async UniTask Panel_StopReceiveLoopAsync()
+        // TODO: 로그인 씬 구현 시 ReceiveLoop 종료 예외 처리 정리
+        // - Pending Request 종료
+        // - 연결 상태 Offline 처리
+        // - Disconnect
+        // - 재접속 또는 로그인 씬 전환 정책 적용
+        public async UniTask StopReceiveLoopAsync()
         {
             var cts = _receiveCts;
             var completion = _receiveCompletion;
