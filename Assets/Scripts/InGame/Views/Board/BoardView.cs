@@ -17,21 +17,23 @@ namespace YuJanggi.InGame.Views.Board
     /// <summary>Live/Replay 여부와 무관하게 보드 위의 시각적 표현을 조정합니다.</summary>
     public class BoardView : MonoBehaviour
     {
-        [SerializeField] private PieceManager _piece;
-        [SerializeField] private ParticleManager _particle;
-        [SerializeField] private MoveGuideManager _moveGuide;
+        [SerializeField] private PieceManager       _piece;
+        [SerializeField] private ParticleManager    _particle;
+        [SerializeField] private MoveGuideManager   _moveGuide;
 
-        private PieceView _currPiece;
-        private int _deathCnt;
-        private Vector3 _deathPos = new Vector3(4, 0, -2);
+        private PieceView   _currPiece;
+        private int         _deathCnt;
 
+        private Vector3 _deathPos;
+        private Vector3 OriginDeath = new Vector3(4, 0, -2);
         private AudioManager Audio
             => YuJanggiBootStrap.Instance.AudioManager;
 
         public void InitPieces(IReadOnlyBoard model)
-            => _piece.SpawnPieces(model);
-
-        public void SetDeathPosition(Vector3 pos) => _deathPos = pos;
+        {
+            _deathPos = OriginDeath;
+            _piece.SpawnPieces(model);
+        }
 
         public void SyncBoardState(IReadOnlyBoard boardModel)
         {
@@ -39,51 +41,51 @@ namespace YuJanggi.InGame.Views.Board
             _piece.ResetViews(boardModel);
         }
 
-        public void MovePiece(int id, Pos to)
-            => _piece.DoMove(id, to);
+        private bool TryMovePiece(int id, Pos to)
+        {
+            if (!_piece.TryGetPiece(id, out var piece))
+                return false;
 
-        public void PlaceCapturedPiece(int id, PlayerTeam team)
+            piece.MoveTo(to);
+            return true;
+        }
+
+        private void PlaceCapturedPiece(int id, PlayerTeam team)
         {
             var deathPos = new Vector3(_deathPos.x, _deathPos.y + _deathCnt * 0.1f, _deathPos.z);
             ++_deathCnt;
             _piece.PlaceCapturedPiece(id, deathPos);
         }
 
-        public void RestoreCapturedPiece(int id, PlayerTeam team, Pos to)
+        private void RestoreCapturedPiece(int id, PlayerTeam team, Pos to)
         {
             --_deathCnt;
             _piece.RestoreCapturedPiece(id, to);
         }
 
-        public void ApplyMovement(MoveRecord record, bool playAudio = true,
-            bool playParticle = true, bool clearSelection = true, bool lowerSelectedPiece = false)
+        public void ApplyMovement(MoveRecord record)
         {
-            if (clearSelection)
-                ClearSelection();
+            ClearSelection();
 
-            if (lowerSelectedPiece
-                    && _piece.TryGetPiece(record.MovedPiece.Id, out var selected)
-                    && selected == _currPiece)
+            if (_piece.TryGetPiece(record.MovedPiece.Id, out var selected))
                 selected.ShowMovementPose();
 
             var from = record.From;
             var to = record.To;
 
-            if (playParticle)
-                _particle.PlayMovementParticle(
-                    new Vector3(from.X, 1f, from.Z),
-                    new Vector3(to.X, 1f, to.Z));
+            Audio.PlaySfx(JanggiSfx.Move);
 
-            MovePiece(record.MovedPiece.Id, to);
+            selected.MoveTo(to);
 
-            if (playAudio)
-                Audio.PlaySfx(JanggiSfx.Move);
+            _particle.PlayMovementParticle(
+                new Vector3(from.X, 1f, from.Z),
+                new Vector3(to.X, 1f, to.Z));
 
             if (record.IsCapture)
             {
-                if (playParticle) _particle.PlayCapture(new Vector3(to.X, 0f, to.Z));
+                _particle.PlayCapture(new Vector3(to.X, 0f, to.Z));
                 PlaceCapturedPiece(record.CapturedPiece.Id, record.CapturedPiece.Team);
-                if (playAudio) Audio.PlaySfx(JanggiSfx.Capture);
+                Audio.PlaySfx(JanggiSfx.Capture);
             }
         }
 
@@ -93,7 +95,8 @@ namespace YuJanggi.InGame.Views.Board
             if (clearSelection)
                 ClearSelection();
 
-            MovePiece(record.MovedPiece.Id, record.From);
+            if (!TryMovePiece(record.MovedPiece.Id, record.To))
+                return;
 
             if (record.IsCapture)
                 RestoreCapturedPiece(
@@ -105,7 +108,7 @@ namespace YuJanggi.InGame.Views.Board
                 selected.ShowHighlightPose();
         }
 
-        public void SelectPiece(int id, bool playAudio = true)
+        public void SelectPiece(int id)
         {
             if (!_piece.TryGetPiece(id, out var piece))
                 return;
@@ -115,10 +118,10 @@ namespace YuJanggi.InGame.Views.Board
             _currPiece = piece;
             _currPiece.SelectPiece();
 
-            if (playAudio) Audio.PlaySfx(JanggiSfx.Select);
+            Audio.PlaySfx(JanggiSfx.Select);
         }
 
-        public void UnSelectPiece()
+        private void UnSelectPiece()
         {
             _currPiece?.UnSelectPiece();
             _currPiece = null;
@@ -137,7 +140,8 @@ namespace YuJanggi.InGame.Views.Board
             _moveGuide.ShowHighlight(illegals, false);
         }
 
-        public void HideMoveGuides() => _moveGuide.HideHighlight();
+        private void HideMoveGuides()
+            => _moveGuide.HideHighlight();
 
     }
 }

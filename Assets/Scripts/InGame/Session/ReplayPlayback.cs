@@ -83,7 +83,7 @@ namespace YuJanggi.InGame.Session
         private void PrepareVisual(in MoveRecord moveRecord)
         {
             var movedPiece = moveRecord.MovedPiece;
-            _board.SelectPiece(movedPiece.Id, playAudio: false);
+            _board.SelectPiece(movedPiece.Id);
         }
         private void PreparePlayback(MoveContext moveCtx)
         {
@@ -110,17 +110,16 @@ namespace YuJanggi.InGame.Session
                 restoreSelectionPose: true);
             _moveApplied = false;
         }
-        private void DoMove(MoveContext moveCtx, bool playAudio)
+        private void DoMove(MoveContext moveCtx, bool repeatPresentation)
         {
             if (moveCtx.IsHandicap) return;
             if (_moveApplied)
             {
-                if (!playAudio) return;
+                if (!repeatPresentation) return;
                 // Normalize an already applied move before repeating its presentation.
                 UnDoMove(moveCtx);
             }
-            _board.ApplyMovement(moveCtx.Record, playAudio: playAudio,
-                playParticle: false, clearSelection: false, lowerSelectedPiece: true);
+            _board.ApplyMovement(moveCtx.Record);
             _moveApplied = true;
         }
         private IEnumerator ReplayRoutine(MoveContext ctx)

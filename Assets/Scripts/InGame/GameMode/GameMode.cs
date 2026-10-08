@@ -10,6 +10,8 @@ namespace YuJanggi.InGame.Mode
     using Controller;
     using Views;
     using Store;
+    using Engine.JanggiOption;
+    using Controller.Input;
 
     internal interface IGameMode
     {
@@ -32,13 +34,14 @@ namespace YuJanggi.InGame.Mode
             InGameView    gameView,
             IInputHandler localInput,
             PlayerType    choType,
-            PlayerType    hanType)
+            PlayerType    hanType,
+            JanggiOptions options = null)
         {
             _gameView   = gameView;
             _localInput = localInput;
 
             _engine = JanggiEngineFactory.CreateEngine(
-                JanggiOptionStore.JanggiSetting);
+                options ?? JanggiOptionStore.JanggiSetting);
 
             _playerCho = InGameControllerFactory.CreateController(
                 choType,
@@ -61,6 +64,8 @@ namespace YuJanggi.InGame.Mode
             _engine.InitEngine();
             _gameView.Initialize(_engine.Board);
         }
+        public bool InitializeRecordInput(RecordInputHandler input)
+            => input.Initialize(this, _engine);
         public void BindEvents()
         {
             _engine.BindEvents();
@@ -119,18 +124,13 @@ namespace YuJanggi.InGame.Mode
             board.ApplyMovement(moveCtx.Record);
         }
         protected virtual void HandleCheckReleased()
-        {
-            var effect = _gameView.CheckEffect;
-            effect.PlayMeonggun();
-        }
+            => _gameView.CheckEffect.PlayMeonggun();
         protected virtual void HandleCheckOccured(PlayerTeam team)
-        {
-            var effect = _gameView.CheckEffect;
-            effect.PlayJanggun(team);
-        }
+            => _gameView.CheckEffect.PlayJanggun(team);
         protected virtual void HandleTurnChanged(PlayerTeam next)
         {
-            var nextPlayer = next == PlayerTeam.Cho ? _playerCho : _playerHan;
+            var nextPlayer =
+                next == PlayerTeam.Cho ? _playerCho : _playerHan;
 
             _gameView.Live.UpdateTurn(next, nextPlayer.IsLocal);
 
@@ -152,9 +152,7 @@ namespace YuJanggi.InGame.Mode
 
 
         public virtual void RequestMove(Pos from, Pos to)
-        {
-            _engine.TryMove(from, to);
-        }
+            => _engine.TryMove(from, to);
         public virtual void SelectPiece(
             int? pieceId,
             IReadOnlyList<Pos> legal,
