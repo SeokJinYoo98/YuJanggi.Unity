@@ -1,9 +1,11 @@
 using UnityEngine;
 namespace YuJanggi.InGame
 {
+    using Input;
     using Mode;
     using Views;
-    using Input;
+    using YuJanggi.Engine.Domain;
+
     public class InGameManager : MonoBehaviour
     {
         #region Fields
@@ -58,9 +60,6 @@ namespace YuJanggi.InGame
         }
         private void Update()
             => _mode?.Tick(Time.deltaTime);
-
-
-
     }
 }
 

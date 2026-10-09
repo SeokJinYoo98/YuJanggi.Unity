@@ -8,12 +8,12 @@ namespace YuJanggi.InGame.Input
 
     public class PointerInputHandler : InputHandler
     {
-        [SerializeField] private Camera     _camera;
         [SerializeField] private LayerMask  _clickableLayer;
         private bool _isActivate;
 
         private PlayerInputs _input;
         private PlayerInputs.PlayerActions _actions;
+        private Camera _camera;
         private void OnPointerPressPerformed(InputAction.CallbackContext context)
         {
             if (!_isActivate) 
@@ -32,7 +32,12 @@ namespace YuJanggi.InGame.Input
         {
             _input = new PlayerInputs();
             _actions = _input.Player;
-        }    
+        }
+        private void Start()
+        {
+            _camera = Camera.main;
+            if (_camera == null) return;
+        }
         private void OnEnable()
         {
             _actions.PointerPress.Enable();

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a7f5422cf4a488fb994c51908c41fdd, type: 3}
+  m_Name: YuJanggiInputs
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Input.InputPrefabs
+  _inputs:
+  - Type: 0
+    Prefab: {fileID: 7382443709764191231, guid: 071affb7c97f3e34196eca861d54d7e7, type: 3}
+  - Type: 1
+    Prefab: {fileID: 4267023966448648976, guid: 4baacef5f57767941860ac8fe8a6e14c, type: 3}
