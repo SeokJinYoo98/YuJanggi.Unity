@@ -53,7 +53,7 @@ namespace YuJanggi.Store
 
     public static class JanggiOptionStore
     {
-        public static GameInputType TYPE => GameInputType.Record;
+        public static GameInputType TYPE => GameInputType.PC;
         public static JanggiOptions         JanggiSetting { get; private set; }
         public static AIMoveStrategyType?   AISetting { get; private set; }
         public static void SaveOptions(

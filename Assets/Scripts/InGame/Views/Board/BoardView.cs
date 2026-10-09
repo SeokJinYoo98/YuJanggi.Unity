@@ -25,7 +25,7 @@ namespace YuJanggi.InGame.Views.Board
         private int         _deathCnt;
 
         private Vector3 _deathPos;
-        private Vector3 OriginDeath = new Vector3(4, 0, -2);
+        private static readonly Vector3 OriginDeath = new Vector3(4, 0, -2);
         private AudioManager Audio
             => YuJanggiBootStrap.Instance.AudioManager;
 

@@ -5,83 +5,60 @@ using YuJanggi.Core.InGame;
 namespace YuJanggi.InGame.Input
 {
     using Engine.Domain;
+    using YuJanggi.Store;
 
-    public class PointerInputHandler : InputHandler
+    public class PointerInputHandler : MonoBehaviour, ILocalInputHandler
     {
         [SerializeField] private LayerMask  _clickableLayer;
-        private bool _isActivate;
-
+  
         private PlayerInputs _input;
         private PlayerInputs.PlayerActions _actions;
-        private Camera _camera;
 
+        private Camera  _camera;
+
+        private IBoardInputReceiver _currReceiver;
         void Awake()
         {
+            Debug.Log("Handler: Awake");
             _input = new PlayerInputs();
             _actions = _input.Player;
         }
-        void Start()
-        {
-            _camera = Camera.main;
-            if (_camera == null) return;
-        }
         void OnEnable()
         {
+            Debug.Log("Handler: OnEnable");
             _actions.PointerPress.Enable();
             _actions.PointerPosition.Enable();
             _actions.PointerPress.performed += OnPointerPressPerformed;
-
         }
         void OnDisable()
         {
-            Deactivate();
+            Debug.Log("Handler: OnDisable");
             _actions.PointerPress.performed -= OnPointerPressPerformed;
             _actions.PointerPosition.Disable();
             _actions.PointerPress.Disable();
         }
-        protected override void OnDestroy()
+        void OnDestroy()
         {
-            base.OnDestroy();
+            Debug.Log("Handler: OnDestroy");
             _input?.Dispose();
         }
 
-        private void         OnPointerPressPerformed(InputAction.CallbackContext context)
+        private void OnPointerPressPerformed(InputAction.CallbackContext context)
         {
-            if (!_isActivate)
-                return;
-
+            Debug.Log("Handler: _currReceiver null");
+            if (_currReceiver == null) return;
+            Debug.Log("Handler: OnPointerPressPerformed");
             if (!TryRaycastToBoard(out var pos))
             {
-                RaiseEmptyClicked();
+                _currReceiver.HandleInvalidClick();
                 return;
             }
 
-            RaiseBoardClicked(pos);
+            _currReceiver.HandleValidClick(pos);
         }
-
-        public override void RotateCamera(PlayerTeam team)
+        private bool TryRaycastToBoard(out Pos pos)
         {
-            if (team == PlayerTeam.Han)
-            {
-                _camera.transform.position = new Vector3(4, 9, 6);
-                _camera.transform.eulerAngles = new Vector3(90, 0, 180);
-                _camera.fieldOfView =
-                    Camera.HorizontalToVerticalFieldOfView(
-                        59f,
-                        _camera.aspect);
-            }
-            else
-            {
-                _camera.transform.position = new Vector3(4, 9, 3);
-                _camera.transform.eulerAngles = new Vector3(90, 0, 0);
-            }
-        }
-        public override void Activate()
-            => _isActivate = true;
-        public override void Deactivate()
-            => _isActivate = false;
-        private bool         TryRaycastToBoard(out Pos pos)
-        {
+            Debug.Log("Handler: TryRaycastToBoard");
             pos = default;
 
             if (_camera == null)
@@ -100,6 +77,43 @@ namespace YuJanggi.InGame.Input
             pos = clickable.BoardPos;
 
             return true;
+        }
+        public void  Initialize()
+        {
+            Debug.Log("Handler: Initialize");
+            _camera     = Camera.main;
+
+            if (_camera == null)
+                return;
+
+            RotateCamera();
+        }
+        public void  ResetPlayer()
+            => _currReceiver = null;
+        public void  SetPlayer(IBoardInputReceiver receiver)
+            => _currReceiver = receiver;
+        private void RotateCamera()
+        {
+            var options = JanggiOptionStore.JanggiSetting;
+            if (options.GameMode == GameModeType.Local)
+                return;
+
+            var localTeam = options.PlayerCho ==
+                PlayerType.Local ? PlayerTeam.Cho : PlayerTeam.Han;
+            if (localTeam == PlayerTeam.Han)
+            {
+                _camera.transform.position = new Vector3(4, 9, 6);
+                _camera.transform.eulerAngles = new Vector3(90, 0, 180);
+                _camera.fieldOfView =
+                    Camera.HorizontalToVerticalFieldOfView(
+                        59f,
+                        _camera.aspect);
+            }
+            else
+            {
+                _camera.transform.position = new Vector3(4, 9, 3);
+                _camera.transform.eulerAngles = new Vector3(90, 0, 0);
+            }
         }
     }
 }

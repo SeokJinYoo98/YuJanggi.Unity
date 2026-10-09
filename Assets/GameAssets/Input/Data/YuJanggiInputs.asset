@@ -12,8 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a7f5422cf4a488fb994c51908c41fdd, type: 3}
   m_Name: YuJanggiInputs
   m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Input.InputPrefabs
-  _inputs:
-  - Type: 0
-    Prefab: {fileID: 7382443709764191231, guid: 071affb7c97f3e34196eca861d54d7e7, type: 3}
-  - Type: 1
-    Prefab: {fileID: 4267023966448648976, guid: 4baacef5f57767941860ac8fe8a6e14c, type: 3}
+  PointerInput: {fileID: 8934741782106684814, guid: 88ffc7395a2c32247b61f99859d4a1c2, type: 3}

@@ -19,38 +19,26 @@ namespace YuJanggi.InGame
         [SerializeField] private InGameView   _inGameView;
 
         private IGameMode     _mode;
-        private IInputHandler _activeInput;
-        private bool _started;
+
         #endregion
 
 
         private void Awake()
         {
-            CreateInputHandler(JanggiOptionStore.TYPE);
-            if (!_activeInput.Initialize())
-            {
-                enabled = false;
-                return;
-            }
             _mode = CreateGameMode(JanggiOptionStore.JanggiSetting.GameMode);
         }
         private void OnEnable()
         {
             _mode?.BindEvents();
-            if (_started)
-                _activeInput.Activate();
         }
         private void OnDisable()
         {
-            _activeInput?.Deactivate();
             _mode?.UnBindEvents();
         }
         private void Start()
         {
             _mode.Initialize();
             _mode.StartGame();
-            _started = true;
-            _activeInput.Activate();
         }
         private void OnDestroy()
         {
@@ -59,24 +47,34 @@ namespace YuJanggi.InGame
         private void Update()
             => _mode?.Tick(Time.deltaTime);
 
-        private IGameMode CreateGameMode(GameModeType type)
+        private IGameMode CreateGameMode(
+            GameModeType type)
             => type switch
             {
-                GameModeType.Local => new LocalMode(_inGameView, _activeInput),
-                _ => throw new NotSupportedException($"아직 지원하지 않는 GameMode입니다: {type}")
+                GameModeType.Local
+                    => new LocalMode(
+                        _inGameView,
+                        Instantiate(
+                            _inputs.PointerInput,
+                            transform)),
+                _
+                    => throw new NotSupportedException(
+                        $"아직 지원하지 않는 GameMode입니다: {type}")
             };
-        private IInputHandler CreateInputHandler(GameInputType type)
+        private IInputHandler CreateInputHandler(
+            GameInputType type)
         {
-            var prefab = _inputs.GetPrefab(
-                type);
-
-            _activeInput = Instantiate(
-                prefab,
-                transform);
-
-            _activeInput.Deactivate();
-            return _activeInput;
+            return null;
         }
+        
+
+        public void HandleTakebackButton()  => _mode.HandleTakebackButton();
+        public void HandlePassTurnButton()  => _mode.HandlePassTurnButton();
+        public void HandleGiveUpButton()    => _mode.HandleGiveUpButton();
+        public void HandlePreviousButton()  => _mode.HandlePreviousButton();
+        public void HandleNextButton()      => _mode.HandleNextButton();
+        public void HandleRematchButton()   => _mode.HandleRematchButton();
+        public void HandleReplayButton()    => _mode.HandleReplayButton();
     }
 }
 

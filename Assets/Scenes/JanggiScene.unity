@@ -230,7 +230,7 @@ GameObject:
   - component: {fileID: 56062716}
   - component: {fileID: 56062715}
   m_Layer: 5
-  m_Name: <-
+  m_Name: Previous Button txt
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -367,7 +367,7 @@ GameObject:
   - component: {fileID: 94275252}
   - component: {fileID: 94275251}
   m_Layer: 5
-  m_Name: "\uCC44\uD305"
+  m_Name: PassTurn Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -905,7 +905,7 @@ GameObject:
   - component: {fileID: 298722149}
   - component: {fileID: 298722148}
   m_Layer: 2
-  m_Name: Text (TMP)
+  m_Name: Main Button txt
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1093,7 +1093,7 @@ GameObject:
   - component: {fileID: 326687930}
   - component: {fileID: 326687929}
   m_Layer: 5
-  m_Name: RematchButton
+  m_Name: Rematch Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1226,7 +1226,7 @@ GameObject:
   - component: {fileID: 332151824}
   - component: {fileID: 332151823}
   m_Layer: 5
-  m_Name: "-> \uBC84\uD2BC"
+  m_Name: Next Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1822,7 +1822,7 @@ GameObject:
   - component: {fileID: 507977072}
   - component: {fileID: 507977071}
   m_Layer: 5
-  m_Name: ReplayButton
+  m_Name: Replay Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2204,7 +2204,7 @@ GameObject:
   - component: {fileID: 761709246}
   - component: {fileID: 761709245}
   m_Layer: 5
-  m_Name: ->
+  m_Name: Next Button txt
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2341,7 +2341,7 @@ GameObject:
   - component: {fileID: 786938542}
   - component: {fileID: 786938541}
   m_Layer: 2
-  m_Name: Text (TMP)
+  m_Name: Replay Button txt
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2616,7 +2616,7 @@ GameObject:
   - component: {fileID: 1038547793}
   - component: {fileID: 1038547792}
   m_Layer: 5
-  m_Name: "\uAE30\uAD8C\uBC84\uD2BC"
+  m_Name: GiveUp Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2885,7 +2885,7 @@ GameObject:
   - component: {fileID: 1083626520}
   - component: {fileID: 1083626519}
   m_Layer: 5
-  m_Name: "\uBB34\uB974\uAE30"
+  m_Name: Takeback Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3626,7 +3626,7 @@ GameObject:
   - component: {fileID: 1329109747}
   - component: {fileID: 1329109746}
   m_Layer: 5
-  m_Name: "\uAE30\uAD8C"
+  m_Name: GiveUp Button txt
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3764,7 +3764,7 @@ GameObject:
   - component: {fileID: 1384504432}
   - component: {fileID: 1384504431}
   m_Layer: 5
-  m_Name: "\uBB34\uB974\uAE30 \uBC84\uD2BC"
+  m_Name: Takeback Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3897,7 +3897,7 @@ GameObject:
   - component: {fileID: 1422981582}
   - component: {fileID: 1422981581}
   m_Layer: 5
-  m_Name: "<- \uBC84\uD2BC"
+  m_Name: Previous Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4164,7 +4164,7 @@ GameObject:
   - component: {fileID: 1448290667}
   - component: {fileID: 1448290666}
   m_Layer: 5
-  m_Name: "\uB118\uAE30\uAE30\uBC84\uD2BC"
+  m_Name: PassTurn Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4693,7 +4693,7 @@ GameObject:
   - component: {fileID: 1665254612}
   - component: {fileID: 1665254611}
   m_Layer: 5
-  m_Name: MainButton
+  m_Name: Main Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4839,7 +4839,7 @@ Transform:
   m_GameObject: {fileID: 1678781762}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.81827, y: 5.18694, z: 14.34607}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4857,8 +4857,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7add935fd2e3dd4f85f3edba604f8ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.InGameManager
-  _inputs: {fileID: 0}
-  _inputCamera: {fileID: 0}
+  _inputs: {fileID: 11400000, guid: 0e246c973aad0094297e997b488becc5, type: 2}
   _inGameView: {fileID: 420409861}
 --- !u!1 &1841336929
 GameObject:
@@ -5605,7 +5604,7 @@ GameObject:
   - component: {fileID: 2129848567}
   - component: {fileID: 2129848566}
   m_Layer: 2
-  m_Name: Text (TMP)
+  m_Name: Rematch Button txt
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5777,124 +5776,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2139214265}
   m_CullTransparentMesh: 1
---- !u!1001 &3004563507332772448
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 3749271776220740501, guid: 4baacef5f57767941860ac8fe8a6e14c, type: 3}
-      propertyPath: m_Name
-      value: RecordInputHandler
-      objectReference: {fileID: 0}
-    - target: {fileID: 6905534873247523337, guid: 4baacef5f57767941860ac8fe8a6e14c, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 1517.6561
-      objectReference: {fileID: 0}
-    - target: {fileID: 6905534873247523337, guid: 4baacef5f57767941860ac8fe8a6e14c, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6905534873247523337, guid: 4baacef5f57767941860ac8fe8a6e14c, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 14618.299
-      objectReference: {fileID: 0}
-    - target: {fileID: 6905534873247523337, guid: 4baacef5f57767941860ac8fe8a6e14c, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6905534873247523337, guid: 4baacef5f57767941860ac8fe8a6e14c, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6905534873247523337, guid: 4baacef5f57767941860ac8fe8a6e14c, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6905534873247523337, guid: 4baacef5f57767941860ac8fe8a6e14c, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6905534873247523337, guid: 4baacef5f57767941860ac8fe8a6e14c, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6905534873247523337, guid: 4baacef5f57767941860ac8fe8a6e14c, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6905534873247523337, guid: 4baacef5f57767941860ac8fe8a6e14c, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 4baacef5f57767941860ac8fe8a6e14c, type: 3}
---- !u!1001 &6101616305055169063
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 7317310111648533011, guid: 071affb7c97f3e34196eca861d54d7e7, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 19.43869
-      objectReference: {fileID: 0}
-    - target: {fileID: 7317310111648533011, guid: 071affb7c97f3e34196eca861d54d7e7, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.00002
-      objectReference: {fileID: 0}
-    - target: {fileID: 7317310111648533011, guid: 071affb7c97f3e34196eca861d54d7e7, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 16.415
-      objectReference: {fileID: 0}
-    - target: {fileID: 7317310111648533011, guid: 071affb7c97f3e34196eca861d54d7e7, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7317310111648533011, guid: 071affb7c97f3e34196eca861d54d7e7, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7317310111648533011, guid: 071affb7c97f3e34196eca861d54d7e7, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7317310111648533011, guid: 071affb7c97f3e34196eca861d54d7e7, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7317310111648533011, guid: 071affb7c97f3e34196eca861d54d7e7, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7317310111648533011, guid: 071affb7c97f3e34196eca861d54d7e7, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7317310111648533011, guid: 071affb7c97f3e34196eca861d54d7e7, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7382443709764191231, guid: 071affb7c97f3e34196eca861d54d7e7, type: 3}
-      propertyPath: _camera
-      value: 
-      objectReference: {fileID: 135010638}
-    - target: {fileID: 7454507126384387807, guid: 071affb7c97f3e34196eca861d54d7e7, type: 3}
-      propertyPath: m_Name
-      value: PointerInputHandler
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 071affb7c97f3e34196eca861d54d7e7, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -5905,5 +5786,3 @@ SceneRoots:
   - {fileID: 135010639}
   - {fileID: 182760224}
   - {fileID: 420409862}
-  - {fileID: 6101616305055169063}
-  - {fileID: 3004563507332772448}

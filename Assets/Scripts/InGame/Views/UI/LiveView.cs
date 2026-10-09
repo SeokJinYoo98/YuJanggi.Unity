@@ -49,9 +49,9 @@ namespace YuJanggi.InGame.Views.UI
         public void SetLiveText()
             => _displayModeText.SetText("라이브 보기");
 
-        public void UpdateTurn(PlayerTeam turn, bool isLocal)
+        public void UpdateTurn(PlayerTeam turn, PlayerType type)
         {
-            if (isLocal)
+            if (type == PlayerType.Local)
                 Audio.PlaySfx(JanggiSfx.TurnAlert);
 
             if (turn == PlayerTeam.Cho)
