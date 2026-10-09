@@ -39,7 +39,8 @@ namespace YuJanggi.InGame.Mode
 
             _localInput = localInput;
 
-            _engine = JanggiEngineFactory.CreateEngine(JanggiOptionStore.JanggiSetting);
+            _engine = JanggiEngineFactory.CreateEngine(
+                JanggiOptionStore.JanggiSetting);
 
             _playerCho = InGameControllerFactory.CreateController(
                 choType,

@@ -12,4 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d6c3970d2e44b508c69039565301e8e, type: 3}
   m_Name: Histories
   m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Input.History
-  _historyJsons: []
+  _historyJsons:
+  - {fileID: 4900000, guid: 377d162fb02d0f040965279e6294939c, type: 3}
+  - {fileID: 4900000, guid: 715d282634d93b743ba24b3f408a20ee, type: 3}
+  - {fileID: 4900000, guid: 0f41ec2844ad9dd4ea9218fa053f85a2, type: 3}
+  - {fileID: 4900000, guid: 00e5c3bfd120de94288730fc6c0a3633, type: 3}
