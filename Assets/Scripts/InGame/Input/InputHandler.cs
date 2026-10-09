@@ -17,10 +17,8 @@ namespace YuJanggi.InGame.Input
         protected void RaiseEmptyClicked()
             => OnEmptyClicked?.Invoke();
 
-        public virtual bool Initialize(Camera inputCamera = null)
+        public virtual bool Initialize()
             => true;
-        public virtual void Bind(IGameInputReceiver receiver, IJanggiEngine engine) { }
-
         public abstract void Activate();
         public abstract void Deactivate();
         public virtual void RotateCamera(PlayerTeam team) { }

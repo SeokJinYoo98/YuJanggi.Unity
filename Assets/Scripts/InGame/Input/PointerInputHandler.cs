@@ -14,60 +14,49 @@ namespace YuJanggi.InGame.Input
         private PlayerInputs _input;
         private PlayerInputs.PlayerActions _actions;
         private Camera _camera;
-        private void OnPointerPressPerformed(InputAction.CallbackContext context)
-        {
-            if (!_isActivate) 
-                return;
-
-            if (!TryRaycastToBoard(out var pos))
-            {
-                RaiseEmptyClicked();
-                return;
-            }    
-      
-            RaiseBoardClicked(pos);
-        }
 
         void Awake()
         {
             _input = new PlayerInputs();
             _actions = _input.Player;
         }
-        private void Start()
+        void Start()
         {
             _camera = Camera.main;
             if (_camera == null) return;
         }
-        private void OnEnable()
+        void OnEnable()
         {
             _actions.PointerPress.Enable();
             _actions.PointerPosition.Enable();
             _actions.PointerPress.performed += OnPointerPressPerformed;
 
         }
-        private void OnDisable()
+        void OnDisable()
         {
             Deactivate();
             _actions.PointerPress.performed -= OnPointerPressPerformed;
             _actions.PointerPosition.Disable();
             _actions.PointerPress.Disable();
         }
-
-        public override bool Initialize(Camera inputCamera = null)
-        {
-            if (inputCamera != null)
-                _camera = inputCamera;
-            if (_camera != null)
-                return true;
-
-            Debug.LogError("[PointerInputHandler] 입력에 사용할 Camera가 지정되지 않았습니다.", this);
-            return false;
-        }
-
         protected override void OnDestroy()
         {
             base.OnDestroy();
             _input?.Dispose();
+        }
+
+        private void         OnPointerPressPerformed(InputAction.CallbackContext context)
+        {
+            if (!_isActivate)
+                return;
+
+            if (!TryRaycastToBoard(out var pos))
+            {
+                RaiseEmptyClicked();
+                return;
+            }
+
+            RaiseBoardClicked(pos);
         }
 
         public override void RotateCamera(PlayerTeam team)
@@ -87,10 +76,11 @@ namespace YuJanggi.InGame.Input
                 _camera.transform.eulerAngles = new Vector3(90, 0, 0);
             }
         }
-        public override void Activate()   => _isActivate = true;
-        public override void Deactivate() => _isActivate = false;
-
-        private bool TryRaycastToBoard(out Pos pos)
+        public override void Activate()
+            => _isActivate = true;
+        public override void Deactivate()
+            => _isActivate = false;
+        private bool         TryRaycastToBoard(out Pos pos)
         {
             pos = default;
 

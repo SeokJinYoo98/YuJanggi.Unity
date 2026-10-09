@@ -11,5 +11,7 @@ namespace YuJanggi.Core.InGame
         public void RotateCamera(PlayerTeam team);
         public void Activate();
         public void Deactivate();
+        public bool Initialize();
+        public void Release();
     }
 }
