@@ -16,6 +16,7 @@ namespace YuJanggi.InGame.Input
     public sealed class RecordInputHandler : InputHandler
     {
         [SerializeField] private History _history;
+        [SerializeField, Min(0)] private int _historyIndex;
         [SerializeField, Min(0f)] private float _moveInterval = 1f;
 
         private readonly List<RecordMove> _moves = new();
@@ -43,20 +44,15 @@ namespace YuJanggi.InGame.Input
                 if (_history == null)
                     throw new InvalidDataException("History SO가 지정되지 않았습니다.");
 
-                var history = _history.Data;
-                if (history.HistoryJson == null)
-                    throw new InvalidDataException("History SO의 HistoryJson이 지정되지 않았습니다.");
+                var histories = _history.HistoryJsons;
+                if (_historyIndex < 0 || _historyIndex >= histories.Count)
+                    throw new InvalidDataException($"기보 인덱스가 목록 범위를 벗어났습니다: {_historyIndex}");
 
-                LoadMoves(history.HistoryJson.text);
-                JanggiOptionStore.SaveOptions(new JanggiOptions
-                {
-                    GameMode        = GameModeType.Local,
-                    PlayerCho       = PlayerType.Local,
-                    PlayerHan       = PlayerType.Local,
-                    ChoFormation    = history.ChoFormation,
-                    HanFormation    = history.HanFormation,
-                    TurnTime        = 0f
-                });
+                var historyJson = histories[_historyIndex];
+                if (historyJson == null)
+                    throw new InvalidDataException($"{_historyIndex}번 기보 JSON이 지정되지 않았습니다.");
+
+                LoadHistory(historyJson.text);
                 return true;
             }
             catch (Exception exception)
@@ -170,13 +166,20 @@ namespace YuJanggi.InGame.Input
                 && record.MovedPiece.Team == move.Team;
         }
 
-        private void LoadMoves(string json)
+        private void LoadHistory(string json)
         {
             using var document = JsonDocument.Parse(json);
-            if (document.RootElement.ValueKind != JsonValueKind.Array)
-                throw new InvalidDataException("기보 JSON의 루트는 배열이어야 합니다.");
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+                throw new InvalidDataException("기보 JSON은 ChoFormation, HanFormation, Moves를 포함한 객체여야 합니다.");
 
-            foreach (var item in document.RootElement.EnumerateArray())
+            var choFormation = ReadFormation(root, "ChoFormation");
+            var hanFormation = ReadFormation(root, "HanFormation");
+            if (!root.TryGetProperty("Moves", out var moves)
+                || moves.ValueKind != JsonValueKind.Array)
+                throw new InvalidDataException("기보 JSON의 Moves는 배열이어야 합니다.");
+
+            foreach (var item in moves.EnumerateArray())
             {
                 int number = _moves.Count + 1;
                 if (item.ValueKind != JsonValueKind.Object
@@ -194,6 +197,32 @@ namespace YuJanggi.InGame.Input
                     ReadPosition(item, "From", number),
                     ReadPosition(item, "To", number)));
             }
+
+            JanggiOptionStore.SaveOptions(new JanggiOptions
+            {
+                GameMode        = GameModeType.Local,
+                PlayerCho       = PlayerType.Local,
+                PlayerHan       = PlayerType.Local,
+                ChoFormation    = choFormation,
+                HanFormation    = hanFormation,
+                TurnTime        = 0f
+            });
+        }
+
+        private static Formation ReadFormation(JsonElement root, string name)
+        {
+            if (!root.TryGetProperty(name, out var value)
+                || value.ValueKind != JsonValueKind.String)
+                throw new InvalidDataException($"기보 JSON의 {name}은 포진 이름 문자열이어야 합니다.");
+
+            return value.GetString() switch
+            {
+                "HEHE" => Formation.HEHE,
+                "EHEH" => Formation.EHEH,
+                "EHHE" => Formation.EHHE,
+                "HEEH" => Formation.HEEH,
+                _ => throw new InvalidDataException($"유효하지 않은 {name}: {value.GetString()}")
+            };
         }
 
         private static Pos ReadPosition(JsonElement item, string name, int number)

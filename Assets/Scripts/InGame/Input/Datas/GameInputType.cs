@@ -1,4 +1,0 @@
-namespace YuJanggi.InGame.Input
-{
-    
-}

@@ -1,4 +1,5 @@
 using System;
+using YuJanggi.Core.InGame;
 
 namespace YuJanggi.Store
 {
@@ -7,7 +8,6 @@ namespace YuJanggi.Store
 
     using AI.Data;
     using Network;
-    using InGame.Input;
 
     public static class OnlineMatchInfoStore
     {

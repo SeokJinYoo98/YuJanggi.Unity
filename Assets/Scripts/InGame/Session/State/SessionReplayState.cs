@@ -9,78 +9,78 @@ namespace YuJanggi.InGame.Session
 
     internal sealed class SessionReplayState : SessionStateBase
     {
-        private readonly GameView   _liveView;
-        private readonly ReplayPlayback _replayPlayback;
-        public SessionReplayState(
-            ISessionTransition      sessionFsm, 
-            ISessionEngine          engine, 
-            IInGameController cho, IInGameController han, 
-            ReplayPlayback replayPlayback,
-            GameView  matchView)
-            : base(sessionFsm, cho, han, engine)
-        {
-            _liveView   = matchView;
-            _replayPlayback  = replayPlayback;
-        }
-        // 리플레이 준비
-        public override void Enter()
-        {
-            base.Enter();
-            _engine.ToReplayRecord();
-            _replayPlayback.EnterReplayView();
-        }
-        // 리플레이 정리
-        public override void Exit()
-        {
-            base.Exit();
-            _replayPlayback.ExitReplayView();
-        }
-        public override void OnTurnChanged(PlayerTeam next)
-        {
-            base.OnTurnChanged(next);
-            var nextPlayer = GetPlayer(next);
-            _liveView.UpdateTurnInfo(next, nextPlayer.IsLocal);
-            BeginNextTurn(next);
-        }
-        // public override void OnPieceMoved(in MoveContext moveCtx) { }
-        public override void OnGameEnded(in GameResultInfo info)
-        {
-            base.OnGameEnded(info);
-            _transition.ToEnd();
-        }
-        // public override void OnCheckOccurred(PlayerTeam team) { }
-        // public override void OnCheckReleased() { }
+        //private readonly GameView   _liveView;
+        //private readonly ReplayPlayback _replayPlayback;
+        //public SessionReplayState(
+        //    ISessionTransition      sessionFsm, 
+        //    ISessionEngine          engine, 
+        //    IInGameController cho, IInGameController han, 
+        //    ReplayPlayback replayPlayback,
+        //    GameView  matchView)
+        //    : base(sessionFsm, cho, han, engine)
+        //{
+        //    _liveView   = matchView;
+        //    _replayPlayback  = replayPlayback;
+        //}
+        //// 리플레이 준비
+        //public override void Enter()
+        //{
+        //    base.Enter();
+        //    _engine.ToReplayRecord();
+        //    _replayPlayback.EnterReplayView();
+        //}
+        //// 리플레이 정리
+        //public override void Exit()
+        //{
+        //    base.Exit();
+        //    _replayPlayback.ExitReplayView();
+        //}
+        //public override void OnTurnChanged(PlayerTeam next)
+        //{
+        //    base.OnTurnChanged(next);
+        //    var nextPlayer = GetPlayer(next);
+        //    _liveView.UpdateTurnInfo(next, nextPlayer.IsLocal);
+        //    BeginNextTurn(next);
+        //}
+        //// public override void OnPieceMoved(in MoveContext moveCtx) { }
+        //public override void OnGameEnded(in GameResultInfo info)
+        //{
+        //    base.OnGameEnded(info);
+        //    _transition.ToEnd();
+        //}
+        //// public override void OnCheckOccurred(PlayerTeam team) { }
+        //// public override void OnCheckReleased() { }
 
-        // 입력 (Controller → State)
-        // public override void OnSelectionChanged(int? pieceId, IReadOnlyList<Pos> legals, IReadOnlyList<Pos> illegals) { }
-        public override void RequestMove(Pos from, Pos to)
-        {
-            base.RequestMove(from, to); 
-            _engine.TryMove(from, to);
-        }
-        // public override void RequestUndo() { }
-        // public override void RequestGiveUp() { }
-        // public override void RequestHandicap() { }
-        public override void RequestStepBackward()
-        {
-            base.RequestStepBackward();
-            var result = _replayPlayback.TryReplayBackward();
-            if (_debug)
-                Debug.Log($"{result}");
-            if (result == ReplayResult.Succeeded) return;
-            if (result == ReplayResult.RecordIsEmpty) _transition.ToLive();
-            if (result == ReplayResult.Failed) _transition.ToLive();
-        }
-        public override void RequestStepForward()
-        {
-            base.RequestStepForward();
-            var result = _replayPlayback.TryReplayForward();
-            if (_debug)
-                Debug.Log($"{result}");
-            if (result == ReplayResult.Succeeded) return;
-            if (result == ReplayResult.IdxAtEnd) _transition.ToLive();
-        }
-        protected override SessionState StateName() => SessionState.ReplayState;
+        //// 입력 (Controller → State)
+        //// public override void OnSelectionChanged(int? pieceId, IReadOnlyList<Pos> legals, IReadOnlyList<Pos> illegals) { }
+        //public override void RequestMove(Pos from, Pos to)
+        //{
+        //    base.RequestMove(from, to); 
+        //    _engine.TryMove(from, to);
+        //}
+        //// public override void RequestUndo() { }
+        //// public override void RequestGiveUp() { }
+        //// public override void RequestHandicap() { }
+        //public override void RequestStepBackward()
+        //{
+        //    base.RequestStepBackward();
+        //    var result = _replayPlayback.TryReplayBackward();
+        //    if (_debug)
+        //        Debug.Log($"{result}");
+        //    if (result == ReplayResult.Succeeded) return;
+        //    if (result == ReplayResult.RecordIsEmpty) _transition.ToLive();
+        //    if (result == ReplayResult.Failed) _transition.ToLive();
+        //}
+        //public override void RequestStepForward()
+        //{
+        //    base.RequestStepForward();
+        //    var result = _replayPlayback.TryReplayForward();
+        //    if (_debug)
+        //        Debug.Log($"{result}");
+        //    if (result == ReplayResult.Succeeded) return;
+        //    if (result == ReplayResult.IdxAtEnd) _transition.ToLive();
+        //}
+        //protected override SessionState StateName() => SessionState.ReplayState;
     }
 }
 

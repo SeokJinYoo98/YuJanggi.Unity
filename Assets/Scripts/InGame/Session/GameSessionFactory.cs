@@ -15,25 +15,6 @@ namespace YuJanggi.InGame.Session
 
     internal static class GameSessionFactory
     {
-        internal static GameSession CreateSession(
-            IJanggiEngine engine,
-            IInputHandler inputHandler,
-            GameView liveView, ReplayPlayback replayPlayback, BoardView boardView)
-
-        {
-            var options = JanggiOptionStore.JanggiSetting;
-
-            IInGameController cho = InGameControllerFactory.CreateController(
-                options.PlayerCho, PlayerTeam.Cho,
-                engine, engine, inputHandler);
-
-            IInGameController han = InGameControllerFactory.CreateController(
-                options.PlayerHan, PlayerTeam.Han,
-                engine, engine, inputHandler);
-
-            return new GameSession(engine, inputHandler, cho, han, liveView, replayPlayback, boardView);
-        }
-
 
     }
 

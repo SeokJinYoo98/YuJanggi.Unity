@@ -3,7 +3,7 @@ using System;
 namespace YuJanggi.Core.InGame
 {
     using Engine.Domain;
-
+    public enum GameInputType { PC, Record }
     public interface IInputHandler
     {
         public event Action<Pos> OnBoardClicked;
