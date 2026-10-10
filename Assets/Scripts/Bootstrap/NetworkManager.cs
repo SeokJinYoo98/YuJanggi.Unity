@@ -27,14 +27,14 @@ namespace YuJanggi.BootStrap
 
         private RequestDispatcher       _requests;
         private LobbyNetworkHandler     _lobbyNetworkHandler;
-        private InGameHandler           _inGameHandler;
+        private InGameNetworkHandler           _inGameHandler;
 
         private CancellationTokenSource _receiveCts;
         private UniTaskCompletionSource _receiveCompletion;
 
         internal LobbyNetworkHandler    Lobby
             => _lobbyNetworkHandler;
-        internal InGameHandler          InGame
+        internal InGameNetworkHandler          InGame
             => _inGameHandler;
 
  
@@ -51,12 +51,12 @@ namespace YuJanggi.BootStrap
             var requests = new RequestDispatcher(client);
 
             LobbyNetworkHandler lobby   = null;
-            InGameHandler       inGame  = null;
+            InGameNetworkHandler       inGame  = null;
 
             try
             {
                 lobby   = new LobbyNetworkHandler(client, requests);
-                inGame  = new InGameHandler(client, requests);
+                inGame  = new InGameNetworkHandler(client, requests);
 
                 _client                 = client;
                 _requests               = requests;

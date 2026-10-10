@@ -14,9 +14,10 @@ namespace YuJanggi.InGame.Handler
     using YuJanggi.Protocol.Messages;
 
     /// <summary>인게임 서버 이벤트의 검증·해석 경계입니다. 게임 상태나 화면은 소유하지 않습니다.</summary>
-    internal sealed class InGameHandler : NetworkHandler
+    internal sealed class InGameNetworkHandler : NetworkHandler
     {
-        public InGameHandler(NetworkClient client, RequestDispatcher requests) : base(client, requests)
+        public InGameNetworkHandler(NetworkClient client, RequestDispatcher requests)
+            : base(client, requests)
         {
         }
 

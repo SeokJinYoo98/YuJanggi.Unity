@@ -1,0 +1,214 @@
+using Cysharp.Threading.Tasks;
+using System;
+using System.Threading;
+using UnityEngine;
+
+using YuJanggi.Core.InGame;
+namespace YuJanggi.InGame.Mode
+{
+    using AI.Data;
+    using AI.Service;
+    using AI.Strategy;
+
+    using Engine.Domain;
+    using Engine.JanggiEngine;
+    using Engine.JanggiOption;
+
+    using Input;
+    using Player;
+    internal sealed class AIMode : GameMode
+    {
+        private readonly ILocalInputHandler _localInput;
+        private readonly ILocalPlayer   _localPlayer;
+        private readonly AIPlayer       _aiPlayer;
+
+        private CancellationToken       _gameToken;
+        private CancellationTokenSource _aiTurnCts;
+        private PlayerTeam _activeTeam;
+        private bool _hasTurn;
+        private bool _localInputEnabled = true;
+
+        public AIMode(
+            IJanggiEngine engine,
+            InputHandlerFactory inputs,
+            IGameCommandReceiver receiver,
+            JanggiOptions options,
+            AIMoveStrategyType strategyType)
+            : base(engine)
+        {
+            bool localCho = options.PlayerCho == PlayerType.Local
+                && options.PlayerHan == PlayerType.AI;
+            bool localHan = options.PlayerHan == PlayerType.Local
+                && options.PlayerCho == PlayerType.AI;
+            if (!localCho && !localHan)
+                throw new ArgumentException("AI 모드는 Local과 AI가 한 명씩 필요합니다.", nameof(options));
+
+            var localTeam = localCho ? PlayerTeam.Cho : PlayerTeam.Han;
+            var aiTeam = localCho ? PlayerTeam.Han : PlayerTeam.Cho;
+
+            _localInput = inputs.Create(GameInputType.PC);
+            _localPlayer = new LocalPlayer(
+                localTeam, PlayerType.Local, receiver, engine.ControllerQuery);
+
+            var strategy = AIMoveStrategyFactory.Create(strategyType);
+            var moves = new AIMoveService(engine, strategy);
+            var aiInput = new AIInputHandler(moves, engine.ControllerQuery);
+            _aiPlayer = new AIPlayer(aiTeam, receiver, aiInput);
+        }
+
+        public override PlayerType GetPlayerType(PlayerTeam team)
+            => team == _localPlayer.Team ? _localPlayer.Type : _aiPlayer.Type;
+
+        public override void BeginNextTurn(PlayerTeam team)
+        {
+            if (IsEnd || (_hasTurn && _activeTeam == team))
+                return;
+
+            SetTurn(team);
+        }
+
+        private void SetTurn(PlayerTeam team)
+        {
+            CancelAITurn();
+            _localInput.ResetPlayer();
+            _localPlayer.ResetSelection();
+            _activeTeam = team;
+            _hasTurn = true;
+
+            if (team == _localPlayer.Team)
+            {
+                if (_localInputEnabled)
+                {
+                    _localInput.Resume();
+                    _localInput.SetPlayer(_localPlayer);
+                }
+            }
+            else
+            {
+                _localInput.Pause();
+                RunAITurnAsync().Forget();
+            }
+        }
+
+        private async UniTask RunAITurnAsync()
+        {
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(_gameToken);
+            _aiTurnCts = cts;
+            var token = cts.Token;
+
+            try
+            {
+                // 게임 시작과 턴 갱신 호출이 끝난 뒤 입력을 생성합니다.
+                await UniTask.NextFrame(token);
+                if (IsEnd || _engine.ControllerQuery.CurrentTurn != _aiPlayer.Team)
+                    return;
+
+                await _aiPlayer.RequestMoveAsync(token);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                // 턴 변경, 게임 종료 또는 씬 종료에 따른 취소입니다.
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+            }
+            finally
+            {
+                if (ReferenceEquals(_aiTurnCts, cts))
+                    _aiTurnCts = null;
+            }
+        }
+
+        private void CancelAITurn()
+        {
+            var cts = _aiTurnCts;
+            _aiTurnCts = null;
+            cts?.Cancel();
+        }
+
+        public override void SetLocalInputEnabled(bool enabled)
+        {
+            _localInputEnabled = enabled;
+            _localInput.ResetPlayer();
+            _localPlayer.ResetSelection();
+
+            if (enabled && !IsEnd
+                && _engine.ControllerQuery.CurrentTurn == _localPlayer.Team)
+            {
+                _localInput.Resume();
+                _localInput.SetPlayer(_localPlayer);
+            }
+            else
+            {
+                _localInput.Pause();
+            }
+        }
+
+        protected override void OnTick(float deltaTime)
+            => _engine.Tick(deltaTime);
+
+        protected override UniTask OnInitializeAsync(CancellationToken token)
+        {
+            CancelAITurn();
+            _hasTurn = false;
+            _localInputEnabled = true;
+            _localInput.Initialize();
+            _localInput.ResetPlayer();
+            _localPlayer.ResetSelection();
+            return UniTask.CompletedTask;
+        }
+
+        protected override UniTask OnGameStartAsync(CancellationToken token)
+        {
+            _gameToken = token;
+            SetTurn(_engine.ControllerQuery.CurrentTurn);
+            return UniTask.CompletedTask;
+        }
+
+        protected override UniTask OnGameEndAsync(CancellationToken token)
+        {
+            CancelAITurn();
+            _hasTurn = false;
+            _localInput.ResetPlayer();
+            _localInput.Pause();
+            _localPlayer.ResetSelection();
+            return UniTask.CompletedTask;
+        }
+
+        protected override UniTask OnRequestMoveAsync(Pos from, Pos to, CancellationToken token)
+        {
+            if (!IsEnd && !_engine.TryProcessTurn(from, to))
+                Debug.LogWarning($"[AIMode] 이동이 거절되었습니다: {from} -> {to}");
+
+            return UniTask.CompletedTask;
+        }
+
+        private bool IsLocalTurn
+            => !IsEnd && _engine.ControllerQuery.CurrentTurn == _localPlayer.Team;
+
+        protected override UniTask OnPassTurnAsync(CancellationToken token)
+        {
+            if (IsLocalTurn)
+                _engine.HandleHandicap();
+            return UniTask.CompletedTask;
+        }
+
+        protected override UniTask OnGiveUpAsync(CancellationToken token)
+        {
+            if (IsLocalTurn)
+                _engine.GiveUp();
+            return UniTask.CompletedTask;
+        }
+
+        protected override UniTask OnTakeBackAsync(CancellationToken token)
+        {
+            if (IsLocalTurn)
+                _engine.Undo();
+            return UniTask.CompletedTask;
+        }
+
+        protected override UniTask<bool> OnRequestRematchAsync(CancellationToken token)
+            => UniTask.FromResult(true);
+    }
+}

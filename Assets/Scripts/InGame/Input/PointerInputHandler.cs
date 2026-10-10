@@ -92,8 +92,6 @@ namespace YuJanggi.InGame.Input
         private void RotateCamera()
         {
             var options = JanggiOptionStore.JanggiSetting;
-            if (options.GameMode == GameModeType.Local)
-                return;
 
             var localTeam = options.PlayerCho ==
                 PlayerType.Local ? PlayerTeam.Cho : PlayerTeam.Han;
@@ -101,10 +99,6 @@ namespace YuJanggi.InGame.Input
             {
                 _camera.transform.position = new Vector3(4, 9, 6);
                 _camera.transform.eulerAngles = new Vector3(90, 0, 180);
-                _camera.fieldOfView =
-                    Camera.HorizontalToVerticalFieldOfView(
-                        59f,
-                        _camera.aspect);
             }
             else
             {
