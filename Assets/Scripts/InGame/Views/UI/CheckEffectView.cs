@@ -16,7 +16,6 @@ namespace YuJanggi.InGame.Views.UI
 
         private Tween _effectTween;
       
-        private PlayerTeam?  _prevJanggun;
 
         private AudioManager Audio
             => YuJanggiBootStrap.Instance.AudioManager;
@@ -26,17 +25,11 @@ namespace YuJanggi.InGame.Views.UI
             Audio.PlaySfx(JanggiSfx.Check);
             _effectText.SetText("장군");
             PlayEffect(team, fromLeft: true);
-            _prevJanggun = team;
+   
         }
 
-        public void PlayMeonggun()
+        public void PlayMeonggun(PlayerTeam team)
         {
-            if (!_prevJanggun.HasValue)
-                return;
-
-            var team = _prevJanggun.Value;
-            _prevJanggun = null;
-
             Audio.PlaySfx(JanggiSfx.UnCheck);
             _effectText.SetText("멍군");
             PlayEffect(team, fromLeft: false);

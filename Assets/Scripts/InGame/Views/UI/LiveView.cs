@@ -31,23 +31,33 @@ namespace YuJanggi.InGame.Views.UI
             _turnText.color = Color.green;
 
         }
-        public void UpdateTotalTurn(int currTurn, int totalTurn)
+        // 이벤트 처리 중
+        public void     UpdateTotalTurn(int currTurn, int totalTurn)
         {
-            _currTurn = currTurn;
+            _currTurn  = currTurn;
             _totalTurn = totalTurn;
-            UpdateRecord();
+
+            _recordText.SetText(
+                "{0}수:{1}수",
+                _currTurn,
+                _totalTurn);
         }
-        public void UpdateCurrTurn(int currTurn)
+        public void     UpdateTimer((PlayerTeam team, int time) info)
         {
-            _currTurn = currTurn;
-            UpdateRecord();
+            if (info.team == PlayerTeam.Han)
+                _hanTimerText.SetText("{0}:시간", info.time);
+            else
+                _choTimerText.SetText("시간:{0}", info.time);
         }
-        private void UpdateRecord()
-            => _recordText.SetText("{0}수:{1}수", _currTurn, _totalTurn);
+        //
+
         public void SetReplayText()
             => _displayModeText.SetText("기보 보기");
         public void SetLiveText()
             => _displayModeText.SetText("라이브 보기");
+
+
+
 
         public void UpdateTurn(PlayerTeam turn, PlayerType type)
         {
@@ -72,13 +82,7 @@ namespace YuJanggi.InGame.Views.UI
             else
                 _hanScoreText.SetText("{0}:점수", score);
         }
-        public void UpdateTimer((PlayerTeam team, int time) info)
-        {
-            if (info.team == PlayerTeam.Han)
-                _hanTimerText.SetText("{0}:시간", info.time);
-            else
-                _choTimerText.SetText("시간:{0}", info.time);
-        }
+
 
     }
 }
