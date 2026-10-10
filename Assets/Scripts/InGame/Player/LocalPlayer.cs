@@ -23,12 +23,16 @@ namespace YuJanggi.InGame.Player
         {
             _query = query;
         }
-
+        public void ResetSelection()
+        {
+            _selectedPos = Pos.Invalid;
+            _legal.Clear();
+            _illegal.Clear();
+        }
         public void HandleInvalidClick()
             => ClearSelection();
         public void HandleValidClick(Pos pos)
         {
-            Debug.Log("HandleValidClick");
             if (!HasSelection)
             {
                 TrySelectPiece(pos);
@@ -61,7 +65,7 @@ namespace YuJanggi.InGame.Player
             if (!_legal.Contains(toPos))
                 return false;
 
-            Receiver.RequestMove(_selectedPos, toPos);
+            Receiver.HandleRequestMove(_selectedPos, toPos);
 
             ResetSelection();
             return true;
@@ -77,13 +81,6 @@ namespace YuJanggi.InGame.Player
             Select(id, pos);
 
             return true;
-        }
-        private void ResetSelection()
-        {
-            _selectedPos = Pos.Invalid;
-
-            _legal.Clear();
-            _illegal.Clear();
         }
         private void ClearSelection()
         {

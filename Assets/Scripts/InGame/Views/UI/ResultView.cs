@@ -14,33 +14,23 @@ namespace YuJanggi.InGame.Views.UI
         [SerializeField] private TMP_Text _winner;
         [SerializeField] private TMP_Text _cnt;
         [SerializeField] private TMP_Text _result;
-        public void ShowResult(in GameResultInfo info, bool loserIsLocal)
+
+        public void PlayAuido(bool localWin)
+            => Audio.PlaySfx(localWin ? JanggiSfx.Lose : JanggiSfx.Win);
+        public void SetWinnerType(PlayerTeam winner)
         {
-            Audio.PlaySfx(loserIsLocal ? JanggiSfx.Lose : JanggiSfx.Win);
-            EndGame(in info);
-            Open();
-        }
-        private void EndGame(in GameResultInfo info)
-        {
-            SetWinnerType(info.Loser);
-            SetWinType(info.Type);
-            SetMoveCnt(info.MoveCnt);
-        }
-        private void SetWinnerType(PlayerTeam loser)
-        {
-            if (loser == PlayerTeam.Cho)
-            {
-                _winner.color = Color.red;
-                _winner.SetText("한");
-            }
-            else
+            if (winner == PlayerTeam.Cho)
             {
                 _winner.color = Color.green;
                 _winner.SetText("초");
             }
-            
+            else
+            {
+                _winner.color = Color.red;
+                _winner.SetText("한");
+            }
         }
-        private void SetWinType(GameResult result)
+        public void SetWinType(GameResult result)
         {
             switch (result)
             {
@@ -54,7 +44,7 @@ namespace YuJanggi.InGame.Views.UI
                     break;
             }
         }
-        private void SetMoveCnt(int moveCnt)
+        public void SetMoveCnt(int moveCnt)
             => _cnt.SetText("{0}", moveCnt);
     }
 }

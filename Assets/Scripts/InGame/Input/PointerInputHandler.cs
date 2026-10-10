@@ -15,39 +15,38 @@ namespace YuJanggi.InGame.Input
         private PlayerInputs.PlayerActions _actions;
 
         private Camera  _camera;
-
+        private bool _pause = false;
         private IBoardInputReceiver _currReceiver;
+
         void Awake()
         {
-            Debug.Log("Handler: Awake");
             _input = new PlayerInputs();
             _actions = _input.Player;
         }
         void OnEnable()
         {
-            Debug.Log("Handler: OnEnable");
             _actions.PointerPress.Enable();
             _actions.PointerPosition.Enable();
             _actions.PointerPress.performed += OnPointerPressPerformed;
         }
         void OnDisable()
         {
-            Debug.Log("Handler: OnDisable");
             _actions.PointerPress.performed -= OnPointerPressPerformed;
             _actions.PointerPosition.Disable();
             _actions.PointerPress.Disable();
         }
         void OnDestroy()
         {
-            Debug.Log("Handler: OnDestroy");
+   
             _input?.Dispose();
         }
 
         private void OnPointerPressPerformed(InputAction.CallbackContext context)
         {
-            Debug.Log("Handler: _currReceiver null");
-            if (_currReceiver == null) return;
-            Debug.Log("Handler: OnPointerPressPerformed");
+  
+            if (_currReceiver == null)
+                return;
+
             if (!TryRaycastToBoard(out var pos))
             {
                 _currReceiver.HandleInvalidClick();
@@ -58,10 +57,9 @@ namespace YuJanggi.InGame.Input
         }
         private bool TryRaycastToBoard(out Pos pos)
         {
-            Debug.Log("Handler: TryRaycastToBoard");
             pos = default;
 
-            if (_camera == null)
+            if (_camera == null || _pause)
                 return false;
 
             Vector2 pointerPosition = _actions.PointerPosition.ReadValue<Vector2>();
@@ -80,7 +78,6 @@ namespace YuJanggi.InGame.Input
         }
         public void  Initialize()
         {
-            Debug.Log("Handler: Initialize");
             _camera     = Camera.main;
 
             if (_camera == null)
@@ -115,6 +112,12 @@ namespace YuJanggi.InGame.Input
                 _camera.transform.eulerAngles = new Vector3(90, 0, 0);
             }
         }
+
+        public void Pause()
+            => _pause = true;
+
+        public void Resume()
+            => _pause = false;
     }
 }
 

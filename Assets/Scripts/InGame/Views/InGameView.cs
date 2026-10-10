@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -18,34 +19,119 @@ namespace YuJanggi.InGame.Views
         [SerializeField] private LiveView        _liveView;
         [SerializeField] private BoardView       _boardView;
         [SerializeField] private CheckEffectView _janggunEffect;
-
-        public ResultView Result
-            => _resultView;
-        public LiveView Live
-            => _liveView;
-        public BoardView Board
-            => _boardView;
-        public CheckEffectView CheckEffect
-            => _janggunEffect;
-
-   
+        public void PrepareRematchView(
+            IReadOnlyBoard board,
+            PlayerTeam team,
+            PlayerType type)
+        {
+            CloseResultView();
+            SyncBoardState(board);
+            SyncLiveUI();
+            _liveView.UpdateTurn(team, type);
+        }
         public void Initialize(IReadOnlyBoard board)
         {
             _boardView.InitPieces(board);
             _liveView.SetLiveText();
         }
+        public void StartGame(
+            PlayerTeam turn,
+            PlayerType type)
+        {
+            _liveView.UpdateTurn(turn, type);
+        }
+        public void SyncReplayUI()
+            => _liveView.SetReplayText();
+        public void SyncLiveUI()
+            => _liveView.SetLiveText();
 
-        public void BindEvents(IReadOnlyGameStateEvents events)
+        public void SyncBoardState(IReadOnlyBoard board)
+            => _boardView.SyncBoardState(board);
+ 
+        public void ClearSelection()
+            => _boardView.ClearSelection();
+
+
+
+        public void SelectPiece(
+            int pieceId,
+            IReadOnlyList<Pos> legal,
+            IReadOnlyList<Pos> illegal)
         {
-            events.OnRecordChanged += _liveView.UpdateTotalTurn;
-            events.OnTimeChanged   += _liveView.UpdateTimer;
-            events.OnScoreChanged  += _liveView.UpdateScore;
+            ClearSelection();
+            _boardView.SelectPiece(pieceId);
+
+            if (legal == null && illegal == null)
+                return;
+
+            _boardView.ShowMoveGuides(legal, illegal);
         }
-        public void UnBindEvents(IReadOnlyGameStateEvents events)
+
+        public void BindEvents(IReadOnlyEngine engine)
         {
-            events.OnRecordChanged -= _liveView.UpdateTotalTurn;
-            events.OnTimeChanged   -= _liveView.UpdateTimer;
-            events.OnScoreChanged  -= _liveView.UpdateScore;
+            engine.Turn.OnTimeChanged                += _liveView.HandleTimeChanged;
+            engine.ReadOnlyRecord.OnRecordChanged    += _liveView.HandleRecordChanged;
+            engine.Score.OnScoreChanged              += _liveView.HandleUpdateScore;
+
         }
+        public void UnBindEvents(IReadOnlyEngine engine)
+        {
+            engine.Turn.OnTimeChanged                -= _liveView.HandleTimeChanged;
+            engine.ReadOnlyRecord.OnRecordChanged    -= _liveView.HandleRecordChanged;
+            engine.Score.OnScoreChanged              -= _liveView.HandleUpdateScore;
+        }
+        public void ApplyLiveUI(
+            PlayerTeam nextTeam,
+            PlayerType nextType)
+        {
+            _liveView.UpdateTurn(nextTeam, nextType);
+        }
+
+        public void ApplyMoveRecord(
+            MoveRecord record)
+        {
+            _boardView.ApplyMovement(
+               record.MovedPiece,
+               record.From,
+               record.To);
+
+            if (record.IsCaptured)
+                _boardView.ApplyCapture(
+                    record.CapturedPiece,
+                    record.To);
+        }
+        public void RevertMoveRecord(MoveRecord record)
+        {
+            _boardView.RevertMovement(
+               record.MovedPiece,
+               record.From,
+               record.To);
+
+            if (record.IsCaptured)
+                _boardView.RevertCapture(
+                    record.CapturedPiece,
+                    record.To);
+        }
+
+        public void PlayJanggunEffect(PlayerTeam team)
+            => _janggunEffect.PlayJanggun(team);
+        public void PlayMeonggunEffect(PlayerTeam team)
+            => _janggunEffect.PlayMeonggun(team);
+
+        public void OnGameEnded(
+            GameResultInfo info,
+            bool isLocalWin,
+            int moveCnt)
+        {
+            _resultView.PlayAuido(isLocalWin);
+
+            _resultView.SetMoveCnt(moveCnt);
+            _resultView.SetWinnerType(info.Winner);
+            _resultView.SetWinType(info.Type);
+        }
+        public void OpenResultView()
+            => _resultView.Open();
+        public void CloseResultView()
+            => _resultView.Close();
     }
 }

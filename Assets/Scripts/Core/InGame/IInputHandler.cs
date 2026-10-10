@@ -13,5 +13,7 @@ namespace YuJanggi.Core.InGame
     {
         public void ResetPlayer();
         public void SetPlayer(IBoardInputReceiver receiver);
+        public void Pause();
+        public void Resume();
     }
 }

@@ -25,10 +25,14 @@ namespace YuJanggi.InGame.Views.Piece
         private BoxCollider  _boxCollider;
         private MeshFilter   _meshFilter;
         private MeshRenderer _meshRenderer;
+        private Material[]   _materials;
      
         private Tween _moveTween;
         private Tween _highlightMoveTween;
         private Tween _highlightRotateTween;
+        private TweenCallback _onMoveCompleted;
+        private TweenCallback _onHighlightRotationCompleted;
+        private Vector3 _moveTarget;
 
         private Vector3    _visualOriginLocalPos;
         private Quaternion _visualOriginLocalRot;
@@ -47,6 +51,9 @@ namespace YuJanggi.InGame.Views.Piece
             _boxCollider  = GetComponent<BoxCollider>();
             _meshFilter   = GetComponent<MeshFilter>();
             _meshRenderer = GetComponent<MeshRenderer>();
+            _materials = _meshRenderer.sharedMaterials;
+            _onMoveCompleted = HandleMoveCompleted;
+            _onHighlightRotationCompleted = HandleHighlightRotationCompleted;
 
             _visualOriginLocalPos = _visual.localPosition;
             _visualOriginLocalRot = _visual.localRotation;
@@ -54,6 +61,8 @@ namespace YuJanggi.InGame.Views.Piece
 
         private void OnDisable()
         {
+            _moveTween?.Kill();
+            _moveTween = null;
             StopHighlightTweens();
             _visual.localPosition = _visualOriginLocalPos;
             _visual.localRotation = _visualOriginLocalRot;
@@ -76,15 +85,12 @@ namespace YuJanggi.InGame.Views.Piece
         public void  MoveTo(Vector3 toPos)
         {
             _moveTween?.Kill();
+            _moveTarget = toPos;
 
             _moveTween = transform
                 .DOMove(toPos, _moveDuration)
                 .SetEase(Ease.Linear)
-                .OnComplete(() =>
-                {
-                    transform.position = toPos;
-                    _moveTween         = null;
-                });
+                .OnComplete(_onMoveCompleted);
         }
         public void MoveTo(Pos toPos)
         {
@@ -127,6 +133,15 @@ namespace YuJanggi.InGame.Views.Piece
 
         #region Private Methods
 
+        private void HandleMoveCompleted()
+        {
+            transform.position = _moveTarget;
+            _moveTween = null;
+        }
+
+        private void HandleHighlightRotationCompleted()
+            => _highlightRotateTween = null;
+
         private void MaterialCheck(PlayerTeam team, PieceType type)
         {
             if (team == PlayerTeam.Cho)
@@ -147,13 +162,11 @@ namespace YuJanggi.InGame.Views.Piece
         }
         private void SwapMaterial()
         {
-            var mats = _meshRenderer.sharedMaterials;
-
-            if (mats.Length < 2)
+            if (_materials.Length < 2)
                 return;
 
-            (mats[0], mats[1]) = (mats[1], mats[0]);
-            _meshRenderer.sharedMaterials = mats;
+            (_materials[0], _materials[1]) = (_materials[1], _materials[0]);
+            _meshRenderer.sharedMaterials = _materials;
         }
         private void MoveToHighlightPosition()
         {
@@ -207,7 +220,7 @@ namespace YuJanggi.InGame.Views.Piece
             _highlightRotateTween = _visual
                 .DOLocalRotateQuaternion(_visualOriginLocalRot, _moveDuration)
                 .SetEase(Ease.InOutSine)
-                .OnComplete(() => _highlightRotateTween = null);
+                .OnComplete(_onHighlightRotationCompleted);
         }
         #endregion
     }
