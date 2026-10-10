@@ -18,10 +18,11 @@ Unity 기반 장기 클라이언트입니다. 게임 화면·입력·대국 흐�
 
 ## Highlights
 
-- 모드별 Flow와 GameSession을 통한 대국·종료 상태 관리
-- Random / Greedy / Minimax AI 전략
-- 대국 기록 기반 리플레이
-- Request / Response와 서버 Event를 구분한 네트워크 처리
+- GameMode의 게임 진행과 Live / Replay State의 화면 처리 분리
+- 기보 보기 중에도 실제 대국은 계속 진행되며, GameMode가 턴에 따른 입력 흐름을 관리합니다.
+- State가 실제 대국을 보여주는 Live 화면과 과거 기보를 보여주는 Replay 화면을 전환합니다.
+- Random / Greedy / Minimax AI 전략 구현
+- RequestId 기반 응답 추적과 서버 Event별 Handler 분배
 
 ## Download
 
@@ -52,25 +53,46 @@ Windows 사용자 환경변수 변경 후에는 **Unity Hub와 Editor를 모두 
 | 모드 | 대국 방식 |
 | --- | --- |
 | Local | 한 클라이언트에서 두 진영 입력 |
-| AI | 사용자와 AI Controller의 대국 |
+| AI | Local Player와 AI Player 대국 |
 | Network | 서버 매칭·포진 준비 후 참가자 간 대국 |
 
 - 기물 선택과 이동 가능 위치 표시
 - 리플레이 중에도 수신 이동을 Engine에 반영해 실제 대국과 화면 탐색을 분리
 - Main Lobby 복귀 전에 이전 매치 상태 초기화와 연결 해제
-
+- 
 ## Architecture
 
-Controller는 입력·AI 결과를 전달하고, Flow는 모드별 처리 경로를 선택합니다. <br>
-GameSession은 Engine과 View를 연결해 대국·리플레이·종료 상태를 관리합니다.
+게임 진행은 `GameMode`, Live / Replay의 보드 표현과 기보 탐색은 `InGameState`가 담당합니다. <br>`InGameManager`는 객체 생성, 생명주기, Engine 이벤트 연결과 상태 전환을 관리합니다.
 
-- **Local / AI**: LocalInGameFlow에서 Engine에 즉시 적용
-- **Network**: NetworkInGameFlow에서 요청 전송 후 서버 Event를 적용
-- **메시지 분배**: RequestId가 있는 응답은 RequestDispatcher로, Event는 기능별 Handler로 전달
+- **입력 처리**: InputHandler가 입력을 받고, LocalPlayer가 기물 선택과 이동 요청을 해석합니다.
+- **게임 진행**: LocalMode가 Engine에 명령을 전달하고 다음 턴의 입력 대상을 설정합니다.
+- **화면 표현**: LiveState는 실제 이동을 표시하고, ReplayState는 선택한 기록을 재생합니다. 기보 보기 중에도 라이브 UI 갱신은 유지합니다.
+- **입력 제어**: State 진입 시 GameMode를 통해 로컬 입력을 정지하거나 재개합니다.
+- **메시지 분배**: NetworkManager가 RequestId가 있는 응답을 RequestDispatcher로, 서버 Event를 기능별 Handler로 전달합니다.
 
-온라인 이동은 `MovePieceResponse`의 Accepted만으로 반영하지 않고 `MovePieceEvent`를 기다립니다.<br>
-종료도 로컬 Engine 결과나 `GameEndResponse`만으로 Info를 표시하지 않으며,<br>
-`GameEndedEvent` 수신 후 최종 결과를 반영합니다.
+## Project Structure
+
+```text
+Assets/
+├─ Scenes/                  # Bootstrap·Login·Lobby·대국 씬
+└─ Scripts/
+   ├─ Bootstrap/            # 애플리케이션 초기화와 NetworkManager
+   ├─ Core/                 # 입력·Player·State·AI 공통 계약
+   ├─ Lobby/                # 모드별 준비 패널과 매칭·포진 통신
+   ├─ InGame/
+   │  ├─ GameMode/          # 게임 진행과 명령 처리
+   │  ├─ Input/             # 포인터·JSON 기보 입력
+   │  ├─ Player/            # 기물 선택과 이동 입력 해석
+   │  ├─ State/             # Live·Replay 화면 상태와 기보 재생
+   │  ├─ Handler/           # 인게임 네트워크 Handler
+   │  └─ Views/             # 보드·기물·이동 가이드·효과·UI
+   ├─ Network/              # TCP 통신·요청 추적·Protocol 변환
+   ├─ AI/                   # 이동 탐색과 평가 전략
+   ├─ Audio/                # 오디오 관리
+   └─ UI/                   # 공통 버튼·볼륨·표시 제어
+Packages/                   # UPM 의존성 설정
+ProjectSettings/            # Unity 프로젝트 설정
+```
 
 ## Build / CI/CD
 
@@ -80,22 +102,6 @@ GameSession은 Engine과 View를 연결해 대국·리플레이·종료 상태�
 
 주요 의존성은 UniTask, Input System, uGUI / TextMeshPro, URP, DOTween입니다.<br>
 Protocol의 JSON 직렬화에 필요한 DLL은 `Assets/Plugins/SystemTextJson`에 포함되어 있습니다.
-
-## Project Structure
-
-```text
-Assets/
-├─ Scenes/               # Bootstrap·Lobby·대국 씬
-└─ Scripts/
-   ├─ Bootstrap/         # 초기화와 공용 Manager
-   ├─ Lobby/             # 모드별 준비와 매칭·포진 통신
-   ├─ InGame/            # Controller·Flow·Session·View
-   ├─ Network/           # Transport·Connection·요청 추적
-   └─ Runtime/           # Input·Board·Piece·UI
-Packages/                # UPM 의존성 설정
-ProjectSettings/         # Unity 프로젝트 설정
-Downloads/               # Windows 설치파일
-```
 
 ## Limitations
 
