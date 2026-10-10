@@ -19,7 +19,15 @@ namespace YuJanggi.InGame.Views
         [SerializeField] private LiveView        _liveView;
         [SerializeField] private BoardView       _boardView;
         [SerializeField] private CheckEffectView _janggunEffect;
-
+        public void PrepareRematchView(
+            IReadOnlyBoard board,
+            PlayerTeam team,
+            PlayerType type)
+        {
+            CloseResultView();
+            SyncBoardState(board);
+            SyncLiveUI(team, type);
+        }
         public void Initialize(IReadOnlyBoard board)
         {
             _boardView.InitPieces(board);
@@ -31,16 +39,16 @@ namespace YuJanggi.InGame.Views
         {
             _liveView.UpdateTurn(turn, type);
         }
-        public void SyncLiveView(
-            IReadOnlyBoard board,
+        public void SyncLiveUI(
             PlayerTeam team,
             PlayerType type)
         {
-            _boardView.SyncBoardState(board);
             _liveView.SetLiveText();
             _liveView.UpdateTurn(team, type);
-            _resultView.Close();
         }
+
+        public void SyncBoardState(IReadOnlyBoard board)
+            => _boardView.SyncBoardState(board);
 
         public void ClearSelection()
             => _boardView.ClearSelection();
@@ -55,15 +63,18 @@ namespace YuJanggi.InGame.Views
             _boardView.ShowMoveGuides(legal, illegal);
         }
 
-        public void BindEvents(IReadOnlyGameStateEvents events)
+        public void BindEvents(IReadOnlyEngine engine)
         {
-            events.OnRecordChanged += _liveView.UpdateTotalTurn;
-            events.OnTimeChanged   += _liveView.UpdateTimer;
+            engine.Turn.OnTimeChanged                += _liveView.HandleTimeChanged;
+            engine.ReadOnlyRecord.OnRecordChanged    += _liveView.HandleRecordChanged;
+            engine.Score.OnScoreChanged              += _liveView.HandleUpdateScore;
+
         }
-        public void UnBindEvents(IReadOnlyGameStateEvents events)
+        public void UnBindEvents(IReadOnlyEngine engine)
         {
-            events.OnRecordChanged -= _liveView.UpdateTotalTurn;
-            events.OnTimeChanged   -= _liveView.UpdateTimer;
+            engine.Turn.OnTimeChanged                -= _liveView.HandleTimeChanged;
+            engine.ReadOnlyRecord.OnRecordChanged    -= _liveView.HandleRecordChanged;
+            engine.Score.OnScoreChanged              -= _liveView.HandleUpdateScore;
         }
         public void ApplyLiveUI(
             PlayerTeam nextTeam,
@@ -71,11 +82,7 @@ namespace YuJanggi.InGame.Views
         {
             _liveView.UpdateTurn(nextTeam, nextType);
         }
-        public void ApplyScore((int Cho, int Han) score)
-        {
-            _liveView.UpdateScore(PlayerTeam.Cho, score.Cho);
-            _liveView.UpdateScore(PlayerTeam.Han, score.Han);
-        }
+
         public void ApplyMoveRecord(
             MoveRecord record)
         {
@@ -117,8 +124,10 @@ namespace YuJanggi.InGame.Views
             _resultView.SetMoveCnt(moveCnt);
             _resultView.SetWinnerType(info.Winner);
             _resultView.SetWinType(info.Type);
-
-            _resultView.Open();
         }
+        public void OpenResultView()
+            => _resultView.Open();
+        public void CloseResultView()
+            => _resultView.Close();
     }
 }

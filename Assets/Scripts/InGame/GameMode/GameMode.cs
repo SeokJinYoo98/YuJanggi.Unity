@@ -38,11 +38,11 @@ namespace YuJanggi.InGame.Mode
     internal abstract class GameMode : IGameMode
     {
         #region Field
-        protected readonly IJanggiEngine _engine;
+        protected readonly IGameEngine _engine;
         private bool _play = false;
         #endregion
         protected GameMode(
-            IJanggiEngine engine)
+            IGameEngine engine)
         {
             _engine = engine;
         }

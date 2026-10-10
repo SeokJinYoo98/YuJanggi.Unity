@@ -17,7 +17,7 @@ namespace YuJanggi.InGame.Mode
         private readonly ILocalPlayer _cho;
         private readonly ILocalPlayer _han;
         public LocalMode(
-            IJanggiEngine       engine,
+            IGameEngine engine,
             InputHandlerFactory inputs,
             IGameCommandReceiver receiver)
             : base(engine)
@@ -81,7 +81,7 @@ namespace YuJanggi.InGame.Mode
         protected override UniTask OnPassTurnAsync(
             CancellationToken token)
         {
-            _engine.Handicap();
+            _engine.HandleHandicap();
             return UniTask.CompletedTask;
         }
         protected override UniTask OnGiveUpAsync(

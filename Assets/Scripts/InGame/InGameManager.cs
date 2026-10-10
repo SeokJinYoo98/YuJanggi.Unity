@@ -8,6 +8,7 @@ namespace YuJanggi.InGame
 {
     using Input;
     using Mode;
+    using State;
 
     using Views;
     using Core.InGame;
@@ -16,7 +17,7 @@ namespace YuJanggi.InGame
  
     using Store;
 
-    public class InGameManager : MonoBehaviour, IGameCommandReceiver
+    public class InGameManager : MonoBehaviour, IGameCommandReceiver, IStateMachine
     {
         #region Fields
         [Header("Inputs")]
@@ -27,10 +28,16 @@ namespace YuJanggi.InGame
 
         private IGameMode     _inGameMode;
         private IJanggiEngine _engine;
-        private CancellationTokenSource _lifecycleCts;
-        private CancellationToken _lifecycleToken;
+        private readonly Dictionary<InGameStateType, IInGameState> _states = new();
 
+        private CancellationTokenSource _lifecycleCts;
+        private CancellationToken       _lifecycleToken;
+
+        private IInGameState _currViewState;
         #endregion
+
+        private IReadOnlyEngine EngineReferences
+            => _engine.References;
 
         private void Awake()
         {
@@ -39,6 +46,14 @@ namespace YuJanggi.InGame
 
             _engine = JanggiEngineFactory.CreateEngine(
                 JanggiOptionStore.JanggiSetting);
+
+            _states.Add(
+                InGameStateType.Live,
+                new InGameLiveState(_inGameView, EngineReferences, this));
+            _states.Add(
+                InGameStateType.Replay,
+                new InGameReplayState(_inGameView, _engine, this));
+ 
 
             _inGameMode = GameModeFactory.Create(
                 JanggiOptionStore.JanggiSetting.GameMode,
@@ -77,27 +92,37 @@ namespace YuJanggi.InGame
             var token = _lifecycleToken;
             await _inGameMode.InitializeAsync(token);
             token.ThrowIfCancellationRequested();
-            _inGameView.Initialize(_engine.Board);
+            _inGameView.Initialize(EngineReferences.Board);
         }
         private async UniTask StartGameAsync()
         {
             await _inGameMode.StartGameAsync(_lifecycleToken);
+
             _inGameView.StartGame(
                 PlayerTeam.Cho,
                 _inGameMode.GetPlayerType(PlayerTeam.Cho));
+
+            _currViewState = _states[InGameStateType.Live];
         }
+
+
         private void BindEvents()
         {
             _engine.BindEvents();
-            _inGameView.BindEvents(_engine.GameStateEvents);
-            _engine.GameEvents.OnTurnCompleted += HandleTurnCompleted;
-            _engine.GameEvents.OnUndoCompleted += HandleUndoCompleted;
+            var engine = _engine.References;
+            _inGameView.BindEvents(engine);
+
+            var events = engine.GameEvents;
+            events.OnTurnCompleted += HandleTurnCompleted;
+            events.OnUndoCompleted += HandleUndoCompleted;
         }
         private void UnBindEvents()
         {
-            _engine.GameEvents.OnTurnCompleted -= HandleTurnCompleted;
-            _engine.GameEvents.OnUndoCompleted -= HandleUndoCompleted;
-            _inGameView.UnBindEvents(_engine.GameStateEvents);
+            var engine = _engine.References;
+            var events = engine.GameEvents;
+            events.OnTurnCompleted -= HandleTurnCompleted;
+            events.OnUndoCompleted -= HandleUndoCompleted;
+            _inGameView.UnBindEvents(engine);
             _engine.UnBindEvents();
         }
 
@@ -108,46 +133,38 @@ namespace YuJanggi.InGame
         {
             var token = _lifecycleToken;
             await _inGameMode.EndGameAsync(token);
+
             token.ThrowIfCancellationRequested();
+
+            ChangeState(InGameStateType.Live);
 
             _inGameView.OnGameEnded(
                 result,
                 _inGameMode.GetPlayerType(result.Winner) == PlayerType.Local,
                 moveCount);
+
+            _inGameView.OpenResultView();
         }
         private void HandleUndoCompleted(UndoData data)
         {
-            _inGameView.ClearSelection();
-
-            if (data.UndoneMove is MoveRecord record)
-                _inGameView.RevertMoveRecord(record);
-
             var currentTeam = data.CurrentTurn;
             var currentType = _inGameMode.GetPlayerType(currentTeam);
 
-            _inGameView.ApplyScore(data.Score);
-            _inGameView.ApplyLiveUI(currentTeam, currentType);
-
-            if (data.CheckReleasedTeam is PlayerTeam releasedTeam)
-                _inGameView.PlayMeonggunEffect(releasedTeam);
-
-            if (data.CheckedTeam is PlayerTeam checkedTeam)
-                _inGameView.PlayJanggunEffect(checkedTeam);
+            _currViewState.HandleUndoCompleted(
+                data,
+                currentType);
 
             _inGameMode.BeginNextTurn(currentTeam);
         }
         private void HandleTurnCompleted(TurnData data)
         {
-            _inGameView.ClearSelection();
+            var nextTeam = data.ActingTeam ==
+                PlayerTeam.Cho ?
+                    PlayerTeam.Han :
+                    PlayerTeam.Cho;
 
-            var nextTeam = data.ActingTeam == PlayerTeam.Cho
-                ? PlayerTeam.Han
-                : PlayerTeam.Cho;
-
-            if (data.MovedRecord is MoveRecord record)
-                _inGameView.ApplyMoveRecord(record);
-
-            _inGameView.ApplyScore(data.Score);
+            var nextType = _inGameMode.GetPlayerType(nextTeam);
+            _currViewState.HandleTurnCompleted(data, nextType);
 
             if (data.GameResult is GameResultInfo result)
             {
@@ -155,18 +172,6 @@ namespace YuJanggi.InGame
 
                 return;
             }
-
-            var nextType = _inGameMode.GetPlayerType(nextTeam);
-
-            _inGameView.ApplyLiveUI(
-                nextTeam,
-                nextType);
-
-            if (data.CheckedTeam is PlayerTeam checkedTeam)
-                _inGameView.PlayJanggunEffect(checkedTeam);
-
-            if (data.CheckReleasedTeam is PlayerTeam releasedTeam)
-                _inGameView.PlayMeonggunEffect(releasedTeam);
 
             _inGameMode.BeginNextTurn(nextTeam);
         }
@@ -178,17 +183,7 @@ namespace YuJanggi.InGame
             int? id,
             IReadOnlyList<Pos> legal,
             IReadOnlyList<Pos> illegal)
-        {
-            if (id is null)
-            {
-                _inGameView.ClearSelection();
-                return;
-            }
-            _inGameView.SelectPiece(
-                id.Value,
-                legal,
-                illegal);
-        }
+            => _currViewState.HandleSelectPiece(id, legal, illegal);
         public void HandleRequestMove(Pos from, Pos to)
             => _inGameMode.RequestMoveAsync(
                     from,
@@ -201,8 +196,10 @@ namespace YuJanggi.InGame
             => _inGameMode.PassTurnAsync(_lifecycleToken).Forget();
         public void HandleGiveUpButton()
             => _inGameMode.GiveUpAsync(_lifecycleToken).Forget();
-        public void HandlePreviousButton() { }
-        public void HandleNextButton() { }
+        public void HandlePreviousButton()
+            => _currViewState.HandlePreviousButton();
+        public void HandleNextButton()
+            => _currViewState.HandleNextButton();
 
         public void HandleLobbyButton()
             => ReturnToLobbyAsync().Forget();
@@ -228,14 +225,24 @@ namespace YuJanggi.InGame
             await _inGameMode.InitializeAsync(token);
             token.ThrowIfCancellationRequested();
 
-            _inGameView.SyncLiveView(
-                _engine.Board,
+            _inGameView.PrepareRematchView(
+                EngineReferences.Board,
                 PlayerTeam.Cho,
                 _inGameMode.GetPlayerType(PlayerTeam.Cho));
 
             await _inGameMode.StartGameAsync(token);
         }
         #endregion
+        public void ChangeState(InGameStateType type)
+        {
+            var nextState = _states[type];
+            if (ReferenceEquals(_currViewState, nextState))
+                return;
+
+            _currViewState?.HandleExit();
+            _currViewState = nextState;
+            _currViewState.HandleEnter();
+        }
     }
 }
 

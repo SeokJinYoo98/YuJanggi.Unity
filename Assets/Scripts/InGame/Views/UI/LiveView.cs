@@ -32,7 +32,7 @@ namespace YuJanggi.InGame.Views.UI
 
         }
         // 이벤트 처리 중
-        public void     UpdateTotalTurn(int currTurn, int totalTurn)
+        public void     HandleRecordChanged(int currTurn, int totalTurn)
         {
             _currTurn  = currTurn;
             _totalTurn = totalTurn;
@@ -42,12 +42,17 @@ namespace YuJanggi.InGame.Views.UI
                 _currTurn,
                 _totalTurn);
         }
-        public void     UpdateTimer((PlayerTeam team, int time) info)
+        public void     HandleTimeChanged((PlayerTeam team, int time) info)
         {
             if (info.team == PlayerTeam.Han)
                 _hanTimerText.SetText("{0}:시간", info.time);
             else
                 _choTimerText.SetText("시간:{0}", info.time);
+        }
+        public void HandleUpdateScore((int cho, int han) score)
+        {
+            UpdateScore(PlayerTeam.Cho, score.cho);
+            UpdateScore(PlayerTeam.Han, score.han);
         }
         //
 
@@ -75,14 +80,14 @@ namespace YuJanggi.InGame.Views.UI
                 _turnText.SetText("차례:한");
             }
         }
-        public void UpdateScore(PlayerTeam team, int score)
+
+        private void UpdateScore(PlayerTeam team, int score)
         {
             if (team == PlayerTeam.Cho)
                 _choScoreText.SetText("점수:{0}", score);
             else
                 _hanScoreText.SetText("{0}:점수", score);
         }
-
 
     }
 }
