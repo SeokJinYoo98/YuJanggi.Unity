@@ -27,7 +27,8 @@ namespace YuJanggi.InGame.Session
         //{
         //    base.Enter();
         //    _engine.ToLiveRecord();
-        //    _boardView.ClearSelection();
+        //
+        //   
         //    _boardView.SyncBoardState(_engine.Board);
         //}
         //// 라이브를 정리한다.

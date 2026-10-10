@@ -39,10 +39,32 @@ namespace YuJanggi.InGame.Mode
         {
             _localInput.Initialize();
         }
+        public override void BeginNextTurn(PlayerTeam team)
+        {
+            _localInput.ResetPlayer();
+
+            _cho.ResetSelection();
+            _han.ResetSelection();
+
+            var nextPlayer = team == PlayerTeam.Cho ? _cho : _han;
+            _localInput.SetPlayer(nextPlayer);
+        }
+        public override PlayerType GetPlayerType(PlayerTeam team)
+            => team == PlayerTeam.Cho ?
+                _cho.Type :
+                _han.Type;
 
         protected override void OnTick(float deltaTime)
             => _engine.Tick(deltaTime);
-
+        protected override void OnGameStart()
+        {
+            _engine.StartEngine();
+            _localInput.SetPlayer(_cho);
+        }
+        protected override void OnGameEnd()
+        {
+            _localInput.ResetPlayer();
+        }
         protected override UniTask OnRequestMoveAsync(
             Pos from,
             Pos to,
@@ -54,30 +76,25 @@ namespace YuJanggi.InGame.Mode
             return UniTask.CompletedTask;
         }
 
-
-
-        protected override void OnStartGame()
+        protected override UniTask OnPassTurnAsync(
+            CancellationToken token)
         {
-            _engine.StartEngine();
-            _localInput.SetPlayer(_cho);
+            _engine.Handicap();
+            return UniTask.CompletedTask;
         }
 
-        public override void BeginNextTurn(PlayerTeam team)
+        protected override UniTask OnGiveUpAsync(
+            CancellationToken token)
         {
-            _localInput.ResetPlayer();
-            var nextPlayer = team == PlayerTeam.Cho ?
-                _cho : _han;
-            _localInput.SetPlayer(nextPlayer);
+            _engine.GiveUp();
+            return UniTask.CompletedTask;
         }
 
-        public override PlayerType GetPlayerType(PlayerTeam team)
-            => team == PlayerTeam.Cho ?
-                _cho.Type :
-                _han.Type;
-
-        protected override void OnStopGame()
+        protected override UniTask OnTakeBackAsync(
+            CancellationToken token)
         {
-            _localInput.ResetPlayer();
+            _engine.Undo();
+            return UniTask.CompletedTask;
         }
     }
 }

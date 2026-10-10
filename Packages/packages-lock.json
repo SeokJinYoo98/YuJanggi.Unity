@@ -8,7 +8,7 @@
       "hash": "e5acc106ee196bc5a32fb14cdf2987b0f96d11e0"
     },
     "com.seokjinyoo.yujanggi.engine": {
-      "version": "file:D:/Git/YuJanggi/upm/engine/com.seokjinyoo.yujanggi.engine-2.6.1.tgz",
+      "version": "file:D:/Git/YuJanggi/upm/engine/com.seokjinyoo.yujanggi.engine-2.6.2.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {}

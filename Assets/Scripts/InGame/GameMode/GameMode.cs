@@ -1,29 +1,34 @@
-using YuJanggi.Core.InGame;
+using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace YuJanggi.InGame.Mode
 {
-    using Cysharp.Threading.Tasks;
-    using DG.Tweening.Core.Easing;
     using Engine.Domain;
     using Engine.JanggiEngine;
-    using Input;
-    using Store;
-    using System.Threading;
-    using Views;
-    using YuJanggi.Engine.JanggiOption;
 
     internal interface IGameMode
     {
         void Initialize();
         void StartGame();
-        void StopGame();
+        void EndGame();
         void Tick(float deltaTime);
+
+        PlayerType GetPlayerType(PlayerTeam team);
+        void BeginNextTurn(PlayerTeam nextTeam);
+
+
         UniTask RequestMoveAsync(
             Pos from,
             Pos to,
             CancellationToken token = default);
-        PlayerType GetPlayerType(PlayerTeam team);
-        void BeginNextTurn(PlayerTeam nextTeam);
+        public UniTask PassTurnAsync(
+            CancellationToken token = default);
+        public UniTask GiveUpAsync(
+            CancellationToken token = default);
+        public UniTask TakeBackAsync(
+            CancellationToken token = default);
     }
     internal abstract class GameMode : IGameMode
     {
@@ -31,8 +36,6 @@ namespace YuJanggi.InGame.Mode
         protected readonly IJanggiEngine _engine;
         private bool _play = false;
         #endregion
-
-
         protected GameMode(
             IJanggiEngine engine)
         {
@@ -42,14 +45,13 @@ namespace YuJanggi.InGame.Mode
         public void StartGame()
         {
             _play = true;
-            OnStartGame();
+            OnGameStart();
         }
-        public void StopGame()
+        public void EndGame()
         {
             _play = false;
-            OnStopGame();
+            OnGameEnd();
         }
-        public abstract void Initialize();
         public async UniTask RequestMoveAsync(
             Pos from,
             Pos to,
@@ -69,6 +71,66 @@ namespace YuJanggi.InGame.Mode
                 UnityEngine.Debug.LogException(exception);
             }
         }
+        public async UniTask PassTurnAsync(
+            CancellationToken token = default)
+        {
+            try
+            {
+                token.ThrowIfCancellationRequested();
+                await OnPassTurnAsync(token);
+            }
+            catch (OperationCanceledException)
+                when (token.IsCancellationRequested)
+            {
+                // 요청 취소
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+            }
+        }
+
+
+
+        public async UniTask GiveUpAsync(
+            CancellationToken token = default)
+        {
+            try
+            {
+                token.ThrowIfCancellationRequested();
+                await OnGiveUpAsync(token);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                // 요청 생명주기 종료에 따른 취소입니다.
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+            }
+        }
+
+        public async UniTask TakeBackAsync(
+            CancellationToken token = default)
+        {
+            try
+            {
+                token.ThrowIfCancellationRequested();
+                await OnTakeBackAsync(token);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                // 요청 생명주기 종료에 따른 취소입니다.
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+            }
+
+        }
+
+        public abstract void Initialize();
+
         public void Tick(float deltaTime)
         {
             if (_play)
@@ -78,11 +140,21 @@ namespace YuJanggi.InGame.Mode
         public abstract PlayerType GetPlayerType(PlayerTeam team);
 
         protected abstract void OnTick(float deltaTime);
+
+        protected abstract void OnGameStart();
+        protected abstract void OnGameEnd();
+
+
+
         protected abstract UniTask OnRequestMoveAsync(
             Pos from,
             Pos to,
             CancellationToken token);
-        protected abstract void OnStartGame();
-        protected abstract void OnStopGame();
+        protected abstract UniTask OnPassTurnAsync(
+            CancellationToken token);
+        protected abstract UniTask OnGiveUpAsync(
+            CancellationToken token);
+        protected abstract UniTask OnTakeBackAsync(
+            CancellationToken token);
     }
 }

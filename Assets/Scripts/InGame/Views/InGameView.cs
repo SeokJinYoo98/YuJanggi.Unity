@@ -20,35 +20,30 @@ namespace YuJanggi.InGame.Views
         [SerializeField] private BoardView       _boardView;
         [SerializeField] private CheckEffectView _janggunEffect;
 
-        public ResultView Result
-            => _resultView;
-        public LiveView Live
-            => _liveView;
-        public BoardView Board
-            => _boardView;
-        public CheckEffectView CheckEffect
-            => _janggunEffect;
-
-   
         public void Initialize(IReadOnlyBoard board)
         {
             _boardView.InitPieces(board);
             _liveView.SetLiveText();
         }
+        public void StartGame(
+            PlayerTeam turn,
+            PlayerType type)
+        {
+            _liveView.UpdateTurn(turn, type);
+        }
+        public void ClearSelection()
+            => _boardView.ClearSelection();
 
         public void SelectPiece(
-            int? pieceId,
+            int pieceId,
             IReadOnlyList<Pos> legal,
             IReadOnlyList<Pos> illegal)
         {
-            _boardView.ClearSelection();
-            if (pieceId is null)
-                return;
-
-            _boardView.SelectPiece(pieceId.Value);
+            ClearSelection();
+            _boardView.SelectPiece(pieceId);
             _boardView.ShowMoveGuides(legal, illegal);
         }
- 
+
         public void BindEvents(IReadOnlyGameStateEvents events)
         {
             events.OnRecordChanged += _liveView.UpdateTotalTurn;
@@ -61,19 +56,18 @@ namespace YuJanggi.InGame.Views
         }
         public void ApplyLiveUI(
             PlayerTeam nextTeam,
-            PlayerType nextType,
-            (int Cho, int Han) score,
-            int nextMoveNumber)
+            PlayerType nextType)
         {
             _liveView.UpdateTurn(nextTeam, nextType);
+        }
+        public void ApplyScore((int Cho, int Han) score)
+        {
             _liveView.UpdateScore(PlayerTeam.Cho, score.Cho);
             _liveView.UpdateScore(PlayerTeam.Han, score.Han);
         }
         public void ApplyMoveRecord(
             MoveRecord record)
         {
-            _boardView.ClearSelection();
-
             _boardView.ApplyMovement(
                record.MovedPiece,
                record.From,
@@ -84,6 +78,19 @@ namespace YuJanggi.InGame.Views
                     record.CapturedPiece,
                     record.To);
         }
+        public void RevertMoveRecord(MoveRecord record)
+        {
+            _boardView.RevertMovement(
+               record.MovedPiece,
+               record.From,
+               record.To);
+
+            if (record.IsCaptured)
+                _boardView.RevertCapture(
+                    record.CapturedPiece,
+                    record.To);
+        }
+
         public void PlayJanggunEffect(PlayerTeam team)
             => _janggunEffect.PlayJanggun(team);
         public void PlayMeonggunEffect(PlayerTeam team)

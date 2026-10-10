@@ -28,7 +28,6 @@ namespace YuJanggi.InGame
 
         #endregion
 
-
         private void Awake()
         {
             _engine = JanggiEngineFactory.CreateEngine(
@@ -61,23 +60,51 @@ namespace YuJanggi.InGame
         {
             _engine.StartEngine();
             _inGameMode.StartGame();
+            _inGameView.StartGame(
+                PlayerTeam.Cho,
+                _inGameMode.GetPlayerType(PlayerTeam.Cho));
         }
         private void BindEvents()
         {
             _engine.BindEvents();
-            _engine.GameEvents.OnTurnCompleted += HandleTurnCompleted;
             _inGameView.BindEvents(_engine.GameStateEvents);
+            _engine.GameEvents.OnTurnCompleted += HandleTurnCompleted;
+            _engine.GameEvents.OnUndoCompleted += HandleUndoCompleted;
         }
         private void UnBindEvents()
         {
             _engine.GameEvents.OnTurnCompleted -= HandleTurnCompleted;
+            _engine.GameEvents.OnUndoCompleted -= HandleUndoCompleted;
             _inGameView.UnBindEvents(_engine.GameStateEvents);
             _engine.UnBindEvents();
         }
 
         #region Engine Handle
+        private void HandleUndoCompleted(UndoData data)
+        {
+            _inGameView.ClearSelection();
+
+            if (data.UndoneMove is MoveRecord record)
+                _inGameView.RevertMoveRecord(record);
+
+            var currentTeam = data.CurrentTurn;
+            var currentType = _inGameMode.GetPlayerType(currentTeam);
+
+            _inGameView.ApplyScore(data.Score);
+            _inGameView.ApplyLiveUI(currentTeam, currentType);
+
+            if (data.CheckReleasedTeam is PlayerTeam releasedTeam)
+                _inGameView.PlayMeonggunEffect(releasedTeam);
+
+            if (data.CheckedTeam is PlayerTeam checkedTeam)
+                _inGameView.PlayJanggunEffect(checkedTeam);
+
+            _inGameMode.BeginNextTurn(currentTeam);
+        }
         private void HandleTurnCompleted(TurnData data)
         {
+            _inGameView.ClearSelection();
+
             var nextTeam = data.ActingTeam == PlayerTeam.Cho
                 ? PlayerTeam.Han
                 : PlayerTeam.Cho;
@@ -85,9 +112,11 @@ namespace YuJanggi.InGame
             if (data.MovedRecord is MoveRecord record)
                 _inGameView.ApplyMoveRecord(record);
 
+            _inGameView.ApplyScore(data.Score);
+
             if (data.GameResult is GameResultInfo result)
             {
-                _inGameMode.StopGame();
+                _inGameMode.EndGame();
 
                 _inGameView.OnGameEnded(
                     result,
@@ -99,13 +128,9 @@ namespace YuJanggi.InGame
 
             var nextType = _inGameMode.GetPlayerType(nextTeam);
 
-            _inGameMode.BeginNextTurn(nextTeam);
-
             _inGameView.ApplyLiveUI(
                 nextTeam,
-                nextType,
-                data.Score,
-                data.TotalTurn);
+                nextType);
 
             if (data.CheckedTeam is PlayerTeam checkedTeam)
                 _inGameView.PlayJanggunEffect(checkedTeam);
@@ -113,29 +138,49 @@ namespace YuJanggi.InGame
             if (data.CheckReleasedTeam is PlayerTeam releasedTeam)
                 _inGameView.PlayMeonggunEffect(releasedTeam);
 
+            _inGameMode.BeginNextTurn(nextTeam);
         }
         #endregion
 
         #region Input Handle
-        public void RequestMove(Pos from, Pos to)
+
+        public void SelectPiece(
+            int? id,
+            IReadOnlyList<Pos> legal,
+            IReadOnlyList<Pos> illegal)
+        {
+            if (id is null)
+            {
+                _inGameView.ClearSelection();
+                return;
+            }
+            _inGameView.SelectPiece(
+                id.Value,
+                legal,
+                illegal);
+        }
+        public void HandleRequestMove(Pos from, Pos to)
             => _inGameMode.RequestMoveAsync(
                     from,
                     to,
                     this.GetCancellationTokenOnDestroy()
                 ).Forget();
-        public void SelectPiece(
-            int? id,
-            IReadOnlyList<Pos> legal,
-            IReadOnlyList<Pos> illegal)
-            => _inGameView.SelectPiece(id, legal, illegal);
+        public void HandleTakebackButton()
+            => _inGameMode.TakeBackAsync().Forget();
+        public void HandlePassTurnButton()
+            => _inGameMode.PassTurnAsync().Forget();
 
-        public void HandleTakebackButton() { }
-        public void HandlePassTurnButton() { }
-        public void HandleGiveUpButton() { }
+        public void HandleGiveUpButton()
+        {
+
+        }
         public void HandlePreviousButton() { }
         public void HandleNextButton() { }
+
+
         public void HandleRematchButton() { }
         public void HandleReplayButton() { }
+        public void HandleLobbyButton() { }
         #endregion
     }
 }

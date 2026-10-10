@@ -6,7 +6,7 @@ namespace YuJanggi.Core.InGame
 {
    public interface IGameCommandReceiver
     {
-        void RequestMove(Pos from, Pos to);
+        void HandleRequestMove(Pos from, Pos to);
         void SelectPiece(int? id, IReadOnlyList<Pos> legal, IReadOnlyList<Pos> illegal);
     }
    public interface IBoardInputReceiver
@@ -22,7 +22,7 @@ namespace YuJanggi.Core.InGame
     }
     public interface ILocalPlayer : IInGamePlayer, IBoardInputReceiver
     {
-
+        public void ResetSelection();
     }
     public abstract class InGamePlayer
     {

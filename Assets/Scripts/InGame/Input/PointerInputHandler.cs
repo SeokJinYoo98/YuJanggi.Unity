@@ -19,35 +19,33 @@ namespace YuJanggi.InGame.Input
         private IBoardInputReceiver _currReceiver;
         void Awake()
         {
-            Debug.Log("Handler: Awake");
             _input = new PlayerInputs();
             _actions = _input.Player;
         }
         void OnEnable()
         {
-            Debug.Log("Handler: OnEnable");
             _actions.PointerPress.Enable();
             _actions.PointerPosition.Enable();
             _actions.PointerPress.performed += OnPointerPressPerformed;
         }
         void OnDisable()
         {
-            Debug.Log("Handler: OnDisable");
             _actions.PointerPress.performed -= OnPointerPressPerformed;
             _actions.PointerPosition.Disable();
             _actions.PointerPress.Disable();
         }
         void OnDestroy()
         {
-            Debug.Log("Handler: OnDestroy");
+   
             _input?.Dispose();
         }
 
         private void OnPointerPressPerformed(InputAction.CallbackContext context)
         {
-            Debug.Log("Handler: _currReceiver null");
-            if (_currReceiver == null) return;
-            Debug.Log("Handler: OnPointerPressPerformed");
+  
+            if (_currReceiver == null)
+                return;
+
             if (!TryRaycastToBoard(out var pos))
             {
                 _currReceiver.HandleInvalidClick();
@@ -58,7 +56,6 @@ namespace YuJanggi.InGame.Input
         }
         private bool TryRaycastToBoard(out Pos pos)
         {
-            Debug.Log("Handler: TryRaycastToBoard");
             pos = default;
 
             if (_camera == null)
@@ -80,7 +77,6 @@ namespace YuJanggi.InGame.Input
         }
         public void  Initialize()
         {
-            Debug.Log("Handler: Initialize");
             _camera     = Camera.main;
 
             if (_camera == null)
