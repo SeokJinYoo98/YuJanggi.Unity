@@ -10,15 +10,20 @@ namespace YuJanggi.InGame.Mode
 
     internal interface IGameMode
     {
-        void Initialize();
-        void StartGame();
-        void EndGame();
+
         void Tick(float deltaTime);
 
         PlayerType GetPlayerType(PlayerTeam team);
         void BeginNextTurn(PlayerTeam nextTeam);
 
-
+        UniTask InitializeAsync(
+            CancellationToken token = default);
+        UniTask StartGameAsync(
+            CancellationToken token = default);
+        UniTask EndGameAsync(
+            CancellationToken token = default);
+        UniTask<bool> RequestRematchAsync(
+            CancellationToken token = default);
         UniTask RequestMoveAsync(
             Pos from,
             Pos to,
@@ -41,16 +46,42 @@ namespace YuJanggi.InGame.Mode
         {
             _engine = engine;
         }
-  
-        public void StartGame()
+
+        public void Tick(float deltaTime)
         {
-            _play = true;
-            OnGameStart();
+            if (_play)
+                OnTick(deltaTime);
         }
-        public void EndGame()
+        public abstract void BeginNextTurn(PlayerTeam team);
+        public abstract PlayerType GetPlayerType(PlayerTeam team);
+ 
+        protected abstract void OnTick(float deltaTime);
+
+
+        public async UniTask EndGameAsync(
+            CancellationToken token = default)
         {
             _play = false;
-            OnGameEnd();
+            token.ThrowIfCancellationRequested();
+            await OnGameEndAsync(token);
+        }
+        public async UniTask InitializeAsync(
+            CancellationToken token = default)
+        {
+            token.ThrowIfCancellationRequested();
+            _play = false;
+            _engine.InitEngine();
+            await OnInitializeAsync(token);
+        }
+        public async UniTask StartGameAsync(
+            CancellationToken token = default)
+        {
+            _play = false;
+            token.ThrowIfCancellationRequested();
+            _engine.StartEngine();
+            await OnGameStartAsync(token);
+            token.ThrowIfCancellationRequested();
+            _play = true;
         }
         public async UniTask RequestMoveAsync(
             Pos from,
@@ -89,9 +120,6 @@ namespace YuJanggi.InGame.Mode
                 Debug.LogException(exception);
             }
         }
-
-
-
         public async UniTask GiveUpAsync(
             CancellationToken token = default)
         {
@@ -109,7 +137,6 @@ namespace YuJanggi.InGame.Mode
                 Debug.LogException(exception);
             }
         }
-
         public async UniTask TakeBackAsync(
             CancellationToken token = default)
         {
@@ -129,23 +156,21 @@ namespace YuJanggi.InGame.Mode
 
         }
 
-        public abstract void Initialize();
-
-        public void Tick(float deltaTime)
+        public async UniTask<bool> RequestRematchAsync(
+            CancellationToken token = default)
         {
-            if (_play)
-                OnTick(deltaTime);
+            token.ThrowIfCancellationRequested();
+            return await OnRequestRematchAsync(token);
         }
-        public abstract void BeginNextTurn(PlayerTeam team);
-        public abstract PlayerType GetPlayerType(PlayerTeam team);
 
-        protected abstract void OnTick(float deltaTime);
-
-        protected abstract void OnGameStart();
-        protected abstract void OnGameEnd();
-
-
-
+        protected abstract UniTask<bool> OnRequestRematchAsync(
+            CancellationToken token);
+        protected abstract UniTask OnInitializeAsync(
+            CancellationToken token);
+        protected abstract UniTask OnGameEndAsync(
+            CancellationToken token);
+        protected abstract UniTask OnGameStartAsync(
+            CancellationToken token);
         protected abstract UniTask OnRequestMoveAsync(
             Pos from,
             Pos to,

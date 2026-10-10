@@ -31,6 +31,17 @@ namespace YuJanggi.InGame.Views
         {
             _liveView.UpdateTurn(turn, type);
         }
+        public void SyncLiveView(
+            IReadOnlyBoard board,
+            PlayerTeam team,
+            PlayerType type)
+        {
+            _boardView.SyncBoardState(board);
+            _liveView.SetLiveText();
+            _liveView.UpdateTurn(team, type);
+            _resultView.Close();
+        }
+
         public void ClearSelection()
             => _boardView.ClearSelection();
 

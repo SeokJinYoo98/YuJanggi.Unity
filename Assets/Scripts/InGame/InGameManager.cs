@@ -1,18 +1,20 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 namespace YuJanggi.InGame
 {
     using Input;
     using Mode;
-    using UnityEngine.SocialPlatforms.Impl;
+
     using Views;
-    using YuJanggi.Core.InGame;
-    using YuJanggi.Engine.Domain;
-    using YuJanggi.Engine.JanggiEngine;
-    using YuJanggi.InGame.Views.Board;
-    using YuJanggi.Store;
+    using Core.InGame;
+    using Engine.Domain;
+    using Engine.JanggiEngine;
+ 
+    using Store;
 
     public class InGameManager : MonoBehaviour, IGameCommandReceiver
     {
@@ -25,11 +27,16 @@ namespace YuJanggi.InGame
 
         private IGameMode     _inGameMode;
         private IJanggiEngine _engine;
+        private CancellationTokenSource _lifecycleCts;
+        private CancellationToken _lifecycleToken;
 
         #endregion
 
         private void Awake()
         {
+            _lifecycleCts = new CancellationTokenSource();
+            _lifecycleToken = _lifecycleCts.Token;
+
             _engine = JanggiEngineFactory.CreateEngine(
                 JanggiOptionStore.JanggiSetting);
 
@@ -39,27 +46,42 @@ namespace YuJanggi.InGame
                 new InputHandlerFactory(_inputs, transform),
                 this);
         }
+        private void Update()
+            => _inGameMode?.Tick(Time.deltaTime);
         private void OnEnable()
             => BindEvents();
         private void OnDisable()
             => UnBindEvents();
         private void Start()
+            => InitializeAndStartAsync().Forget();
+        private void OnDestroy()
         {
-            Initialize();
-            StartGame();
+            try
+            {
+                _lifecycleCts.Cancel();
+            }
+            finally
+            {
+                _lifecycleCts.Dispose();
+            }
         }
-        private void Update()
-            => _inGameMode?.Tick(Time.deltaTime);
-        private void Initialize()
+
+        private async UniTask InitializeAndStartAsync()
         {
-            _engine.InitEngine();
-            _inGameMode.Initialize();
+            await InitializeAsync();
+            await StartGameAsync();
+        }
+
+        private async UniTask InitializeAsync()
+        {
+            var token = _lifecycleToken;
+            await _inGameMode.InitializeAsync(token);
+            token.ThrowIfCancellationRequested();
             _inGameView.Initialize(_engine.Board);
         }
-        private void StartGame()
+        private async UniTask StartGameAsync()
         {
-            _engine.StartEngine();
-            _inGameMode.StartGame();
+            await _inGameMode.StartGameAsync(_lifecycleToken);
             _inGameView.StartGame(
                 PlayerTeam.Cho,
                 _inGameMode.GetPlayerType(PlayerTeam.Cho));
@@ -80,6 +102,19 @@ namespace YuJanggi.InGame
         }
 
         #region Engine Handle
+        private async UniTask EndGameAsync(
+            GameResultInfo result,
+            int moveCount)
+        {
+            var token = _lifecycleToken;
+            await _inGameMode.EndGameAsync(token);
+            token.ThrowIfCancellationRequested();
+
+            _inGameView.OnGameEnded(
+                result,
+                _inGameMode.GetPlayerType(result.Winner) == PlayerType.Local,
+                moveCount);
+        }
         private void HandleUndoCompleted(UndoData data)
         {
             _inGameView.ClearSelection();
@@ -116,12 +151,7 @@ namespace YuJanggi.InGame
 
             if (data.GameResult is GameResultInfo result)
             {
-                _inGameMode.EndGame();
-
-                _inGameView.OnGameEnded(
-                    result,
-                    _inGameMode.GetPlayerType(result.Winner) == PlayerType.Local,
-                    data.MoveCount);
+                EndGameAsync(result, data.MoveCount).Forget();
 
                 return;
             }
@@ -163,24 +193,48 @@ namespace YuJanggi.InGame
             => _inGameMode.RequestMoveAsync(
                     from,
                     to,
-                    this.GetCancellationTokenOnDestroy()
+                    _lifecycleToken
                 ).Forget();
         public void HandleTakebackButton()
-            => _inGameMode.TakeBackAsync().Forget();
+            => _inGameMode.TakeBackAsync(_lifecycleToken).Forget();
         public void HandlePassTurnButton()
-            => _inGameMode.PassTurnAsync().Forget();
-
+            => _inGameMode.PassTurnAsync(_lifecycleToken).Forget();
         public void HandleGiveUpButton()
-        {
-
-        }
+            => _inGameMode.GiveUpAsync(_lifecycleToken).Forget();
         public void HandlePreviousButton() { }
         public void HandleNextButton() { }
 
+        public void HandleLobbyButton()
+            => ReturnToLobbyAsync().Forget();
 
-        public void HandleRematchButton() { }
-        public void HandleReplayButton() { }
-        public void HandleLobbyButton() { }
+        private async UniTask ReturnToLobbyAsync()
+        {
+            var token = _lifecycleToken;
+            await _inGameMode.EndGameAsync(token);
+            token.ThrowIfCancellationRequested();
+            SceneManager.LoadScene("LobbyScene");
+        }
+        public void HandleRematchButton()
+            => RematchAsync().Forget();
+
+        private async UniTask RematchAsync()
+        {
+            var token = _lifecycleToken;
+
+            // 재대결이 승인된 경우에만 기존 게임을 초기화합니다.
+            if (!await _inGameMode.RequestRematchAsync(token))
+                return;
+
+            await _inGameMode.InitializeAsync(token);
+            token.ThrowIfCancellationRequested();
+
+            _inGameView.SyncLiveView(
+                _engine.Board,
+                PlayerTeam.Cho,
+                _inGameMode.GetPlayerType(PlayerTeam.Cho));
+
+            await _inGameMode.StartGameAsync(token);
+        }
         #endregion
     }
 }

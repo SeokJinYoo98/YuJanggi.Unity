@@ -9,6 +9,7 @@ namespace YuJanggi.InGame.Mode
     using Input;
     using Views;
     using YuJanggi.InGame.Player;
+    using NUnit.Framework.Constraints;
 
     internal sealed class LocalMode : GameMode
     {
@@ -35,10 +36,7 @@ namespace YuJanggi.InGame.Mode
                 receiver,
                 _engine.ControllerQuery);
         }
-        public override void Initialize()
-        {
-            _localInput.Initialize();
-        }
+
         public override void BeginNextTurn(PlayerTeam team)
         {
             _localInput.ResetPlayer();
@@ -56,14 +54,18 @@ namespace YuJanggi.InGame.Mode
 
         protected override void OnTick(float deltaTime)
             => _engine.Tick(deltaTime);
-        protected override void OnGameStart()
+
+        protected override UniTask OnGameStartAsync(
+            CancellationToken token)
         {
-            _engine.StartEngine();
             _localInput.SetPlayer(_cho);
+            return UniTask.CompletedTask;
         }
-        protected override void OnGameEnd()
+        protected override UniTask OnGameEndAsync(
+            CancellationToken token)
         {
             _localInput.ResetPlayer();
+            return UniTask.CompletedTask;
         }
         protected override UniTask OnRequestMoveAsync(
             Pos from,
@@ -71,18 +73,17 @@ namespace YuJanggi.InGame.Mode
             CancellationToken token)
         {
             if (!_engine.TryProcessTurn(from, to))
-                UnityEngine.Debug.LogWarning($"[LocalMode] 이동이 거절되었습니다: {from} -> {to}");
+                UnityEngine.Debug.LogWarning(
+                    $"[LocalMode] 이동이 거절되었습니다: {from} -> {to}");
 
             return UniTask.CompletedTask;
         }
-
         protected override UniTask OnPassTurnAsync(
             CancellationToken token)
         {
             _engine.Handicap();
             return UniTask.CompletedTask;
         }
-
         protected override UniTask OnGiveUpAsync(
             CancellationToken token)
         {
@@ -90,10 +91,23 @@ namespace YuJanggi.InGame.Mode
             return UniTask.CompletedTask;
         }
 
+        protected override UniTask<bool> OnRequestRematchAsync(
+            CancellationToken token)
+            => UniTask.FromResult(true);
+
         protected override UniTask OnTakeBackAsync(
             CancellationToken token)
         {
             _engine.Undo();
+            return UniTask.CompletedTask;
+        }
+        protected override UniTask OnInitializeAsync(
+            CancellationToken token)
+        {
+            _localInput.Initialize();
+            _localInput.ResetPlayer();
+            _cho.ResetSelection();
+            _han.ResetSelection();
             return UniTask.CompletedTask;
         }
     }
