@@ -15,8 +15,9 @@ namespace YuJanggi.InGame.Input
         private PlayerInputs.PlayerActions _actions;
 
         private Camera  _camera;
-
+        private bool _pause = false;
         private IBoardInputReceiver _currReceiver;
+
         void Awake()
         {
             _input = new PlayerInputs();
@@ -58,7 +59,7 @@ namespace YuJanggi.InGame.Input
         {
             pos = default;
 
-            if (_camera == null)
+            if (_camera == null || _pause)
                 return false;
 
             Vector2 pointerPosition = _actions.PointerPosition.ReadValue<Vector2>();
@@ -111,6 +112,12 @@ namespace YuJanggi.InGame.Input
                 _camera.transform.eulerAngles = new Vector3(90, 0, 0);
             }
         }
+
+        public void Pause()
+            => _pause = true;
+
+        public void Resume()
+            => _pause = false;
     }
 }
 

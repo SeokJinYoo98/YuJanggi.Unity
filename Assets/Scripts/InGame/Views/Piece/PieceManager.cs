@@ -22,6 +22,8 @@ namespace YuJanggi.InGame.Views.Piece
 
         public bool TryGetPiece(int id, out PieceView piece)
             => _views.TryGetValue(id, out piece);
+
+
         public void ResetViews(IReadOnlyBoard boardModel)
         {
             int width = boardModel.WIDTH;

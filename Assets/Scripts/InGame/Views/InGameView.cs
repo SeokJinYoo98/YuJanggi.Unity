@@ -26,7 +26,8 @@ namespace YuJanggi.InGame.Views
         {
             CloseResultView();
             SyncBoardState(board);
-            SyncLiveUI(team, type);
+            SyncLiveUI();
+            _liveView.UpdateTurn(team, type);
         }
         public void Initialize(IReadOnlyBoard board)
         {
@@ -39,19 +40,18 @@ namespace YuJanggi.InGame.Views
         {
             _liveView.UpdateTurn(turn, type);
         }
-        public void SyncLiveUI(
-            PlayerTeam team,
-            PlayerType type)
-        {
-            _liveView.SetLiveText();
-            _liveView.UpdateTurn(team, type);
-        }
+        public void SyncReplayUI()
+            => _liveView.SetReplayText();
+        public void SyncLiveUI()
+            => _liveView.SetLiveText();
 
         public void SyncBoardState(IReadOnlyBoard board)
             => _boardView.SyncBoardState(board);
-
+ 
         public void ClearSelection()
             => _boardView.ClearSelection();
+
+
 
         public void SelectPiece(
             int pieceId,
@@ -60,6 +60,10 @@ namespace YuJanggi.InGame.Views
         {
             ClearSelection();
             _boardView.SelectPiece(pieceId);
+
+            if (legal == null && illegal == null)
+                return;
+
             _boardView.ShowMoveGuides(legal, illegal);
         }
 

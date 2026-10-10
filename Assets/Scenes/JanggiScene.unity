@@ -1684,7 +1684,7 @@ PrefabInstance:
       objectReference: {fileID: 1678781764}
     - target: {fileID: 6519653713187152821, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: HandleReplayButton
+      value: HandlePreviousButton
       objectReference: {fileID: 0}
     - target: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
       propertyPath: m_text

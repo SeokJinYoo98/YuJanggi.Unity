@@ -1,11 +1,12 @@
 using System.Collections.Generic;
-using YuJanggi.Engine.Domain;
-using YuJanggi.Engine.JanggiBoard;
-using YuJanggi.Engine.JanggiRecord;
-using YuJanggi.InGame.Views;
-
 namespace YuJanggi.Core.InGame
 {
+    using Engine.Domain;
+    using Engine.JanggiBoard;
+    using YuJanggi.InGame.Mode;
+
+    // 코어에서 인게임뷰를 바라보는것은 참;; ㅋㅋㅋ
+    using YuJanggi.InGame.Views;
     public enum InGameStateType { Live, Replay }
     public interface IStateMachine
     {
@@ -13,8 +14,9 @@ namespace YuJanggi.Core.InGame
     }
     public interface IInGameState
     {
-        void HandleEnter();
-        void HandleExit();
+        InGameStateType State { get; }
+        void HandleEnter(IGameMode mode);
+        void HandleExit(IGameMode mode);
         void HandleTurnCompleted(TurnData data, PlayerType nextType);
         void HandleUndoCompleted(UndoData data, PlayerType currentType);
         void HandleSelectPiece(
@@ -23,7 +25,6 @@ namespace YuJanggi.Core.InGame
             IReadOnlyList<Pos> illegal);
         void HandlePreviousButton();
         void HandleNextButton();
-        void HandleReplayButton();
     }
 
     public abstract class InGameState : IInGameState
@@ -31,7 +32,7 @@ namespace YuJanggi.Core.InGame
         protected readonly IReadOnlyBoard  _board;
         protected readonly InGameView      _inGameView;
         protected readonly IStateMachine   _stateMachine;
-
+        public abstract InGameStateType State { get; }
         protected InGameState(
             InGameView view,
             IReadOnlyBoard board,  
@@ -41,8 +42,8 @@ namespace YuJanggi.Core.InGame
             _board          = board;
             _stateMachine   = stateMachine;
         }
-        public abstract void HandleEnter();
-        public abstract void HandleExit();
+        public abstract void HandleEnter(IGameMode mode);
+        public abstract void HandleExit(IGameMode mode);
 
         public void HandleTurnCompleted(TurnData data, PlayerType nextType)
         {
@@ -70,26 +71,19 @@ namespace YuJanggi.Core.InGame
             IReadOnlyList<Pos> legal,
             IReadOnlyList<Pos> illegal)
             => OnSelectPiece(id, legal, illegal);
-        public virtual void HandlePreviousButton()
-        {
+        public virtual void HandlePreviousButton() { }
+        public virtual void HandleNextButton()     { }
 
-        }
-        public virtual void HandleNextButton()
-        {
-
-        }
-        public virtual void HandleReplayButton()
-        {
-
-        }
-
-        protected virtual void OnTurnCompleted(TurnData data, PlayerType nextType) { }
-        protected virtual void OnUndoCompleted(UndoData data, PlayerType currentType) { }
+        protected virtual void OnTurnCompleted(
+            TurnData data,
+            PlayerType nextType) { }
+        protected virtual void OnUndoCompleted(
+            UndoData data,
+            PlayerType currentType) { }
         protected virtual void OnSelectPiece(
             int? id,
             IReadOnlyList<Pos> legal,
-            IReadOnlyList<Pos> illegal)
-        {  }
+            IReadOnlyList<Pos> illegal) {  }
 
     }
 }

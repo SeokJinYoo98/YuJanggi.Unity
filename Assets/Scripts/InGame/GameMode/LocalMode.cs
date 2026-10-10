@@ -110,5 +110,11 @@ namespace YuJanggi.InGame.Mode
             _han.ResetSelection();
             return UniTask.CompletedTask;
         }
+
+        public override void SetLocalInputEnabled(bool enabled)
+        {
+            if (enabled) _localInput.Resume();
+            else _localInput.Pause();
+        }
     }
 }

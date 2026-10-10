@@ -1,18 +1,24 @@
-
-
 using System.Collections.Generic;
+using UnityEngine;
+
 using YuJanggi.Core.InGame;
-using YuJanggi.Engine.Domain;
-using YuJanggi.Engine.JanggiBoard;
-using YuJanggi.Engine.JanggiEngine;
-using YuJanggi.Engine.JanggiRecord;
-using YuJanggi.InGame.Views;
 
 namespace YuJanggi.InGame.State
 {
+    using Engine.Domain;
+    using Engine.JanggiEngine;
+    using Engine.JanggiRecord;
+
+    using Views;
+    using YuJanggi.InGame.Mode;
+
     public class InGameLiveState : InGameState
     {
         private readonly IReadOnlyRecord _record;
+
+        public override InGameStateType State
+            => InGameStateType.Live;
+
         public InGameLiveState(
             InGameView inGameView,
             IReadOnlyEngine engine,
@@ -21,19 +27,19 @@ namespace YuJanggi.InGame.State
         {
             _record = engine.ReadOnlyRecord;
         }   
-        public override void HandlePreviousButton()
-        {
 
-        }
-        public override void HandleEnter()
+        public override void HandleEnter(IGameMode mode)
         {
+            if (mode.IsEnd) _inGameView.OpenResultView();
+            mode.SetLocalInputEnabled(true);
             _inGameView.ClearSelection();
             _inGameView.SyncBoardState(_board);
+            _inGameView.SyncLiveUI();
         }
 
-        public override void HandleExit()
+        public override void HandleExit(IGameMode mode)
         {
-            throw new System.NotImplementedException();
+            _inGameView.ClearSelection();
         }
         protected override void OnTurnCompleted(TurnData data, PlayerType nextType)
         {
@@ -76,7 +82,13 @@ namespace YuJanggi.InGame.State
 
             _inGameView.SelectPiece(id.Value, legal, illegal);
         }
+        public override void HandlePreviousButton()
+        {
+            if (_record.Count <= 0)
+                return;
 
+            _stateMachine.ChangeState(InGameStateType.Replay);
+        }
 
     }
 }

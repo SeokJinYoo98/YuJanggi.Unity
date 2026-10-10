@@ -14,7 +14,7 @@ namespace YuJanggi.InGame
     using Core.InGame;
     using Engine.Domain;
     using Engine.JanggiEngine;
- 
+
     using Store;
 
     public class InGameManager : MonoBehaviour, IGameCommandReceiver, IStateMachine
@@ -24,21 +24,21 @@ namespace YuJanggi.InGame
         [SerializeField] private InputPrefabs _inputs;
 
         [Header("View")]
-        [SerializeField] private InGameView   _inGameView;
+        [SerializeField] private InGameView _inGameView;
 
-        private IGameMode     _inGameMode;
+        private IGameMode _inGameMode;
         private IJanggiEngine _engine;
         private readonly Dictionary<InGameStateType, IInGameState> _states = new();
 
         private CancellationTokenSource _lifecycleCts;
-        private CancellationToken       _lifecycleToken;
+        private CancellationToken _lifecycleToken;
 
-        private IInGameState _currViewState;
+        private IInGameState _currState;
         #endregion
 
         private IReadOnlyEngine EngineReferences
             => _engine.References;
-
+        private bool IsLive => _currState.State == InGameStateType.Live;
         private void Awake()
         {
             _lifecycleCts = new CancellationTokenSource();
@@ -52,8 +52,8 @@ namespace YuJanggi.InGame
                 new InGameLiveState(_inGameView, EngineReferences, this));
             _states.Add(
                 InGameStateType.Replay,
-                new InGameReplayState(_inGameView, _engine, this));
- 
+                new InGameReplayState(_inGameView, _engine, this, _lifecycleToken));
+
 
             _inGameMode = GameModeFactory.Create(
                 JanggiOptionStore.JanggiSetting.GameMode,
@@ -102,7 +102,7 @@ namespace YuJanggi.InGame
                 PlayerTeam.Cho,
                 _inGameMode.GetPlayerType(PlayerTeam.Cho));
 
-            _currViewState = _states[InGameStateType.Live];
+            _currState = _states[InGameStateType.Live];
         }
 
 
@@ -150,7 +150,7 @@ namespace YuJanggi.InGame
             var currentTeam = data.CurrentTurn;
             var currentType = _inGameMode.GetPlayerType(currentTeam);
 
-            _currViewState.HandleUndoCompleted(
+            _currState.HandleUndoCompleted(
                 data,
                 currentType);
 
@@ -164,12 +164,11 @@ namespace YuJanggi.InGame
                     PlayerTeam.Cho;
 
             var nextType = _inGameMode.GetPlayerType(nextTeam);
-            _currViewState.HandleTurnCompleted(data, nextType);
+            _currState.HandleTurnCompleted(data, nextType);
 
             if (data.GameResult is GameResultInfo result)
             {
                 EndGameAsync(result, data.MoveCount).Forget();
-
                 return;
             }
 
@@ -183,7 +182,7 @@ namespace YuJanggi.InGame
             int? id,
             IReadOnlyList<Pos> legal,
             IReadOnlyList<Pos> illegal)
-            => _currViewState.HandleSelectPiece(id, legal, illegal);
+            => _currState.HandleSelectPiece(id, legal, illegal);
         public void HandleRequestMove(Pos from, Pos to)
             => _inGameMode.RequestMoveAsync(
                     from,
@@ -191,15 +190,24 @@ namespace YuJanggi.InGame
                     _lifecycleToken
                 ).Forget();
         public void HandleTakebackButton()
-            => _inGameMode.TakeBackAsync(_lifecycleToken).Forget();
+        {
+            if (!IsLive) return;
+            _inGameMode.TakeBackAsync(_lifecycleToken).Forget();
+        }
         public void HandlePassTurnButton()
-            => _inGameMode.PassTurnAsync(_lifecycleToken).Forget();
+        {
+            if (!IsLive) return;
+            _inGameMode.PassTurnAsync(_lifecycleToken).Forget();
+        }
         public void HandleGiveUpButton()
-            => _inGameMode.GiveUpAsync(_lifecycleToken).Forget();
+        {
+            if (!IsLive) return;
+            _inGameMode.GiveUpAsync(_lifecycleToken).Forget();
+        }
         public void HandlePreviousButton()
-            => _currViewState.HandlePreviousButton();
+            => _currState.HandlePreviousButton();
         public void HandleNextButton()
-            => _currViewState.HandleNextButton();
+            => _currState.HandleNextButton();
 
         public void HandleLobbyButton()
             => ReturnToLobbyAsync().Forget();
@@ -236,12 +244,12 @@ namespace YuJanggi.InGame
         public void ChangeState(InGameStateType type)
         {
             var nextState = _states[type];
-            if (ReferenceEquals(_currViewState, nextState))
+            if (ReferenceEquals(_currState, nextState))
                 return;
 
-            _currViewState?.HandleExit();
-            _currViewState = nextState;
-            _currViewState.HandleEnter();
+            _currState?.HandleExit(_inGameMode);
+            _currState = nextState;
+            _currState.HandleEnter(_inGameMode);
         }
     }
 }

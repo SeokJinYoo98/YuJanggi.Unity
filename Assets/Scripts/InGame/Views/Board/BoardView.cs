@@ -41,6 +41,7 @@ namespace YuJanggi.InGame.Views.Board
             ClearSelection();
             _piece.ResetViews(boardModel);
         }
+ 
         public void ClearSelection()
         {
             UnSelectPiece();
@@ -123,11 +124,15 @@ namespace YuJanggi.InGame.Views.Board
             _currPiece?.UnSelectPiece();
             _currPiece = null;
         }
-        public void ShowMoveGuides(IReadOnlyList<Pos> legals, IReadOnlyList<Pos> illegals)
+        public void ShowMoveGuides(
+            IReadOnlyList<Pos> legals,
+            IReadOnlyList<Pos> illegals)
         {
             HideMoveGuides();
-            _moveGuide.ShowHighlight(legals, true);
-            _moveGuide.ShowHighlight(illegals, false);
+            if (legals != null)
+                _moveGuide.ShowHighlight(legals, true);
+            if (illegals != null)
+                _moveGuide.ShowHighlight(illegals, false);
         }
 
         private void HideMoveGuides()

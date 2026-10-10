@@ -1,18 +1,19 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace YuJanggi.InGame.Mode
 {
     using Engine.Domain;
     using Engine.JanggiEngine;
+    using YuJanggi.Core.InGame;
 
-    internal interface IGameMode
+    public interface IGameMode
     {
-
+        public bool IsEnd { get; }
         void Tick(float deltaTime);
-
+        void SetLocalInputEnabled(bool enabled);
         PlayerType GetPlayerType(PlayerTeam team);
         void BeginNextTurn(PlayerTeam nextTeam);
 
@@ -35,11 +36,12 @@ namespace YuJanggi.InGame.Mode
         public UniTask TakeBackAsync(
             CancellationToken token = default);
     }
-    internal abstract class GameMode : IGameMode
+    public abstract class GameMode : IGameMode
     {
         #region Field
         protected readonly IGameEngine _engine;
         private bool _play = false;
+        public bool IsEnd => !_play;
         #endregion
         protected GameMode(
             IGameEngine engine)
@@ -52,10 +54,10 @@ namespace YuJanggi.InGame.Mode
             if (_play)
                 OnTick(deltaTime);
         }
-        public abstract void BeginNextTurn(PlayerTeam team);
-        public abstract PlayerType GetPlayerType(PlayerTeam team);
- 
-        protected abstract void OnTick(float deltaTime);
+        public abstract void        BeginNextTurn(PlayerTeam team);
+        public abstract PlayerType  GetPlayerType(PlayerTeam team);
+        public abstract void        SetLocalInputEnabled(bool enabled);
+        protected abstract void     OnTick(float deltaTime);
 
 
         public async UniTask EndGameAsync(
