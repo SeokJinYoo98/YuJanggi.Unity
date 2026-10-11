@@ -14,6 +14,7 @@ namespace YuJanggi.InGame.Mode
     using Input;
     using Network;
     using Player;
+    using Store;
 
 
     internal sealed class NetworkMode
@@ -35,7 +36,7 @@ namespace YuJanggi.InGame.Mode
             IGameCommandReceiver receiver)
             : base(engine)
         {
-            _localInput = inputs.Create(GameInputType.Pointer);
+            _localInput = inputs.Create(JanggiOptionStore.TYPE);
             _network = network;
             _netHandler = network.InGame;
 

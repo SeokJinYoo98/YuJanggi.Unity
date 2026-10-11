@@ -176,6 +176,7 @@ namespace YuJanggi.Lobby.Panel
                 await handler.SubmitFormation(
                     networkData.MatchId,
                     formation,
+                    networkData.MyTeam,
                     token);
 
                 var formData = await handler.WaitForGameReadyEvent(token);

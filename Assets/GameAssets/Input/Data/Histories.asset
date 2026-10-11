@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Histories
   m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Input.History
   _historyJsons:
-  - {fileID: 4900000, guid: 377d162fb02d0f040965279e6294939c, type: 3}
-  - {fileID: 4900000, guid: 715d282634d93b743ba24b3f408a20ee, type: 3}
-  - {fileID: 4900000, guid: 0f41ec2844ad9dd4ea9218fa053f85a2, type: 3}
-  - {fileID: 4900000, guid: 00e5c3bfd120de94288730fc6c0a3633, type: 3}
+  - {fileID: 4900000, guid: 32a4ec70047a33d4cb8c328a709ddd57, type: 3}
+  - {fileID: 4900000, guid: 745819c8eebb9b54b995b3d348076dc5, type: 3}
+  - {fileID: 4900000, guid: ced60ae187bc6ba4f8ce96c142e4f990, type: 3}
+  - {fileID: 4900000, guid: 863d34689d5b211478c15baa10d4dc1b, type: 3}

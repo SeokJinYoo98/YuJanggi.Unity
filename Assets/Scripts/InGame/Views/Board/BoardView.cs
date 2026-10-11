@@ -25,6 +25,7 @@ namespace YuJanggi.InGame.Views.Board
         private PieceView   _currPiece;
         private int         _deathCnt;
 
+        private float _z = 11f;
         private Vector3 _deathPos;
         private static readonly Vector3 OriginDeath = new Vector3(4, 0, -2);
         private AudioManager Audio

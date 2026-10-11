@@ -53,7 +53,7 @@ namespace YuJanggi.Store
 
     public static class JanggiOptionStore
     {
-        public static GameInputType TYPE => GameInputType.Pointer;
+        public static GameInputType TYPE => GameInputType.Record;
         public static JanggiOptions         JanggiSetting { get; private set; }
         public static AIMoveStrategyType?   AISetting { get; private set; }
         public static void SaveOptions(
@@ -123,7 +123,7 @@ namespace YuJanggi.Store
             PlayerTeam myTeam)
         {
             var isPlayerCho = myTeam == PlayerTeam.Cho;
-
+          
             return new JanggiOptions
             {
                 GameMode     = GameModeType.Network,
