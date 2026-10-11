@@ -21,7 +21,6 @@ namespace YuJanggi.InGame.Input
 
         private IBoardInputReceiver _currReceiver;
         private bool _pause = false;
-        private int  _currIdx = 0;
         public RecordInputHandler(HistroyManager history, CancellationToken lifecycleToken)
         {
             _history = history;

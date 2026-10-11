@@ -16,7 +16,7 @@ namespace YuJanggi.InGame.Views.UI
         [SerializeField] private TMP_Text _result;
 
         public void PlayAuido(bool localWin)
-            => Audio.PlaySfx(localWin ? JanggiSfx.Lose : JanggiSfx.Win);
+            => Audio.PlaySfx(localWin ? JanggiSfx.Win : JanggiSfx.Lose);
         public void SetWinnerType(PlayerTeam winner)
         {
             if (winner == PlayerTeam.Cho)

@@ -9,6 +9,7 @@ namespace YuJanggi.InGame.Views.Board
     using Engine.JanggiBoard;
     using Particle;
     using Piece;
+    using YuJanggi.Store;
     using static UnityEngine.Audio.ProcessorInstance;
 
     public interface ILiveBoardView
@@ -21,19 +22,18 @@ namespace YuJanggi.InGame.Views.Board
         [SerializeField] private PieceManager       _piece;
         [SerializeField] private ParticleManager    _particle;
         [SerializeField] private MoveGuideManager   _moveGuide;
-
+        [SerializeField] private Transform          _garbagePos;
         private PieceView   _currPiece;
         private int         _deathCnt;
 
-        private float _z = 11f;
-        private Vector3 _deathPos;
-        private static readonly Vector3 OriginDeath = new Vector3(4, 0, -2);
         private AudioManager Audio
             => YuJanggiBootStrap.Instance.AudioManager;
 
         public void InitPieces(IReadOnlyBoard model)
         {
-            _deathPos = OriginDeath;
+            if (JanggiOptionStore.JanggiSetting.PlayerCho != PlayerType.Local)
+                _garbagePos.localPosition = new Vector3(0f, 0f, -6f);
+            _deathCnt = 0;
             _piece.SpawnPieces(model);
         }
 
@@ -86,10 +86,7 @@ namespace YuJanggi.InGame.Views.Board
                     out var capturedTarget))
                 return;
 
-            var deathPos = new Vector3(
-                _deathPos.x,
-                _deathPos.y + _deathCnt * 0.1f,
-                _deathPos.z);
+            var deathPos = _garbagePos.position + Vector3.up * (_deathCnt * 0.1f);
 
             ++_deathCnt;
 

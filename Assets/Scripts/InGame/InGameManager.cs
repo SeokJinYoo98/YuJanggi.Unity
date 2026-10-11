@@ -14,7 +14,6 @@ namespace YuJanggi.InGame
     using State;
     using Store;
     using Views;
-    using YuJanggi.InGame.Handler;
 
     public class InGameManager : MonoBehaviour, IGameCommandReceiver, IStateMachine
     {
