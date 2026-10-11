@@ -22,7 +22,7 @@ namespace YuJanggi.InGame.Mode
             IGameCommandReceiver receiver)
             : base(engine)
         {
-            _localInput = inputs.Create(GameInputType.PC);
+            _localInput = inputs.Create(GameInputType.Pointer);
 
             _cho = new LocalPlayer(
                 PlayerTeam.Cho,
@@ -57,10 +57,8 @@ namespace YuJanggi.InGame.Mode
 
         protected override UniTask OnGameStartAsync(
             CancellationToken token)
-        {
-            _localInput.SetPlayer(_cho);
-            return UniTask.CompletedTask;
-        }
+                => UniTask.CompletedTask;
+        
         protected override UniTask OnGameEndAsync(
             CancellationToken token)
         {

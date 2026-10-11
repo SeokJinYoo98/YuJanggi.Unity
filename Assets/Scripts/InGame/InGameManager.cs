@@ -53,13 +53,16 @@ namespace YuJanggi.InGame
             _states.Add(
                 InGameStateType.Replay,
                 new InGameReplayState(_inGameView, _engine, this, _lifecycleToken));
-
+            _currState = _states[InGameStateType.Live];
 
             _inGameMode = GameModeFactory.Create(
                 JanggiOptionStore.JanggiSetting.GameMode,
                 _engine,
                 new InputHandlerFactory(_inputs, transform),
-                this);
+                this,
+                JanggiOptionStore.JanggiSetting.GameMode == GameModeType.Network
+                    ? BootStrap.YuJanggiBootStrap.Instance.NetworkManager.InGame
+                    : null);
         }
         private void Update()
             => _inGameMode?.Tick(Time.deltaTime);
@@ -91,7 +94,6 @@ namespace YuJanggi.InGame
         {
             var token = _lifecycleToken;
             await _inGameMode.InitializeAsync(token);
-            token.ThrowIfCancellationRequested();
             _inGameView.Initialize(EngineReferences.Board);
         }
         private async UniTask StartGameAsync()
@@ -102,7 +104,6 @@ namespace YuJanggi.InGame
                 PlayerTeam.Cho,
                 _inGameMode.GetPlayerType(PlayerTeam.Cho));
 
-            _currState = _states[InGameStateType.Live];
         }
 
 
@@ -132,9 +133,8 @@ namespace YuJanggi.InGame
             int moveCount)
         {
             var token = _lifecycleToken;
+            result = await _inGameMode.ConfirmGameEndAsync(result, moveCount, token);
             await _inGameMode.EndGameAsync(token);
-
-            token.ThrowIfCancellationRequested();
 
             ChangeState(InGameStateType.Live);
 
@@ -216,7 +216,6 @@ namespace YuJanggi.InGame
         {
             var token = _lifecycleToken;
             await _inGameMode.EndGameAsync(token);
-            token.ThrowIfCancellationRequested();
             SceneManager.LoadScene("LobbyScene");
         }
         public void HandleRematchButton()
@@ -231,7 +230,6 @@ namespace YuJanggi.InGame
                 return;
 
             await _inGameMode.InitializeAsync(token);
-            token.ThrowIfCancellationRequested();
 
             _inGameView.PrepareRematchView(
                 EngineReferences.Board,

@@ -8,14 +8,11 @@ using UnityEngine;
 
 namespace YuJanggi.Lobby.Panel
 {
-    using BootStrap;
     using Engine.Domain;
     using Handler;
-    using YuJanggi.Store;
-    using NetworkFormationData = Network.NetworkFormationData;
-  
-    using NetworkMatchingData  = Network.NetworkMatchingData;
-
+    using BootStrap;
+    using Network;
+    using Store;
     public enum NetworkState
     { Offline, Connecting, ConnectingFailed, Handshaking, HandshakeFailed, Online, Matching, Matched };
     public class NetworkPanel : Panel, IGameStartPanel
@@ -246,7 +243,7 @@ namespace YuJanggi.Lobby.Panel
                 data.MyTeam);
 
             JanggiOptionStore.SaveOptions(options);
-            OnlineMatchInfoStore.SaveData(data);
+            NetworkSessionStore.SaveData(data);
 
             CanClosePanel = true;
             return true;

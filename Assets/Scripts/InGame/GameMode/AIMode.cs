@@ -46,7 +46,7 @@ namespace YuJanggi.InGame.Mode
             var localTeam = localCho ? PlayerTeam.Cho : PlayerTeam.Han;
             var aiTeam = localCho ? PlayerTeam.Han : PlayerTeam.Cho;
 
-            _localInput = inputs.Create(GameInputType.PC);
+            _localInput = inputs.Create(GameInputType.Pointer);
             _localPlayer = new LocalPlayer(
                 localTeam, PlayerType.Local, receiver, engine.ControllerQuery);
 

@@ -4,11 +4,10 @@ using System;
 using System.Threading;
 using UnityEngine;
 
-namespace YuJanggi.BootStrap
+namespace YuJanggi.Network
 {
     using YuJanggi.InGame.Handler;
     using YuJanggi.Lobby.Handler;
-    using YuJanggi.Network;
     using YuJanggi.Protocol.Messages;
 
     public enum ConnectingResult
@@ -164,6 +163,10 @@ namespace YuJanggi.BootStrap
                     await StopReceiveLoopAsync();
                 }
             }
+
+            // TODO: 명시적 Disconnect 후 Handler의 Event 대기가 남는지 테스트합니다.
+            // 대기가 남으면 해당 대기를 취소하는 처리를 추가합니다.
+            // 정상 연결 종료를 IOException으로 만들어 전달하지 않습니다.
         }
 
         // TCP 연결 성공 직후 시작해 Handshake Response도 라우팅합니다.
@@ -182,6 +185,9 @@ namespace YuJanggi.BootStrap
                 _receiveCts.Token,
                 _receiveCompletion)
                 .Forget();
+
+            // TODO: 재연결 후 이전 Handler 대기 상태가 새 요청에 영향을 주는지 테스트합니다.
+            // 문제가 확인되면 연결 시작 시 필요한 대기 상태만 초기화합니다.
         }
 
         // TODO: 로그인 씬 구현 시 ReceiveLoop 종료 예외 처리 정리
@@ -232,6 +238,10 @@ namespace YuJanggi.BootStrap
             {
                 completion.TrySetResult();
             }
+
+            // TODO: 서버 연결 종료 후 Request/Response 및 Handler의 Event 대기가 남는지 테스트합니다.
+            // 대기가 남으면 수신 종료 경로에 필요한 대기 취소 처리를 추가합니다.
+            // 종료 처리를 추가할 때 미처리 예외 로그가 중복 발생하는지도 확인합니다.
         }
 
         private void OnDestroy()

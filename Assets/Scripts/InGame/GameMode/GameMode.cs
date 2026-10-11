@@ -1,7 +1,5 @@
 using Cysharp.Threading.Tasks;
-using System;
 using System.Threading;
-using UnityEngine;
 
 namespace YuJanggi.InGame.Mode
 {
@@ -23,6 +21,8 @@ namespace YuJanggi.InGame.Mode
             CancellationToken token = default);
         UniTask EndGameAsync(
             CancellationToken token = default);
+        UniTask<GameResultInfo> ConfirmGameEndAsync(
+            GameResultInfo result, int moveCount, CancellationToken token = default);
         UniTask<bool> RequestRematchAsync(
             CancellationToken token = default);
         UniTask RequestMoveAsync(
@@ -59,14 +59,6 @@ namespace YuJanggi.InGame.Mode
         public abstract void        SetLocalInputEnabled(bool enabled);
         protected abstract void     OnTick(float deltaTime);
 
-
-        public async UniTask EndGameAsync(
-            CancellationToken token = default)
-        {
-            _play = false;
-            token.ThrowIfCancellationRequested();
-            await OnGameEndAsync(token);
-        }
         public async UniTask InitializeAsync(
             CancellationToken token = default)
         {
@@ -75,87 +67,57 @@ namespace YuJanggi.InGame.Mode
             _engine.InitEngine();
             await OnInitializeAsync(token);
         }
-        public async UniTask StartGameAsync(
+        public virtual async UniTask StartGameAsync(
+            CancellationToken token = default)
+        {
+            _play = false;
+
+            token.ThrowIfCancellationRequested();
+            await OnGameStartAsync(token);
+            token.ThrowIfCancellationRequested();
+
+            _engine.StartEngine();
+            _play = true;
+
+            BeginNextTurn(_engine.ControllerQuery.CurrentTurn);
+        }
+        public async UniTask EndGameAsync(
             CancellationToken token = default)
         {
             _play = false;
             token.ThrowIfCancellationRequested();
-            _engine.StartEngine();
-            await OnGameStartAsync(token);
-            token.ThrowIfCancellationRequested();
-            _play = true;
+            await OnGameEndAsync(token);
         }
+
+
+        public virtual UniTask<GameResultInfo> ConfirmGameEndAsync(
+            GameResultInfo result, int moveCount, CancellationToken token = default)
+            => UniTask.FromResult(result);
         public async UniTask RequestMoveAsync(
             Pos from,
             Pos to,
             CancellationToken token = default)
         {
-            try
-            {
-                token.ThrowIfCancellationRequested();
-                await OnRequestMoveAsync(from, to, token);
-            }
-            catch (System.OperationCanceledException) when (token.IsCancellationRequested)
-            {
-                // 요청 생명주기 종료에 따른 취소입니다.
-            }
-            catch (System.Exception exception)
-            {
-                UnityEngine.Debug.LogException(exception);
-            }
+            token.ThrowIfCancellationRequested();
+            await OnRequestMoveAsync(from, to, token);
         }
         public async UniTask PassTurnAsync(
             CancellationToken token = default)
         {
-            try
-            {
-                token.ThrowIfCancellationRequested();
-                await OnPassTurnAsync(token);
-            }
-            catch (OperationCanceledException)
-                when (token.IsCancellationRequested)
-            {
-                // 요청 취소
-            }
-            catch (Exception exception)
-            {
-                Debug.LogException(exception);
-            }
+            token.ThrowIfCancellationRequested();
+            await OnPassTurnAsync(token);
         }
         public async UniTask GiveUpAsync(
             CancellationToken token = default)
         {
-            try
-            {
-                token.ThrowIfCancellationRequested();
-                await OnGiveUpAsync(token);
-            }
-            catch (OperationCanceledException) when (token.IsCancellationRequested)
-            {
-                // 요청 생명주기 종료에 따른 취소입니다.
-            }
-            catch (Exception exception)
-            {
-                Debug.LogException(exception);
-            }
+            token.ThrowIfCancellationRequested();
+            await OnGiveUpAsync(token);
         }
         public async UniTask TakeBackAsync(
             CancellationToken token = default)
         {
-            try
-            {
-                token.ThrowIfCancellationRequested();
-                await OnTakeBackAsync(token);
-            }
-            catch (OperationCanceledException) when (token.IsCancellationRequested)
-            {
-                // 요청 생명주기 종료에 따른 취소입니다.
-            }
-            catch (Exception exception)
-            {
-                Debug.LogException(exception);
-            }
-
+            token.ThrowIfCancellationRequested();
+            await OnTakeBackAsync(token);
         }
 
         public async UniTask<bool> RequestRematchAsync(

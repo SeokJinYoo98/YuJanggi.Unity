@@ -9,7 +9,7 @@ namespace YuJanggi.Store
     using AI.Data;
     using Network;
 
-    public static class OnlineMatchInfoStore
+    public static class NetworkSessionStore
     {
 
         private struct NetworkSessionInfo
@@ -53,7 +53,7 @@ namespace YuJanggi.Store
 
     public static class JanggiOptionStore
     {
-        public static GameInputType TYPE => GameInputType.PC;
+        public static GameInputType TYPE => GameInputType.Pointer;
         public static JanggiOptions         JanggiSetting { get; private set; }
         public static AIMoveStrategyType?   AISetting { get; private set; }
         public static void SaveOptions(

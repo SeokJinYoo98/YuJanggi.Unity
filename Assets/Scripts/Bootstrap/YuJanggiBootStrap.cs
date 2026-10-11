@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 
 namespace YuJanggi.BootStrap
 {
+    using Network;
     using Audio;
     public sealed class YuJanggiBootStrap : MonoBehaviour
     {
