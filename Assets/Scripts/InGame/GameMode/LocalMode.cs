@@ -52,18 +52,26 @@ namespace YuJanggi.InGame.Mode
                 _cho.Type :
                 _han.Type;
 
-        protected override void OnTick(float deltaTime)
-            => _engine.Tick(deltaTime);
-
         protected override UniTask OnGameStartAsync(
             CancellationToken token)
                 => UniTask.CompletedTask;
         
-        protected override UniTask OnGameEndAsync(
+        protected override UniTask OnClearAsync(CancellationToken token)
+        {
+            _localInput.ResetPlayer();
+            _localInput.Pause();
+            _cho.ResetSelection();
+            _han.ResetSelection();
+            return UniTask.CompletedTask;
+        }
+
+        protected override UniTask<GameResultInfo> OnGameEndAsync(
+            GameResultInfo info,
+            int totalMoves,
             CancellationToken token)
         {
             _localInput.ResetPlayer();
-            return UniTask.CompletedTask;
+            return UniTask.FromResult(info);
         }
         protected override UniTask OnRequestMoveAsync(
             Pos from,

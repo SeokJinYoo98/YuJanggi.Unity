@@ -1,11 +1,11 @@
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using UnityEngine;
 
 namespace YuJanggi.InGame.Mode
 {
     using Engine.Domain;
     using Engine.JanggiEngine;
-    using YuJanggi.Core.InGame;
 
     public interface IGameMode
     {
@@ -19,10 +19,12 @@ namespace YuJanggi.InGame.Mode
             CancellationToken token = default);
         UniTask StartGameAsync(
             CancellationToken token = default);
-        UniTask EndGameAsync(
+        UniTask ClearAsync(
             CancellationToken token = default);
-        UniTask<GameResultInfo> ConfirmGameEndAsync(
-            GameResultInfo result, int moveCount, CancellationToken token = default);
+        UniTask<GameResultInfo> EndGameAsync(
+            GameResultInfo info,
+            int totalMoves,
+            CancellationToken token = default);
         UniTask<bool> RequestRematchAsync(
             CancellationToken token = default);
         UniTask RequestMoveAsync(
@@ -51,13 +53,11 @@ namespace YuJanggi.InGame.Mode
 
         public void Tick(float deltaTime)
         {
-            if (_play)
-                OnTick(deltaTime);
+            if (_play) _engine.Tick(deltaTime);
         }
         public abstract void        BeginNextTurn(PlayerTeam team);
         public abstract PlayerType  GetPlayerType(PlayerTeam team);
         public abstract void        SetLocalInputEnabled(bool enabled);
-        protected abstract void     OnTick(float deltaTime);
 
         public async UniTask InitializeAsync(
             CancellationToken token = default)
@@ -70,29 +70,36 @@ namespace YuJanggi.InGame.Mode
         public virtual async UniTask StartGameAsync(
             CancellationToken token = default)
         {
+            token.ThrowIfCancellationRequested();
             _play = false;
 
-            token.ThrowIfCancellationRequested();
             await OnGameStartAsync(token);
-            token.ThrowIfCancellationRequested();
 
             _engine.StartEngine();
             _play = true;
-
+            Debug.Log("StartGameAsync");
             BeginNextTurn(_engine.ControllerQuery.CurrentTurn);
+
+            // TODO: 시작 대기 중 취소 시 Engine이 시작되는지 확인하고, 필요하면 대기 후 검사를 추가합니다.
         }
-        public async UniTask EndGameAsync(
+        public async UniTask ClearAsync(CancellationToken token = default)
+        {
+            _play = false;
+            await OnClearAsync(token);
+        }
+
+        public async UniTask<GameResultInfo> EndGameAsync(
+            GameResultInfo info,
+            int totalMoves,
             CancellationToken token = default)
         {
             _play = false;
-            token.ThrowIfCancellationRequested();
-            await OnGameEndAsync(token);
+            return await OnGameEndAsync(info, totalMoves, token);
         }
 
 
-        public virtual UniTask<GameResultInfo> ConfirmGameEndAsync(
-            GameResultInfo result, int moveCount, CancellationToken token = default)
-            => UniTask.FromResult(result);
+
+
         public async UniTask RequestMoveAsync(
             Pos from,
             Pos to,
@@ -131,7 +138,11 @@ namespace YuJanggi.InGame.Mode
             CancellationToken token);
         protected abstract UniTask OnInitializeAsync(
             CancellationToken token);
-        protected abstract UniTask OnGameEndAsync(
+        protected abstract UniTask OnClearAsync(
+            CancellationToken token);
+        protected abstract UniTask<GameResultInfo> OnGameEndAsync(
+            GameResultInfo info,
+            int totalMoves,
             CancellationToken token);
         protected abstract UniTask OnGameStartAsync(
             CancellationToken token);

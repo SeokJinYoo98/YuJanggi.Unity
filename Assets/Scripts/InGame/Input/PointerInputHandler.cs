@@ -93,8 +93,11 @@ namespace YuJanggi.InGame.Input
         {
             var options = JanggiOptionStore.JanggiSetting;
 
-            var localTeam = options.PlayerCho ==
-                PlayerType.Local ? PlayerTeam.Cho : PlayerTeam.Han;
+            var localTeam = options.GameMode == GameModeType.Network
+                ? NetworkSessionStore.MyTeam
+                : options.PlayerCho == PlayerType.Local
+                    ? PlayerTeam.Cho
+                    : PlayerTeam.Han;
             if (localTeam == PlayerTeam.Han)
             {
                 _camera.transform.position = new Vector3(4, 9, 6);

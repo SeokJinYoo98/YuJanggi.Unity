@@ -145,9 +145,6 @@ namespace YuJanggi.InGame.Mode
             }
         }
 
-        protected override void OnTick(float deltaTime)
-            => _engine.Tick(deltaTime);
-
         protected override UniTask OnInitializeAsync(CancellationToken token)
         {
             CancelAITurn();
@@ -166,7 +163,7 @@ namespace YuJanggi.InGame.Mode
             return UniTask.CompletedTask;
         }
 
-        protected override UniTask OnGameEndAsync(CancellationToken token)
+        protected override UniTask OnClearAsync(CancellationToken token)
         {
             CancelAITurn();
             _hasTurn = false;
@@ -174,6 +171,19 @@ namespace YuJanggi.InGame.Mode
             _localInput.Pause();
             _localPlayer.ResetSelection();
             return UniTask.CompletedTask;
+        }
+
+        protected override UniTask<GameResultInfo> OnGameEndAsync(
+            GameResultInfo info,
+            int totalMoves,
+            CancellationToken token)
+        {
+            CancelAITurn();
+            _hasTurn = false;
+            _localInput.ResetPlayer();
+            _localInput.Pause();
+            _localPlayer.ResetSelection();
+            return UniTask.FromResult(info);
         }
 
         protected override UniTask OnRequestMoveAsync(Pos from, Pos to, CancellationToken token)

@@ -54,15 +54,6 @@ namespace YuJanggi.Network.Handler
         #endregion
 
         #region Protected Methods
-        protected async UniTask SendAsync(
-            ClientMessage message,
-            CancellationToken token = default)
-        {
-            EnsureAvailable(token);
-
-            await _client.SendAsync(message, token);
-        }
-
         /// <summary>
         /// Handler별 서버 이벤트 처리
         /// </summary>
@@ -122,6 +113,29 @@ namespace YuJanggi.Network.Handler
                 throw new ObjectDisposedException(GetType().Name);
 
             token.ThrowIfCancellationRequested();
+        }
+
+        protected static UniTaskCompletionSource ResetCompletion(
+            ref UniTaskCompletionSource source)
+        {
+            var previous = source;
+            var completion = new UniTaskCompletionSource();
+
+            source = completion;
+            previous?.TrySetCanceled();
+
+            return completion;
+        }
+        protected static UniTaskCompletionSource<T> ResetCompletion<T>(
+            ref UniTaskCompletionSource<T> source)
+        {
+            var previous = source;
+            var completion = new UniTaskCompletionSource<T>();
+
+            source = completion;
+            previous?.TrySetCanceled();
+
+            return completion;
         }
         #endregion
     }

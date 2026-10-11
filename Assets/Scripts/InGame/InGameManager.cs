@@ -6,16 +6,15 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 namespace YuJanggi.InGame
 {
-    using Input;
-    using Mode;
-    using State;
-
-    using Views;
     using Core.InGame;
     using Engine.Domain;
     using Engine.JanggiEngine;
-
+    using Input;
+    using Mode;
+    using State;
     using Store;
+    using Views;
+    using YuJanggi.InGame.Handler;
 
     public class InGameManager : MonoBehaviour, IGameCommandReceiver, IStateMachine
     {
@@ -133,8 +132,11 @@ namespace YuJanggi.InGame
             int moveCount)
         {
             var token = _lifecycleToken;
-            result = await _inGameMode.ConfirmGameEndAsync(result, moveCount, token);
-            await _inGameMode.EndGameAsync(token);
+
+            result = await _inGameMode.EndGameAsync(
+                result,
+                _engine.References.ReadOnlyRecord.Count,
+                token);
 
             ChangeState(InGameStateType.Live);
 
@@ -215,7 +217,7 @@ namespace YuJanggi.InGame
         private async UniTask ReturnToLobbyAsync()
         {
             var token = _lifecycleToken;
-            await _inGameMode.EndGameAsync(token);
+            await _inGameMode.ClearAsync(token);
             SceneManager.LoadScene("LobbyScene");
         }
         public void HandleRematchButton()
