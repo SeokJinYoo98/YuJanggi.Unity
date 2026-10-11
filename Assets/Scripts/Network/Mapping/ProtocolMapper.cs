@@ -4,10 +4,27 @@ using System.IO;
 namespace YuJanggi.Network.Mapper
 {
     using Engine.Domain;
+    using Protocol.InGame;
     using Protocol.Matching;
 
     internal static class ProtocolMapper
     {
+        public static (byte X, byte Z) ToProtocolPosition(Pos position)
+            => ((byte)position.X, (byte)position.Z);
+
+        public static Pos ToPos(byte x, byte z)
+            => new Pos(x, z);
+
+        public static ProtocolGameEndReason ToProtocolGameEndReason(GameResult result)
+            => result switch
+            {
+                GameResult.Draw         => ProtocolGameEndReason.Draw,
+                GameResult.CheckMate    => ProtocolGameEndReason.CheckMate,
+                GameResult.GiveUp       => ProtocolGameEndReason.GiveUp,
+                GameResult.Score        => ProtocolGameEndReason.Score,
+                _ => throw new ArgumentOutOfRangeException(nameof(result), result, null)
+            };
+
         public static PlayerTeam ToPlayerTeam(ProtocolPlayerTeam team)
         {
             return team switch

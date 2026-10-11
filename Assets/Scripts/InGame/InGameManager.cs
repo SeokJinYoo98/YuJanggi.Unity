@@ -6,16 +6,15 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 namespace YuJanggi.InGame
 {
-    using Input;
-    using Mode;
-    using State;
-
-    using Views;
     using Core.InGame;
     using Engine.Domain;
     using Engine.JanggiEngine;
-
+    using Input;
+    using Mode;
+    using State;
     using Store;
+    using Views;
+    using YuJanggi.InGame.Handler;
 
     public class InGameManager : MonoBehaviour, IGameCommandReceiver, IStateMachine
     {
@@ -53,13 +52,16 @@ namespace YuJanggi.InGame
             _states.Add(
                 InGameStateType.Replay,
                 new InGameReplayState(_inGameView, _engine, this, _lifecycleToken));
-
+            _currState = _states[InGameStateType.Live];
 
             _inGameMode = GameModeFactory.Create(
                 JanggiOptionStore.JanggiSetting.GameMode,
                 _engine,
                 new InputHandlerFactory(_inputs, transform),
-                this);
+                this,
+                JanggiOptionStore.JanggiSetting.GameMode == GameModeType.Network
+                    ? BootStrap.YuJanggiBootStrap.Instance.NetworkManager.InGame
+                    : null);
         }
         private void Update()
             => _inGameMode?.Tick(Time.deltaTime);
@@ -91,7 +93,6 @@ namespace YuJanggi.InGame
         {
             var token = _lifecycleToken;
             await _inGameMode.InitializeAsync(token);
-            token.ThrowIfCancellationRequested();
             _inGameView.Initialize(EngineReferences.Board);
         }
         private async UniTask StartGameAsync()
@@ -102,7 +103,6 @@ namespace YuJanggi.InGame
                 PlayerTeam.Cho,
                 _inGameMode.GetPlayerType(PlayerTeam.Cho));
 
-            _currState = _states[InGameStateType.Live];
         }
 
 
@@ -132,9 +132,11 @@ namespace YuJanggi.InGame
             int moveCount)
         {
             var token = _lifecycleToken;
-            await _inGameMode.EndGameAsync(token);
 
-            token.ThrowIfCancellationRequested();
+            result = await _inGameMode.EndGameAsync(
+                result,
+                _engine.References.ReadOnlyRecord.Count,
+                token);
 
             ChangeState(InGameStateType.Live);
 
@@ -215,8 +217,7 @@ namespace YuJanggi.InGame
         private async UniTask ReturnToLobbyAsync()
         {
             var token = _lifecycleToken;
-            await _inGameMode.EndGameAsync(token);
-            token.ThrowIfCancellationRequested();
+            await _inGameMode.ClearAsync(token);
             SceneManager.LoadScene("LobbyScene");
         }
         public void HandleRematchButton()
@@ -231,7 +232,6 @@ namespace YuJanggi.InGame
                 return;
 
             await _inGameMode.InitializeAsync(token);
-            token.ThrowIfCancellationRequested();
 
             _inGameView.PrepareRematchView(
                 EngineReferences.Board,

@@ -1,15 +1,15 @@
+using Cysharp.Threading.Tasks;
+using System.Threading;
+
 using YuJanggi.Core.InGame;
 
 namespace YuJanggi.InGame.Mode
 {
     using Engine.Domain;
-    using Cysharp.Threading.Tasks;
-    using System.Threading;
     using Engine.JanggiEngine;
     using Input;
-    using Views;
-    using YuJanggi.InGame.Player;
-    using NUnit.Framework.Constraints;
+    using Player;
+
 
     internal sealed class LocalMode : GameMode
     {
@@ -22,7 +22,7 @@ namespace YuJanggi.InGame.Mode
             IGameCommandReceiver receiver)
             : base(engine)
         {
-            _localInput = inputs.Create(GameInputType.PC);
+            _localInput = inputs.Create(GameInputType.Pointer);
 
             _cho = new LocalPlayer(
                 PlayerTeam.Cho,
@@ -52,20 +52,26 @@ namespace YuJanggi.InGame.Mode
                 _cho.Type :
                 _han.Type;
 
-        protected override void OnTick(float deltaTime)
-            => _engine.Tick(deltaTime);
-
         protected override UniTask OnGameStartAsync(
             CancellationToken token)
+                => UniTask.CompletedTask;
+        
+        protected override UniTask OnClearAsync(CancellationToken token)
         {
-            _localInput.SetPlayer(_cho);
+            _localInput.ResetPlayer();
+            _localInput.Pause();
+            _cho.ResetSelection();
+            _han.ResetSelection();
             return UniTask.CompletedTask;
         }
-        protected override UniTask OnGameEndAsync(
+
+        protected override UniTask<GameResultInfo> OnGameEndAsync(
+            GameResultInfo info,
+            int totalMoves,
             CancellationToken token)
         {
             _localInput.ResetPlayer();
-            return UniTask.CompletedTask;
+            return UniTask.FromResult(info);
         }
         protected override UniTask OnRequestMoveAsync(
             Pos from,

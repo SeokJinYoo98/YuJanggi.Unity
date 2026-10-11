@@ -9,6 +9,9 @@ using System.Threading;
 namespace YuJanggi.Lobby.Handler
 {
     using Engine.Domain;
+    using BootStrap;
+    using Core.InGame;
+    using Store;
 
     using Network;
     using Network.Mapper;
@@ -104,9 +107,15 @@ namespace YuJanggi.Lobby.Handler
         public async UniTask SubmitFormation(
             string matchId,
             Formation formation,
+            PlayerTeam team,
             CancellationToken token)
         {
             EnsureAvailable(token);
+
+            // *********************************************************************************
+            if (JanggiOptionStore.TYPE == GameInputType.Record)
+                formation = YuJanggiBootStrap.Instance.HistoryManger.SelectTeam(team);
+            // *********************************************************************************
 
             var prev = _gameReady;
             _gameReady = new UniTaskCompletionSource<NetworkFormationData>();

@@ -30,7 +30,7 @@ namespace YuJanggi.Lobby
         private void OnEnable()
         {
             JanggiOptionStore.Clear();
-            OnlineMatchInfoStore.Clear();
+            NetworkSessionStore.Clear();
         }
         private void Start()
         {

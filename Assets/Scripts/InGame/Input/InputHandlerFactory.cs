@@ -1,5 +1,7 @@
 using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
+using YuJanggi.BootStrap;
 using YuJanggi.Core.InGame;
 
 namespace YuJanggi.InGame.Input
@@ -20,8 +22,13 @@ namespace YuJanggi.InGame.Input
         public ILocalInputHandler Create(GameInputType type)
             => type switch
             {
-                GameInputType.PC => UnityEngine.Object.Instantiate(
+                GameInputType.Pointer => UnityEngine.Object.Instantiate(
                     _prefabs.PointerInput, _parent),
+
+                GameInputType.Record => new RecordInputHandler(
+                    YuJanggiBootStrap.Instance.HistoryManger,
+                    _parent.gameObject.GetCancellationTokenOnDestroy()),
+
                 _ => throw new NotSupportedException(
                     $"아직 지원하지 않는 GameInput입니다: {type}")
             };

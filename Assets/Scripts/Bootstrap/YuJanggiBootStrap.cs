@@ -7,6 +7,9 @@ using UnityEngine.SceneManagement;
 namespace YuJanggi.BootStrap
 {
     using Audio;
+    using Network;
+    using YuJanggi.InGame.Input;
+
     public sealed class YuJanggiBootStrap : MonoBehaviour
     {
         public static YuJanggiBootStrap Instance { get; private set; } = null!;
@@ -16,11 +19,14 @@ namespace YuJanggi.BootStrap
         public NetworkManager NetworkManager { get; private set; } = null!;
         [field: SerializeField]
         public AudioManager AudioManager { get; private set; } = null!;
-
+        [field: SerializeField]
+        public HistroyManager HistoryManger { get; private set; } = null!;
         [Header("Audio Settings")]
         [SerializeField] private float _sfxVolume    = 1.0f;
         [SerializeField] private float _uiVolume     = 1.0f;
         [SerializeField] private float _masterVolume = 1.0f;
+
+
 
         private const string _host = "127.0.0.1";
         private const int    _port = 7777;
