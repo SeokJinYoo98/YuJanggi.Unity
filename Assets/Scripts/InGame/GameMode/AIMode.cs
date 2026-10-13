@@ -26,7 +26,6 @@ namespace YuJanggi.InGame.Mode
         private CancellationTokenSource _aiTurnCts;
         private PlayerTeam _activeTeam;
         private bool _hasTurn;
-        private bool _localInputEnabled = true;
 
         public AIMode(
             IJanggiEngine engine,
@@ -59,7 +58,7 @@ namespace YuJanggi.InGame.Mode
         public override PlayerType GetPlayerType(PlayerTeam team)
             => team == _localPlayer.Team ? _localPlayer.Type : _aiPlayer.Type;
 
-        public override void BeginNextTurn(PlayerTeam team)
+        protected override void BeginNextTurn(PlayerTeam team)
         {
             if (IsEnd || (_hasTurn && _activeTeam == team))
                 return;
@@ -127,9 +126,8 @@ namespace YuJanggi.InGame.Mode
             cts?.Cancel();
         }
 
-        public override void SetLocalInputEnabled(bool enabled)
+        protected override void OnSetLocalInputEnabled(bool enabled)
         {
-            _localInputEnabled = enabled;
             _localInput.ResetPlayer();
             _localPlayer.ResetSelection();
 
@@ -149,7 +147,6 @@ namespace YuJanggi.InGame.Mode
         {
             CancelAITurn();
             _hasTurn = false;
-            _localInputEnabled = true;
             _localInput.Initialize();
             _localInput.ResetPlayer();
             _localPlayer.ResetSelection();
@@ -159,31 +156,7 @@ namespace YuJanggi.InGame.Mode
         protected override UniTask OnGameStartAsync(CancellationToken token)
         {
             _gameToken = token;
-            SetTurn(_engine.ControllerQuery.CurrentTurn);
             return UniTask.CompletedTask;
-        }
-
-        protected override UniTask OnClearAsync(CancellationToken token)
-        {
-            CancelAITurn();
-            _hasTurn = false;
-            _localInput.ResetPlayer();
-            _localInput.Pause();
-            _localPlayer.ResetSelection();
-            return UniTask.CompletedTask;
-        }
-
-        protected override UniTask<GameResultInfo> OnGameEndAsync(
-            GameResultInfo info,
-            int totalMoves,
-            CancellationToken token)
-        {
-            CancelAITurn();
-            _hasTurn = false;
-            _localInput.ResetPlayer();
-            _localInput.Pause();
-            _localPlayer.ResetSelection();
-            return UniTask.FromResult(info);
         }
 
         protected override UniTask OnRequestMoveAsync(Pos from, Pos to, CancellationToken token)
@@ -204,13 +177,6 @@ namespace YuJanggi.InGame.Mode
             return UniTask.CompletedTask;
         }
 
-        protected override UniTask OnGiveUpAsync(CancellationToken token)
-        {
-            if (IsLocalTurn)
-                _engine.GiveUp();
-            return UniTask.CompletedTask;
-        }
-
         protected override UniTask OnTakeBackAsync(CancellationToken token)
         {
             if (IsLocalTurn)
@@ -218,7 +184,38 @@ namespace YuJanggi.InGame.Mode
             return UniTask.CompletedTask;
         }
 
-        protected override UniTask<bool> OnRequestRematchAsync(CancellationToken token)
+        protected override UniTask<bool> OnRequestRematchAsync(
+            CancellationToken token)
             => UniTask.FromResult(true);
+        #region 게임 종료
+
+        protected override UniTask<PlayerTeam?> OnGiveUpAsync(
+            CancellationToken token)
+            => UniTask.FromResult<PlayerTeam?>(
+                IsLocalTurn ? _localPlayer.Team : null);
+
+        protected override UniTask<GameResultInfo> OnGameEndAsync(
+            GameResultInfo info,
+            int totalMoves,
+            CancellationToken token)
+        {
+            CancelAITurn();
+            _hasTurn = false;
+            _localInput.ResetPlayer();
+            _localInput.Pause();
+            _localPlayer.ResetSelection();
+            return UniTask.FromResult(info);
+        }
+
+        protected override UniTask OnClearAsync(CancellationToken token)
+        {
+            CancelAITurn();
+            _hasTurn = false;
+            _localInput.ResetPlayer();
+            _localInput.Pause();
+            _localPlayer.ResetSelection();
+            return UniTask.CompletedTask;
+        }
+        #endregion
     }
 }

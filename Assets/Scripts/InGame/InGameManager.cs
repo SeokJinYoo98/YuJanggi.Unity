@@ -47,10 +47,19 @@ namespace YuJanggi.InGame
 
             _states.Add(
                 InGameStateType.Live,
-                new InGameLiveState(_inGameView, EngineReferences, this));
+                new InGameLiveState(
+                    _inGameView,
+                    EngineReferences,
+                    this));
+
             _states.Add(
                 InGameStateType.Replay,
-                new InGameReplayState(_inGameView, _engine, this, _lifecycleToken));
+                new InGameReplayState(
+                    _inGameView,
+                    _engine,
+                    this,
+                    _lifecycleToken));
+
             _currState = _states[InGameStateType.Live];
 
             _inGameMode = GameModeFactory.Create(
@@ -107,73 +116,60 @@ namespace YuJanggi.InGame
 
         private void BindEvents()
         {
+            UnBindEvents();
             _engine.BindEvents();
+
             var engine = _engine.References;
             _inGameView.BindEvents(engine);
 
-            var events = engine.GameEvents;
-            events.OnTurnCompleted += HandleTurnCompleted;
-            events.OnUndoCompleted += HandleUndoCompleted;
+            _inGameMode.OnTurnCompleted += HandleTurnCompleted;
+            _inGameMode.OnUndoCompleted += HandleUndoCompleted;
+            _inGameMode.OnGameEnded     += HandleGameEnded;
+            _inGameMode.BindEvents();
         }
         private void UnBindEvents()
         {
+            _inGameMode.UnBindEvents();
+            _inGameMode.OnTurnCompleted -= HandleTurnCompleted;
+            _inGameMode.OnUndoCompleted -= HandleUndoCompleted;
+            _inGameMode.OnGameEnded     -= HandleGameEnded;
+
             var engine = _engine.References;
-            var events = engine.GameEvents;
-            events.OnTurnCompleted -= HandleTurnCompleted;
-            events.OnUndoCompleted -= HandleUndoCompleted;
             _inGameView.UnBindEvents(engine);
+
             _engine.UnBindEvents();
         }
 
         #region Engine Handle
-        private async UniTask EndGameAsync(
+        private void HandleGameEnded(
             GameResultInfo result,
+            bool isLocalWin,
             int moveCount)
         {
-            var token = _lifecycleToken;
-
-            result = await _inGameMode.EndGameAsync(
-                result,
-                _engine.References.ReadOnlyRecord.Count,
-                token);
-
             ChangeState(InGameStateType.Live);
 
             _inGameView.OnGameEnded(
                 result,
-                _inGameMode.GetPlayerType(result.Winner) == PlayerType.Local,
+                isLocalWin,
                 moveCount);
 
             _inGameView.OpenResultView();
         }
-        private void HandleUndoCompleted(UndoData data)
+        private void HandleUndoCompleted(
+            UndoData data,
+            PlayerType currentType)
         {
-            var currentTeam = data.CurrentTurn;
-            var currentType = _inGameMode.GetPlayerType(currentTeam);
-
             _currState.HandleUndoCompleted(
                 data,
                 currentType);
-
-            _inGameMode.BeginNextTurn(currentTeam);
         }
-        private void HandleTurnCompleted(TurnData data)
+        private void HandleTurnCompleted(
+            TurnData data,
+            PlayerType nextType)
         {
-            var nextTeam = data.ActingTeam ==
-                PlayerTeam.Cho ?
-                    PlayerTeam.Han :
-                    PlayerTeam.Cho;
-
-            var nextType = _inGameMode.GetPlayerType(nextTeam);
-            _currState.HandleTurnCompleted(data, nextType);
-
-            if (data.GameResult is GameResultInfo result)
-            {
-                EndGameAsync(result, data.MoveCount).Forget();
-                return;
-            }
-
-            _inGameMode.BeginNextTurn(nextTeam);
+            _currState.HandleTurnCompleted(
+                data,
+                nextType);
         }
         #endregion
 

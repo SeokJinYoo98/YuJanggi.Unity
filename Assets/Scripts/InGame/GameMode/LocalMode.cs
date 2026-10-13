@@ -10,15 +10,14 @@ namespace YuJanggi.InGame.Mode
     using Input;
     using Player;
 
-
     internal sealed class LocalMode : GameMode
     {
         private readonly ILocalInputHandler _localInput;
         private readonly ILocalPlayer _cho;
         private readonly ILocalPlayer _han;
         public LocalMode(
-            IGameEngine engine,
-            InputHandlerFactory inputs,
+            IJanggiEngine        engine,
+            InputHandlerFactory  inputs,
             IGameCommandReceiver receiver)
             : base(engine)
         {
@@ -37,15 +36,23 @@ namespace YuJanggi.InGame.Mode
                 _engine.ControllerQuery);
         }
 
-        public override void BeginNextTurn(PlayerTeam team)
+        protected override void BeginNextTurn(PlayerTeam team)
         {
             _localInput.ResetPlayer();
 
             _cho.ResetSelection();
             _han.ResetSelection();
 
-            var nextPlayer = team == PlayerTeam.Cho ? _cho : _han;
-            _localInput.SetPlayer(nextPlayer);
+            if (_localInputEnabled)
+            {
+                var nextPlayer = team == PlayerTeam.Cho ? _cho : _han;
+                _localInput.Resume();
+                _localInput.SetPlayer(nextPlayer);
+            }
+            else
+            {
+                _localInput.Pause();
+            }
         }
         public override PlayerType GetPlayerType(PlayerTeam team)
             => team == PlayerTeam.Cho ?
@@ -55,24 +62,8 @@ namespace YuJanggi.InGame.Mode
         protected override UniTask OnGameStartAsync(
             CancellationToken token)
                 => UniTask.CompletedTask;
-        
-        protected override UniTask OnClearAsync(CancellationToken token)
-        {
-            _localInput.ResetPlayer();
-            _localInput.Pause();
-            _cho.ResetSelection();
-            _han.ResetSelection();
-            return UniTask.CompletedTask;
-        }
 
-        protected override UniTask<GameResultInfo> OnGameEndAsync(
-            GameResultInfo info,
-            int totalMoves,
-            CancellationToken token)
-        {
-            _localInput.ResetPlayer();
-            return UniTask.FromResult(info);
-        }
+
         protected override UniTask OnRequestMoveAsync(
             Pos from,
             Pos to,
@@ -88,12 +79,6 @@ namespace YuJanggi.InGame.Mode
             CancellationToken token)
         {
             _engine.HandleHandicap();
-            return UniTask.CompletedTask;
-        }
-        protected override UniTask OnGiveUpAsync(
-            CancellationToken token)
-        {
-            _engine.GiveUp();
             return UniTask.CompletedTask;
         }
 
@@ -117,10 +102,43 @@ namespace YuJanggi.InGame.Mode
             return UniTask.CompletedTask;
         }
 
-        public override void SetLocalInputEnabled(bool enabled)
+        protected override void OnSetLocalInputEnabled(bool enabled)
         {
-            if (enabled) _localInput.Resume();
-            else _localInput.Pause();
+            if (enabled && !IsEnd)
+            {
+                BeginNextTurn(_engine.ControllerQuery.CurrentTurn);
+            }
+            else
+            {
+                _localInput.ResetPlayer();
+                _localInput.Pause();
+            }
         }
+        #region 게임 종료
+
+
+        protected override UniTask<GameResultInfo> OnGameEndAsync(
+            GameResultInfo info,
+            int totalMoves,
+            CancellationToken token)
+        {
+            _localInput.ResetPlayer();
+            return UniTask.FromResult(info);
+        }
+
+        protected override UniTask OnClearAsync(CancellationToken token)
+        {
+            _localInput.ResetPlayer();
+            _localInput.Pause();
+            _cho.ResetSelection();
+            _han.ResetSelection();
+            return UniTask.CompletedTask;
+        }
+
+        protected override UniTask<PlayerTeam?> OnGiveUpAsync(
+            CancellationToken token)
+            => UniTask.FromResult<PlayerTeam?>(
+                _engine.ControllerQuery.CurrentTurn);
+        #endregion
     }
 }

@@ -16,15 +16,20 @@ namespace YuJanggi.InGame.Handler
     using Network.Handler;
     public interface IInGameNetworkReceiver
     {
-        void ApplyServerMove(PlayerTeam team, Pos from, Pos to);
+        void ApplyServerTurn(
+            PlayerTeam team,
+            ProtocolTurnAction action,
+            Pos from, Pos to);
+
+        public void ApplyServerGameEnded(
+            GameResultInfo result,
+            int totalMoves);
     }
     /// <summary>Protocol 생성·해석과 대기만 담당하며 게임 상태나 화면은 조작하지 않습니다.</summary>
     internal sealed class InGameNetworkHandler : NetworkHandler
     {
         private IInGameNetworkReceiver _receiver;
         private UniTaskCompletionSource _gameStart;
-        private UniTaskCompletionSource<GameResultInfo> _gameEnd;
-        private GameResultInfo _requestedGameResult;
 
 
         public InGameNetworkHandler(
@@ -32,8 +37,10 @@ namespace YuJanggi.InGame.Handler
             RequestDispatcher requests)
             : base(client, requests)
         { }
-        public void SetReceiver(IInGameNetworkReceiver receiver)
+        public void SetReceiver(IInGameNetworkReceiver
+            receiver)
             => _receiver = receiver;
+
         public async UniTask        SendInGameReadyAsync(
             CancellationToken token)
         {
@@ -96,8 +103,6 @@ namespace YuJanggi.InGame.Handler
             CancellationToken token)
         {
             EnsureAvailable(token);
-            ResetCompletion(ref _gameEnd);
-            _requestedGameResult = info;
 
             var request = new GameEndRequest
             {
@@ -119,18 +124,6 @@ namespace YuJanggi.InGame.Handler
 
             return false;
         }
-        public async UniTask<GameResultInfo> WaitForGameEndEvent(
-            CancellationToken token)
-        {
-            EnsureAvailable(token);
-
-            var completion = _gameEnd
-                ?? throw new InvalidOperationException(
-                    "게임 종료 대기가 준비되지 않았습니다.");
-
-            return await completion.Task.AttachExternalCancellation(token);
-        }
-
         protected override void OnHandleMessage(
             ServerMessage msg)
         {
@@ -139,8 +132,8 @@ namespace YuJanggi.InGame.Handler
                 case ServerMessageType.GameStartEvent:
                     _gameStart?.TrySetResult();
                     break;
-                case ServerMessageType.MovePieceEvent:
-                    OnServerMovePieceEvent(msg);
+                case ServerMessageType.TurnCompletedEvent:
+                    OnServerTurnCompleted(msg);
                     break;
 
                 case ServerMessageType.GameEndedEvent:
@@ -151,17 +144,22 @@ namespace YuJanggi.InGame.Handler
                     break;
             }
         }
-        private void OnServerMovePieceEvent(
+        private void OnServerTurnCompleted(
             ServerMessage msg)
         {
-            var payload = msg.GetPayload<MovePieceEvent>();
+            var payload = msg.GetPayload<TurnCompletedEvent>();
 
             var team = ProtocolMapper.ToPlayerTeam(payload.Team);
-            var from = ProtocolMapper.ToPos(payload.FromX, payload.FromZ);
-            var to   = ProtocolMapper.ToPos(payload.ToX, payload.ToZ);
+            var from = payload.Action == ProtocolTurnAction.Move
+                ? ProtocolMapper.ToPos(payload.FromX, payload.FromZ)
+                : Pos.Invalid;
+            var to = payload.Action == ProtocolTurnAction.Move
+                ? ProtocolMapper.ToPos(payload.ToX, payload.ToZ)
+                : Pos.Invalid;
 
-            _receiver?.ApplyServerMove(
+            _receiver?.ApplyServerTurn(
                 team,
+                payload.Action,
                 from,
                 to);
         }
@@ -173,20 +171,12 @@ namespace YuJanggi.InGame.Handler
                 ? PlayerTeam.None
                 : ProtocolMapper.ToPlayerTeam(payload.Winner);
 
-            var info = new GameResultInfo
-            {
-                // GameEndedEvent에는 종료 사유가 없어 요청에 사용한 값을 유지합니다.
-                Type = _requestedGameResult.Type,
-                Winner = winner,
-                Loser = winner switch
-                {
-                    PlayerTeam.Cho => PlayerTeam.Han,
-                    PlayerTeam.Han => PlayerTeam.Cho,
-                    _ => PlayerTeam.None
-                }
-            };
-            _gameEnd?.TrySetResult(info);
+            //_receiver?.ApplyServerGameEnded(
+            //    winner,
+            //    payload.TotalMoves);
         }
+
+
     }
 }
 

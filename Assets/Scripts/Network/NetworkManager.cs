@@ -89,7 +89,7 @@ namespace YuJanggi.Network
                     Lobby.HandleMessage(message);
                     break;
                 case ServerMessageType.GameStartEvent:
-                case ServerMessageType.MovePieceEvent:
+                case ServerMessageType.TurnCompletedEvent:
                 case ServerMessageType.GameEndedEvent:
                     InGame.HandleMessage(message);
                     break;
