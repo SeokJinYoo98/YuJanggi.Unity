@@ -117,7 +117,7 @@ namespace YuJanggi.InGame.Handler
                 ServerMessageType.GameEndResponse,
                 token);
 
-            var result = response.GetPayload<GameEndResponse>().Result;
+            var result = response.GetPayload<GameRequestResponse>().Result;
 
             if (result == GameRequestResult.Accepted)
                 return true;
@@ -142,7 +142,7 @@ namespace YuJanggi.InGame.Handler
                 ServerMessageType.GiveUpResponse,
                 token);
 
-            var result = response.GetPayload<GiveUpResponse>().Result;
+            var result = response.GetPayload<GameRequestResponse>().Result;
 
             if (result == GameRequestResult.Accepted)
                 return true;
@@ -166,7 +166,7 @@ namespace YuJanggi.InGame.Handler
                 ServerMessageType.PassTurnResponse,
                 token);
 
-            var result = response.GetPayload<GiveUpResponse>().Result;
+            var result = response.GetPayload<GameRequestResponse>().Result;
 
             if (result == GameRequestResult.Accepted)
                 return true;
