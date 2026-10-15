@@ -10,6 +10,7 @@ namespace YuJanggi.InGame.Mode
 
     public interface IGameMode
     {
+        GameModeType ModeType { get; }
         event Action<TurnData, PlayerType> OnTurnCompleted;
         event Action<UndoData, PlayerType> OnUndoCompleted;
         event Action<GameResultInfo, bool, int> OnGameEnded;
@@ -53,6 +54,7 @@ namespace YuJanggi.InGame.Mode
         private bool   _play = false;
         protected bool _localInputEnabled = true;
         public bool IsEnd => !_play;
+        public abstract GameModeType ModeType { get; }
         #endregion
         #region Constructor
         protected GameMode(

@@ -96,7 +96,10 @@ namespace YuJanggi.InGame
         {
             var token = _lifecycleToken;
             _inGameMode.Initialize(token);
-            _inGameView.Initialize(EngineReferences.Board);
+
+            _inGameView.Initialize(
+                EngineReferences.Board,
+                _inGameMode.ModeType == GameModeType.Network);
 
             await _inGameMode.StartGameAsync(_lifecycleToken);
 
@@ -177,9 +180,17 @@ namespace YuJanggi.InGame
                     to,
                     _lifecycleToken
                 ).Forget();
-        public void HandleTakebackButton()
+        public void HandleModeActionButton()
         {
-            if (!IsLive) return;
+            if (_inGameMode.ModeType == GameModeType.Network)
+            {
+                // 채팅창 열기
+                return;
+            }
+
+            if (!IsLive)
+                return;
+
             _inGameMode.TakeBackAsync(_lifecycleToken).Forget();
         }
         public void HandlePassTurnButton()

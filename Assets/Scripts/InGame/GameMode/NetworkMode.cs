@@ -22,6 +22,8 @@ namespace YuJanggi.InGame.Mode
     internal sealed class NetworkMode
         : GameMode, IInGameNetworkReceiver
     {
+        public override GameModeType ModeType => GameModeType.Network;
+
         private readonly ILocalPlayer _localPlayer;
         private readonly RemotePlayer _remotePlayer;
 

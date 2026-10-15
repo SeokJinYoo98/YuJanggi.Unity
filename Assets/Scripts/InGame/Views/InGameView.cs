@@ -12,6 +12,7 @@ namespace YuJanggi.InGame.Views
     using Audio;
     using Board;
     using UI;
+    using YuJanggi.UI;
 
     public class InGameView : MonoBehaviour
     {
@@ -19,6 +20,9 @@ namespace YuJanggi.InGame.Views
         [SerializeField] private LiveView        _liveView;
         [SerializeField] private BoardView       _boardView;
         [SerializeField] private CheckEffectView _janggunEffect;
+
+        [SerializeField] private ButtonBase      _modeActionButton;
+      
         public void PrepareRematchView(
             IReadOnlyBoard board,
             PlayerTeam team,
@@ -29,10 +33,13 @@ namespace YuJanggi.InGame.Views
             SyncLiveUI();
             _liveView.UpdateTurn(team, type);
         }
-        public void Initialize(IReadOnlyBoard board)
+        public void Initialize(
+            IReadOnlyBoard board,
+            bool isNetworkMode)
         {
             _boardView.InitPieces(board);
             _liveView.SetLiveText();
+            _modeActionButton.SetText(isNetworkMode ? "채팅" : "무르기");
         }
         public void StartGame(
             PlayerTeam turn,

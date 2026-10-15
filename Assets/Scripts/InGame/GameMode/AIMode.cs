@@ -18,6 +18,8 @@ namespace YuJanggi.InGame.Mode
     using Player;
     internal sealed class AIMode : GameMode
     {
+        public override GameModeType ModeType => GameModeType.AI;
+
         #region Field
         private readonly ILocalInputHandler _localInput;
         private readonly ILocalPlayer   _localPlayer;

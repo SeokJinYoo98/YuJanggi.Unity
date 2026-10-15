@@ -12,6 +12,8 @@ namespace YuJanggi.InGame.Mode
 
     internal sealed class LocalMode : GameMode
     {
+        public override GameModeType ModeType => GameModeType.Local;
+
         #region Field
         private readonly ILocalInputHandler _localInput;
         private readonly ILocalPlayer _cho;
