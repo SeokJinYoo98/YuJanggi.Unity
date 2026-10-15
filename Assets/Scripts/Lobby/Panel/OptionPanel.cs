@@ -26,6 +26,7 @@ namespace YuJanggi.Lobby.Panel
             _masterSlider.SetValue(audio.MasterVolume);
             _uiSlider.SetValue(audio.UIVolume);
             _sfxSlider.SetValue(audio.SfxVolume);
+            _bgmSlider.SetValue(audio.BGMVolume);
         }
 
         protected override void OnClose()

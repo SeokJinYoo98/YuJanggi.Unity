@@ -18,5 +18,16 @@ namespace YuJanggi.Audio.Player
 
         public void Play(int index)
             => _source.PlayOneShot(_data.GetClip(index));
+
+        public void PlayLoop(int index)
+        {
+            _source.Stop();
+            _source.clip = _data.GetClip(index);
+            _source.loop = true;
+            _source.Play();
+        }
+
+        public void Stop()
+            => _source.Stop();
     }
 }

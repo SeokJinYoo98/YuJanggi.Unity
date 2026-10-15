@@ -67,12 +67,9 @@ namespace YuJanggi.Audio
         public void PlayUI(UISfx type)
             => _uiPlayer.Play((int)type);
         public void PlayBGM(Bgm type)
-        {
-            StopBGM();
-            _bgmPlayer.Play((int)type);
-        }
+            => _bgmPlayer.PlayLoop((int)type);
         public void StopBGM()
-            => _bgmPlayer.GetComponent<AudioSource>().Stop();
+            => _bgmPlayer.Stop();
 
         public void SetMasterVolume(float value)
         {
