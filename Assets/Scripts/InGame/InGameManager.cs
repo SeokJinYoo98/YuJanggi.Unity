@@ -187,11 +187,10 @@ namespace YuJanggi.InGame
                 // 채팅창 열기
                 return;
             }
-
-            if (!IsLive)
-                return;
-
-            _inGameMode.TakeBackAsync(_lifecycleToken).Forget();
+            else if (IsLive)
+            {
+                _inGameMode.TakeBackAsync(_lifecycleToken).Forget();
+            }
         }
         public void HandlePassTurnButton()
         {

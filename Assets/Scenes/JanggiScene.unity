@@ -1129,6 +1129,7 @@ MonoBehaviour:
   _boardView: {fileID: 2126822363}
   _janggunEffect: {fileID: 720711495}
   _modeActionButton: {fileID: 1623123109}
+  _rematchButton: {fileID: 1973302049}
 --- !u!4 &420409862
 Transform:
   m_ObjectHideFlags: 0
@@ -3185,6 +3186,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1256041696}
   m_CullTransparentMesh: 1
+--- !u!1 &1356843457 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3837456833902176546, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+  m_PrefabInstance: {fileID: 1973302043}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1359487849 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
@@ -4440,16 +4446,33 @@ PrefabInstance:
       propertyPath: m_hasFontAssetChanged
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 6803892071073673165, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3837456833902176546, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1973302049}
   m_SourcePrefab: {fileID: 100100000, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
 --- !u!224 &1973302044 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 4980586729654603752, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
   m_PrefabInstance: {fileID: 1973302043}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1973302049
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1356843457}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8b482fbe92a4cba84b9d3395cf28a62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.UI.LockOnClickButton
+  _text: {fileID: 636082437}
 --- !u!1 &1974558477
 GameObject:
   m_ObjectHideFlags: 0

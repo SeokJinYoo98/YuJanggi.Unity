@@ -22,7 +22,7 @@ namespace YuJanggi.InGame.Views
         [SerializeField] private CheckEffectView _janggunEffect;
 
         [SerializeField] private ButtonBase      _modeActionButton;
-      
+        [SerializeField] private LockOnClickButton _rematchButton;
         public void PrepareRematchView(
             IReadOnlyBoard board,
             PlayerTeam team,
@@ -32,6 +32,7 @@ namespace YuJanggi.InGame.Views
             SyncBoardState(board);
             SyncLiveUI();
             _liveView.UpdateTurn(team, type);
+            _rematchButton.ResetButton();
         }
         public void Initialize(
             IReadOnlyBoard board,
@@ -40,6 +41,7 @@ namespace YuJanggi.InGame.Views
             _boardView.InitPieces(board);
             _liveView.SetLiveText();
             _modeActionButton.SetText(isNetworkMode ? "채팅" : "무르기");
+            _rematchButton.ResetButton();
         }
         public void StartGame(
             PlayerTeam turn,
