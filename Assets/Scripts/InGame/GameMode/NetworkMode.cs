@@ -17,6 +17,7 @@ namespace YuJanggi.InGame.Mode
     using Player;
     using Protocol.InGame;
     using Store;
+    using Views.UI;
 
     internal sealed class NetworkMode
         : GameMode, IInGameNetworkReceiver
@@ -129,7 +130,16 @@ namespace YuJanggi.InGame.Mode
         public async override UniTask<bool> RequestRematchAsync(
             CancellationToken token)
         {
-            throw new NotImplementedException();
+            bool accepted = await _netHandler.SendRematchRequest(
+                _localPlayer.Team,
+                token);
+
+            if (!accepted)
+                return false;
+
+            await _netHandler.WaitForRematchConfirmedEvent(token);
+
+            return true;
         }
 
         #endregion

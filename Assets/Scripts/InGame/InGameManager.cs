@@ -14,6 +14,7 @@ namespace YuJanggi.InGame
     using State;
     using Store;
     using Views;
+    using YuJanggi.InGame.Views.UI;
 
     public class InGameManager : MonoBehaviour, IGameCommandReceiver, IStateMachine
     {
@@ -22,7 +23,7 @@ namespace YuJanggi.InGame
         [SerializeField] private InputPrefabs _inputs;
 
         [Header("View")]
-        [SerializeField] private InGameView _inGameView;
+        [SerializeField] private InGameView  _inGameView;
 
         private IGameMode _inGameMode;
         private IJanggiEngine _engine;

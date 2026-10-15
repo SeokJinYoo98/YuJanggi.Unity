@@ -76,25 +76,21 @@ namespace YuJanggi.Network
         {
             if (message is null)
                 throw new ArgumentNullException(nameof(message));
+
             if (message.RequestId is not null)
             {
                 _requests.HandleMessage(message);
                 return;
             }
 
-            switch (message.Type)
-            {
-                case ServerMessageType.MatchingFoundEvent:
-                case ServerMessageType.GameReadyEvent:
-                    Lobby.HandleMessage(message);
-                    break;
-                case ServerMessageType.GameStartEvent:
-                case ServerMessageType.TurnCompletedEvent:
-                case ServerMessageType.GameEndedEvent:
-                    InGame.HandleMessage(message);
-                    break;
-            }
+            int typeNum = (int)message.Type;
+
+            if (200 <= typeNum && typeNum <= 299)
+                Lobby.HandleMessage(message);
+            else if (300 <= typeNum && typeNum <= 399)
+                InGame.HandleMessage(message);
         }
+        
 
         public async UniTask<ConnectingResult> ConnectAsync(
             CancellationToken token)

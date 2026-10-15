@@ -30,7 +30,7 @@ namespace YuJanggi.InGame.Handler
     {
         private IInGameNetworkReceiver _receiver;
         private UniTaskCompletionSource _gameStart;
-
+        private UniTaskCompletionSource _rematchConfirmed;
 
         public InGameNetworkHandler(
             NetworkClient client,
@@ -131,14 +131,9 @@ namespace YuJanggi.InGame.Handler
         {
             EnsureAvailable(token);
 
-            var request = new GiveUpRequest
-            {
-                Requester = ProtocolMapper.ToProtocolPlayerTeam(myTeam)
-            };
-
             var response = await SendRequestAsync(
                 ClientMessageType.GiveUpRequest,
-                request,
+                new { Requester = ProtocolMapper.ToProtocolPlayerTeam(myTeam) },
                 ServerMessageType.GiveUpResponse,
                 token);
 
@@ -155,14 +150,9 @@ namespace YuJanggi.InGame.Handler
         {
             EnsureAvailable(token);
 
-            var request = new PassTurnRequest
-            {
-                Requester = ProtocolMapper.ToProtocolPlayerTeam(myTeam)
-            };
-
             var response = await SendRequestAsync(
                 ClientMessageType.PassTurnRequest,
-                request,
+                 new { Requester = ProtocolMapper.ToProtocolPlayerTeam(myTeam) },
                 ServerMessageType.PassTurnResponse,
                 token);
 
@@ -172,6 +162,30 @@ namespace YuJanggi.InGame.Handler
                 return true;
 
             return false;
+        }
+        public async UniTask<bool> SendRematchRequest(
+            PlayerTeam myTeam,
+            CancellationToken token)
+        {
+            EnsureAvailable(token);
+            ResetCompletion(ref _rematchConfirmed);
+
+            var response = await SendRequestAsync(
+                ClientMessageType.RematchRequest,
+                new { Requester = ProtocolMapper.ToProtocolPlayerTeam(myTeam)},
+                ServerMessageType.RematchResponse,
+                token);
+
+            return response.GetPayload<GameRequestResponse>().Result
+                == GameRequestResult.Accepted;
+        }
+        public async UniTask WaitForRematchConfirmedEvent(
+            CancellationToken token)
+        {
+            EnsureAvailable(token);
+
+            var completion = _rematchConfirmed;
+            await completion.Task.AttachExternalCancellation(token);
         }
         protected override void OnHandleMessage(
             ServerMessage msg)
@@ -187,6 +201,9 @@ namespace YuJanggi.InGame.Handler
 
                 case ServerMessageType.GameEndedEvent:
                     OnServerGameEnded(msg);
+                    break;
+                case ServerMessageType.RematchConfirmedEvent:
+                    _rematchConfirmed?.TrySetResult();
                     break;
 
                 default:
