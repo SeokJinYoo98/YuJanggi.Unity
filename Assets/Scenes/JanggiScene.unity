@@ -320,6 +320,10 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: HandleLobbyButton
       objectReference: {fileID: 0}
+    - target: {fileID: 6803892071073673165, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+      propertyPath: _text
+      value: 
+      objectReference: {fileID: 519409948}
     - target: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
       propertyPath: m_text
       value: "\uBA54\uC778\uD654\uBA74\n"
@@ -474,6 +478,10 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: HandleGiveUpButton
       objectReference: {fileID: 0}
+    - target: {fileID: 6803892071073673165, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+      propertyPath: _text
+      value: 
+      objectReference: {fileID: 1078089410}
     - target: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
       propertyPath: m_text
       value: "\uAE30\uAD8C\n"
@@ -752,6 +760,17 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
+--- !u!114 &192153715 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+  m_PrefabInstance: {fileID: 574536228}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1 &238652084
 GameObject:
   m_ObjectHideFlags: 0
@@ -1464,6 +1483,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eebc9367781b3a24aab1b0d4b80fb279, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Views.Piece.PieceManager
+--- !u!114 &519409948 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+  m_PrefabInstance: {fileID: 34972546}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1001 &574536228
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1568,6 +1598,10 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: HandlePassTurnButton
       objectReference: {fileID: 0}
+    - target: {fileID: 6803892071073673165, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+      propertyPath: _text
+      value: 
+      objectReference: {fileID: 192153715}
     - target: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
       propertyPath: m_text
       value: "\uB118\uAE30\uAE30\n"
@@ -1686,6 +1720,10 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: HandlePreviousButton
       objectReference: {fileID: 0}
+    - target: {fileID: 6803892071073673165, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+      propertyPath: _text
+      value: 
+      objectReference: {fileID: 2058973805}
     - target: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
       propertyPath: m_text
       value: "\uAE30\uBCF4\uBCF4\uAE30\n"
@@ -1736,6 +1774,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 4980586729654603752, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
   m_PrefabInstance: {fileID: 635190755}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &636082437 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+  m_PrefabInstance: {fileID: 1973302043}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1 &720711491
 GameObject:
   m_ObjectHideFlags: 0
@@ -2207,6 +2256,10 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: HandlePreviousButton
       objectReference: {fileID: 0}
+    - target: {fileID: 6803892071073673165, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+      propertyPath: _text
+      value: 
+      objectReference: {fileID: 2085792946}
     - target: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
       propertyPath: m_text
       value: "\u25C0"
@@ -2394,6 +2447,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1062954804}
   m_CullTransparentMesh: 1
+--- !u!114 &1078089410 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+  m_PrefabInstance: {fileID: 88678401}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1001 &1090121053
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2498,6 +2562,10 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: HandleTakebackButton
       objectReference: {fileID: 0}
+    - target: {fileID: 6803892071073673165, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+      propertyPath: _text
+      value: 
+      objectReference: {fileID: 1653665667}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3112,6 +3180,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1256041696}
   m_CullTransparentMesh: 1
+--- !u!114 &1359487849 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+  m_PrefabInstance: {fileID: 341179093897247212}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!224 &1423750538 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 4980586729654603752, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
@@ -3647,6 +3726,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1639911012}
   m_CullTransparentMesh: 1
+--- !u!114 &1653665667 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+  m_PrefabInstance: {fileID: 1090121053}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1 &1678781762
 GameObject:
   m_ObjectHideFlags: 0
@@ -4287,6 +4377,10 @@ PrefabInstance:
       value: HandleRematchButton
       objectReference: {fileID: 0}
     - target: {fileID: 6803892071073673165, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+      propertyPath: _text
+      value: 
+      objectReference: {fileID: 636082437}
+    - target: {fileID: 6803892071073673165, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
       propertyPath: _keepPressed
       value: 1
       objectReference: {fileID: 0}
@@ -4508,6 +4602,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2058973805 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+  m_PrefabInstance: {fileID: 635190755}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1 &2070058879
 GameObject:
   m_ObjectHideFlags: 0
@@ -4587,6 +4692,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2085792946 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+  m_PrefabInstance: {fileID: 959075341}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1 &2126822358
 GameObject:
   m_ObjectHideFlags: 0
@@ -4850,6 +4966,10 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: HandleNextButton
       objectReference: {fileID: 0}
+    - target: {fileID: 6803892071073673165, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+      propertyPath: _text
+      value: 
+      objectReference: {fileID: 1359487849}
     - target: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
       propertyPath: m_text
       value: "\u25B6"

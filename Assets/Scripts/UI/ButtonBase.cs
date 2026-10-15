@@ -10,6 +10,8 @@ namespace YuJanggi.UI
     public sealed class ButtonBase : MonoBehaviour
     {
         [SerializeField] private bool _keepPressed;
+        [SerializeField] private TMPro.TMP_Text _text;
+
 
         private UnityEngine.UI.Button _button;
 
@@ -32,5 +34,7 @@ namespace YuJanggi.UI
 
         public void ResetButton()
             => _button.interactable = true;
+        public void SetText(string text)
+            => _text.SetText(text);
     }
 }

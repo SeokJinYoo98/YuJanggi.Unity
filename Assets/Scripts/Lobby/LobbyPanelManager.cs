@@ -85,8 +85,12 @@ namespace YuJanggi.Lobby
         }
         private void ClosePanel()
         {
-            // CTS 정리 및 정리할거 정리시키기
-            _currPanel.Close();
+            if (_currPanel == null)
+                return;
+
+            if (!_currPanel.Close())
+                return;
+
             _currPanel = null;
         }
         private void ChangePanelView(PanelType type)
