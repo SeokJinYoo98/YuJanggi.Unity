@@ -14,6 +14,7 @@ namespace YuJanggi.Lobby.Panel
         [SerializeField] private VolumeSlider _masterSlider;
         [SerializeField] private VolumeSlider _uiSlider;
         [SerializeField] private VolumeSlider _sfxSlider;
+        [SerializeField] private VolumeSlider _bgmSlider;
 
         private AudioManager AudioManager
             => YuJanggiBootStrap.Instance.AudioManager;
@@ -34,6 +35,7 @@ namespace YuJanggi.Lobby.Panel
             audio.SetMasterVolume(_masterSlider.NormalizedValue);
             audio.SetSfxVolume(_sfxSlider.NormalizedValue);
             audio.SetUIVolume(_uiSlider.NormalizedValue);
+            audio.SetBGMVolume(_bgmSlider.NormalizedValue);
         }
     }
 }

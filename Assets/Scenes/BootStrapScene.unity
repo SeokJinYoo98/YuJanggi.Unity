@@ -151,6 +151,7 @@ MonoBehaviour:
   _audioMixer: {fileID: 24100000, guid: 46c5699b7776f6244985edd4e36c9cfd, type: 2}
   _sfxPlayer: {fileID: 958478290}
   _uiPlayer: {fileID: 2053824259}
+  _bgmPlayer: {fileID: 1628159228}
 --- !u!4 &128700571
 Transform:
   m_ObjectHideFlags: 0
@@ -166,6 +167,7 @@ Transform:
   m_Children:
   - {fileID: 221739126}
   - {fileID: 1915021978}
+  - {fileID: 1628159229}
   m_Father: {fileID: 1687302066}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &221739125
@@ -659,6 +661,83 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1628159227
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 128700571}
+    m_Modifications:
+    - target: {fileID: 4164097152079083674, guid: 1a85550609a7d3346b4b7e2e63b51803, type: 3}
+      propertyPath: _data
+      value: 
+      objectReference: {fileID: 11400000, guid: 8b6906e9dd0c48a4fabf15ef7ecb528f, type: 2}
+    - target: {fileID: 6307391131620320044, guid: 1a85550609a7d3346b4b7e2e63b51803, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 349.94135
+      objectReference: {fileID: 0}
+    - target: {fileID: 6307391131620320044, guid: 1a85550609a7d3346b4b7e2e63b51803, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -667.0791
+      objectReference: {fileID: 0}
+    - target: {fileID: 6307391131620320044, guid: 1a85550609a7d3346b4b7e2e63b51803, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 292.326
+      objectReference: {fileID: 0}
+    - target: {fileID: 6307391131620320044, guid: 1a85550609a7d3346b4b7e2e63b51803, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6307391131620320044, guid: 1a85550609a7d3346b4b7e2e63b51803, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6307391131620320044, guid: 1a85550609a7d3346b4b7e2e63b51803, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6307391131620320044, guid: 1a85550609a7d3346b4b7e2e63b51803, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6307391131620320044, guid: 1a85550609a7d3346b4b7e2e63b51803, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6307391131620320044, guid: 1a85550609a7d3346b4b7e2e63b51803, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6307391131620320044, guid: 1a85550609a7d3346b4b7e2e63b51803, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6346375347079973240, guid: 1a85550609a7d3346b4b7e2e63b51803, type: 3}
+      propertyPath: m_Name
+      value: AudioPlayer_Bgm
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 1a85550609a7d3346b4b7e2e63b51803, type: 3}
+--- !u!114 &1628159228 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4164097152079083674, guid: 1a85550609a7d3346b4b7e2e63b51803, type: 3}
+  m_PrefabInstance: {fileID: 1628159227}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd948313da96ca94e91b8127450d3455, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.Audio.Player.AudioPlayer
+--- !u!4 &1628159229 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6307391131620320044, guid: 1a85550609a7d3346b4b7e2e63b51803, type: 3}
+  m_PrefabInstance: {fileID: 1628159227}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1687302064
 GameObject:
   m_ObjectHideFlags: 0
