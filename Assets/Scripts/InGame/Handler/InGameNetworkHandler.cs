@@ -16,7 +16,7 @@ namespace YuJanggi.InGame.Handler
     using Network.Handler;
     public interface IInGameNetworkReceiver
     {
-        void ApplyServerTurn(
+        void ApplyServerMove(
             PlayerTeam team,
             ProtocolTurnAction action,
             Pos from, Pos to);
@@ -119,7 +119,56 @@ namespace YuJanggi.InGame.Handler
 
             var result = response.GetPayload<GameEndResponse>().Result;
 
-            if (result == GameEndResult.Accepted)
+            if (result == GameRequestResult.Accepted)
+                return true;
+
+            return false;
+        }
+
+        public async UniTask<bool> SendGiveUpRequest(
+            PlayerTeam          myTeam,
+            CancellationToken   token)
+        {
+            EnsureAvailable(token);
+
+            var request = new GiveUpRequest
+            {
+                Requester = ProtocolMapper.ToProtocolPlayerTeam(myTeam)
+            };
+
+            var response = await SendRequestAsync(
+                ClientMessageType.GiveUpRequest,
+                request,
+                ServerMessageType.GiveUpResponse,
+                token);
+
+            var result = response.GetPayload<GiveUpResponse>().Result;
+
+            if (result == GameRequestResult.Accepted)
+                return true;
+
+            return false;
+        }
+        public async UniTask<bool> SendPassTurnRequest(
+            PlayerTeam myTeam,
+            CancellationToken token)
+        {
+            EnsureAvailable(token);
+
+            var request = new PassTurnRequest
+            {
+                Requester = ProtocolMapper.ToProtocolPlayerTeam(myTeam)
+            };
+
+            var response = await SendRequestAsync(
+                ClientMessageType.PassTurnRequest,
+                request,
+                ServerMessageType.PassTurnResponse,
+                token);
+
+            var result = response.GetPayload<GiveUpResponse>().Result;
+
+            if (result == GameRequestResult.Accepted)
                 return true;
 
             return false;
@@ -157,7 +206,7 @@ namespace YuJanggi.InGame.Handler
                 ? ProtocolMapper.ToPos(payload.ToX, payload.ToZ)
                 : Pos.Invalid;
 
-            _receiver?.ApplyServerTurn(
+            _receiver?.ApplyServerMove(
                 team,
                 payload.Action,
                 from,
@@ -167,16 +216,24 @@ namespace YuJanggi.InGame.Handler
             ServerMessage msg)
         {
             var payload = msg.GetPayload<GameEndedEvent>();
+
             var winner = payload.Winner == Protocol.Matching.ProtocolPlayerTeam.None
                 ? PlayerTeam.None
                 : ProtocolMapper.ToPlayerTeam(payload.Winner);
 
-            //_receiver?.ApplyServerGameEnded(
-            //    winner,
-            //    payload.TotalMoves);
+            var result = new GameResultInfo
+            {
+                Type = ProtocolMapper.ToGameResult(payload.EndReason),
+                Winner = winner,
+                Loser = winner == PlayerTeam.None
+                    ? PlayerTeam.None
+                    : winner == PlayerTeam.Cho
+                        ? PlayerTeam.Han
+                        : PlayerTeam.Cho
+            };
+
+            _receiver?.ApplyServerGameEnded(result, payload.TotalMoves);
         }
-
-
     }
 }
 

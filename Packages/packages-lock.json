@@ -14,7 +14,7 @@
       "dependencies": {}
     },
     "com.seokjinyoo.yujanggi.protocol": {
-      "version": "file:D:/Git/YuJanggi/upm/protocol/com.seokjinyoo.yujanggi.protocol-1.6.0.tgz",
+      "version": "file:D:/Git/YuJanggi/upm/protocol/com.seokjinyoo.yujanggi.protocol-1.7.1.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {}

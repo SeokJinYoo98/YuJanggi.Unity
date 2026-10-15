@@ -20,8 +20,7 @@ namespace YuJanggi.InGame.Mode
         void SetLocalInputEnabled(bool enabled);
         PlayerType GetPlayerType(PlayerTeam team);
 
-        UniTask InitializeAsync(
-            CancellationToken token = default);
+        public void Initialize(CancellationToken token);
         UniTask StartGameAsync(
             CancellationToken token = default);
         UniTask ClearAsync(
@@ -47,31 +46,42 @@ namespace YuJanggi.InGame.Mode
         public event Action<TurnData, PlayerType>       OnTurnCompleted;
         public event Action<UndoData, PlayerType>       OnUndoCompleted;
         public event Action<GameResultInfo, bool, int>  OnGameEnded;
-        private CancellationToken _lifecycleToken;
+
+        private CancellationTokenSource _gameCts;
+        protected CancellationToken     _gameToken;
+
         private bool   _play = false;
         protected bool _localInputEnabled = true;
         public bool IsEnd => !_play;
         #endregion
+        #region Constructor
         protected GameMode(
             IJanggiEngine engine)
         {
             _engine = engine;
         }
 
+        #endregion
+
+        #region Update
         public void Tick(float deltaTime)
         {
             if (_play) _engine.Tick(deltaTime);
         }
+        #endregion
+
+        #region Turn & Input
         protected abstract void     BeginNextTurn(PlayerTeam team);
         public abstract PlayerType  GetPlayerType(PlayerTeam team);
-        public void SetLocalInputEnabled(bool enabled)
+        public void                 SetLocalInputEnabled(bool enabled)
         {
             _localInputEnabled = enabled;
             OnSetLocalInputEnabled(enabled);
         }
+        protected abstract void     OnSetLocalInputEnabled(bool enabled);
+        #endregion
 
-        protected abstract void OnSetLocalInputEnabled(bool enabled);
-
+        #region Engine Events
         public void BindEvents()
         {
             UnBindEvents();
@@ -79,15 +89,14 @@ namespace YuJanggi.InGame.Mode
             events.OnTurnCompleted += HandleTurnCompleted;
             events.OnUndoCompleted += HandleUndoCompleted;
         }
-
         public void UnBindEvents()
         {
             var events = _engine.References.GameEvents;
             events.OnTurnCompleted -= HandleTurnCompleted;
             events.OnUndoCompleted -= HandleUndoCompleted;
         }
-
-        protected virtual void HandleTurnCompleted(TurnData data)
+        protected virtual void HandleTurnCompleted(
+            TurnData data)
         {
             var nextTeam = data.ActingTeam == PlayerTeam.Cho
                 ? PlayerTeam.Han
@@ -96,170 +105,131 @@ namespace YuJanggi.InGame.Mode
             if (data.GameResult is null)
                 BeginNextTurn(nextTeam);
 
-            // 종료 결과도 TurnData.GameResult에 포함된 상태로 기존 처리에 전달합니다.
             OnTurnCompleted?.Invoke(data, GetPlayerType(nextTeam));
 
             if (data.GameResult is GameResultInfo result)
-                HandleGameEndedAsync(
-                    result,
-                    data.MoveCount).Forget();
-              
+                HandleGameEnded(result, data.MoveCount);
         }
-        protected virtual void HandleUndoCompleted(UndoData data)
+        protected abstract void HandleGameEnded(
+            GameResultInfo result,
+            int moveCount);
+        protected virtual void HandleUndoCompleted(
+            UndoData data)
         {
             BeginNextTurn(data.CurrentTurn);
             OnUndoCompleted?.Invoke(data, GetPlayerType(data.CurrentTurn));
         }
+        #endregion
 
-
-        public async UniTask InitializeAsync(
-            CancellationToken token = default)
+        #region Game Start
+        public void Initialize(CancellationToken token)
         {
-            token.ThrowIfCancellationRequested();
-            _lifecycleToken = token;
-            _play = false;
+            CancelGameTasks();
+            _gameCts    = CancellationTokenSource.CreateLinkedTokenSource(token);
+            _gameToken  = _gameCts.Token;
+
+            _play              = false;
             _localInputEnabled = true;
+
             BindEvents();
+
             _engine.InitEngine();
-            await OnInitializeAsync(token);
+            OnInitialize();
         }
-        protected abstract UniTask OnInitializeAsync(
-            CancellationToken token);
+        protected abstract void OnInitialize();
 
         public virtual async UniTask StartGameAsync(
             CancellationToken token = default)
         {
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(token, _gameToken);
+            token = cts.Token;
             token.ThrowIfCancellationRequested();
             _play = false;
 
             await OnGameStartAsync(token);
 
+            token.ThrowIfCancellationRequested();
             _engine.StartEngine();
             _play = true;
             Debug.Log("StartGameAsync");
             BeginNextTurn(_engine.ControllerQuery.CurrentTurn);
 
-            // TODO: 시작 대기 중 취소 시 Engine이 시작되는지 확인하고, 필요하면 대기 후 검사를 추가합니다.
         }
         protected abstract UniTask OnGameStartAsync(
             CancellationToken token);
+        #endregion
 
-        public async UniTask RequestMoveAsync(
+        #region Move Requests
+        public abstract UniTask RequestMoveAsync(
             Pos from,
             Pos to,
+            CancellationToken token = default);
+        #endregion
+
+        #region LiveGame UI Buttons
+        public abstract UniTask PassTurnAsync(
+            CancellationToken token = default);
+        public abstract UniTask TakeBackAsync(
+            CancellationToken token = default);
+        public abstract UniTask GiveUpAsync(
+            CancellationToken token = default);
+        #endregion
+
+        #region GameEnd UI Buttons
+        public virtual UniTask<bool> RequestRematchAsync(
             CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            await OnRequestMoveAsync(from, to, token);
-        }
-        protected abstract UniTask OnRequestMoveAsync(
-            Pos from,
-            Pos to,
-            CancellationToken token);
+            => UniTask.FromResult(true);
+        #endregion
 
-        public async UniTask PassTurnAsync(
-            CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            await OnPassTurnAsync(token);
-        }
-        protected abstract UniTask OnPassTurnAsync(
-            CancellationToken token);
+        #region Game End
+ 
 
-        public async UniTask TakeBackAsync(
-            CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            await OnTakeBackAsync(token);
-        }
-        protected abstract UniTask OnTakeBackAsync(
-            CancellationToken token);
-
-
-        public async UniTask<bool> RequestRematchAsync(
-            CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            return await OnRequestRematchAsync(token);
-        }
-
-        protected abstract UniTask<bool> OnRequestRematchAsync(
-            CancellationToken token);
-
-        public async UniTask GiveUpAsync(
-            CancellationToken token = default)
-        {
-            token.ThrowIfCancellationRequested();
-            var loser = await OnGiveUpAsync(token);
-
-            if (loser != null)
-                _engine.GiveUp(loser.Value);
-        }
-        protected abstract UniTask<PlayerTeam?> OnGiveUpAsync(
-            CancellationToken token);
-
-        protected async UniTask HandleGameEndedAsync(
+        protected void NotifyGameEnded(
             GameResultInfo result,
             int moveCount)
         {
             _play = false;
             UnBindEvents();
 
-            result = await OnGameEndAsync(
-                result,
-                _engine.References.ReadOnlyRecord.Count,
-                _lifecycleToken);
-            // 결과가 무엇인지?
+            CancelGameTasks();
 
             OnGameEnded?.Invoke(
                 result,
                 GetPlayerType(result.Winner) == PlayerType.Local,
                 moveCount);
         }
-        protected abstract UniTask<GameResultInfo> OnGameEndAsync(
-            GameResultInfo info,
-            int totalMoves,
-            CancellationToken token);
+        #endregion
 
-        #region 게임 종료
-
-
-
-        protected UniTask HandleGiveUpAsync(PlayerTeam team)
-        {
-            if (IsEnd)
-                return UniTask.CompletedTask;
-
-            var result = new GameResultInfo
-            {
-                Type   = GameResult.GiveUp,
-                Loser  = team,
-                Winner = team == PlayerTeam.Cho ? PlayerTeam.Han : PlayerTeam.Cho
-            };
-
-            _engine.EndEngine();
-
-            return HandleGameEndedAsync(
-                result,
-                _engine.References.ReadOnlyRecord.Count);
-        }
-        public async UniTask ClearAsync(CancellationToken token = default)
+        #region Clear
+        public async UniTask ClearAsync(
+            CancellationToken token = default)
         {
             _play = false;
             UnBindEvents();
-            //
-            // 종료메서드
-            //
+            CancelGameTasks();
+ 
             await OnClearAsync(token);
-            //
         }
-
-
-
-
-
         protected abstract UniTask OnClearAsync(
             CancellationToken token);
+
+        private void CancelGameTasks()
+        {
+            var cts = _gameCts;
+            _gameCts = null;
+
+            if (cts == null)
+                return;
+
+            try
+            {
+                cts.Cancel();
+            }
+            finally
+            {
+                cts.Dispose();
+            }
+        }
         #endregion
     }
 }

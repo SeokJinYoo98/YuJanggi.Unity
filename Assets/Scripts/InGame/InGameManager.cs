@@ -93,26 +93,16 @@ namespace YuJanggi.InGame
 
         private async UniTask InitializeAndStartAsync()
         {
-            await InitializeAsync();
-            await StartGameAsync();
-        }
-
-        private async UniTask InitializeAsync()
-        {
             var token = _lifecycleToken;
-            await _inGameMode.InitializeAsync(token);
+            _inGameMode.Initialize(token);
             _inGameView.Initialize(EngineReferences.Board);
-        }
-        private async UniTask StartGameAsync()
-        {
+
             await _inGameMode.StartGameAsync(_lifecycleToken);
 
             _inGameView.StartGame(
                 PlayerTeam.Cho,
                 _inGameMode.GetPlayerType(PlayerTeam.Cho));
-
         }
-
 
         private void BindEvents()
         {
@@ -226,7 +216,7 @@ namespace YuJanggi.InGame
             if (!await _inGameMode.RequestRematchAsync(token))
                 return;
 
-            await _inGameMode.InitializeAsync(token);
+            _inGameMode.Initialize(token);
 
             _inGameView.PrepareRematchView(
                 EngineReferences.Board,
