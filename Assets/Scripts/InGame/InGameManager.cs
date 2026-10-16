@@ -183,14 +183,9 @@ namespace YuJanggi.InGame
         public void HandleModeActionButton()
         {
             if (_inGameMode.ModeType == GameModeType.Network)
-            {
-                // 채팅창 열기
-                return;
-            }
+                _inGameView.ToggleChattingPanel();
             else if (IsLive)
-            {
-                _inGameMode.TakeBackAsync(_lifecycleToken).Forget();
-            }
+                _inGameMode.TakeBack();
         }
         public void HandlePassTurnButton()
         {

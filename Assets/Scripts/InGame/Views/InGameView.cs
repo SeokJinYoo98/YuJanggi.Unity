@@ -21,6 +21,8 @@ namespace YuJanggi.InGame.Views
         [SerializeField] private BoardView       _boardView;
         [SerializeField] private CheckEffectView _janggunEffect;
 
+        [SerializeField] private ChattingPanel   _chatPanel;
+
         [SerializeField] private ButtonBase      _modeActionButton;
         [SerializeField] private LockOnClickButton _rematchButton;
         public void PrepareRematchView(
@@ -40,7 +42,7 @@ namespace YuJanggi.InGame.Views
         {
             _boardView.InitPieces(board);
             _liveView.SetLiveText();
-            _modeActionButton.SetText(isNetworkMode ? "채팅" : "무르기");
+            _modeActionButton.SetText(isNetworkMode ? "채팅열기" : "무르기");
             _rematchButton.ResetButton();
         }
         public void StartGame(
@@ -56,7 +58,6 @@ namespace YuJanggi.InGame.Views
 
         public void SyncBoardState(IReadOnlyBoard board)
             => _boardView.SyncBoardState(board);
- 
         public void ClearSelection()
             => _boardView.ClearSelection();
 
@@ -142,5 +143,15 @@ namespace YuJanggi.InGame.Views
             => _resultView.Open();
         public void CloseResultView()
             => _resultView.Close();
+
+        public void ToggleChattingPanel()
+        {
+            _chatPanel.Toggle();
+
+            if (_chatPanel.IsToggled)
+                _modeActionButton.SetText("채팅닫기");
+            else
+                _modeActionButton.SetText("채팅열기");
+        }
     }
 }

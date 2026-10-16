@@ -36,8 +36,7 @@ namespace YuJanggi.InGame.Mode
             CancellationToken token = default);
         public UniTask GiveUpAsync(
             CancellationToken token = default);
-        public UniTask TakeBackAsync(
-            CancellationToken token = default);
+        public void TakeBack();
     }
     public abstract class GameMode : IGameMode
     {
@@ -171,8 +170,7 @@ namespace YuJanggi.InGame.Mode
         #region LiveGame UI Buttons
         public abstract UniTask PassTurnAsync(
             CancellationToken token = default);
-        public abstract UniTask TakeBackAsync(
-            CancellationToken token = default);
+        public virtual void TakeBack() { }
         public abstract UniTask GiveUpAsync(
             CancellationToken token = default);
         #endregion

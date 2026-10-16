@@ -147,11 +147,7 @@ namespace YuJanggi.InGame.Mode
         #endregion
 
         #region LiveGame UI Buttons
-        public async override UniTask TakeBackAsync(
-            CancellationToken token)
-        {
-            throw new NotImplementedException();
-        }
+
         public async override UniTask PassTurnAsync(
             CancellationToken token)
         {

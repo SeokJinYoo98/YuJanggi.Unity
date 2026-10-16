@@ -8,10 +8,8 @@ namespace YuJanggi.UI
 {
     public class UIVisible : MonoBehaviour
     {
-        private void Start()
-        {
-            Close();
-        }
+        protected virtual void Awake()
+            => Close();
         public void Open()
             => gameObject.SetActive(true);
 

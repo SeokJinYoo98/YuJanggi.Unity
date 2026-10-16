@@ -98,12 +98,10 @@ namespace YuJanggi.InGame.Mode
                 _engine.HandleHandicap();
             return UniTask.CompletedTask;
         }
-        public override UniTask TakeBackAsync(
-            CancellationToken token)
+        public override void TakeBack()
         {
             if (IsLocalTurn)
                 _engine.Undo();
-            return UniTask.CompletedTask;
         }
         public override UniTask GiveUpAsync(
             CancellationToken token)

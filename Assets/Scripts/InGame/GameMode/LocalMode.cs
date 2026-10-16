@@ -82,12 +82,8 @@ namespace YuJanggi.InGame.Mode
             return UniTask.CompletedTask;
         }
 
-        public override UniTask TakeBackAsync(
-            CancellationToken token)
-        {
-            _engine.Undo();
-            return UniTask.CompletedTask;
-        }
+        public override void TakeBack()
+            => _engine.Undo();
 
         public override UniTask GiveUpAsync(
             CancellationToken token)
