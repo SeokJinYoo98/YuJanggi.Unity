@@ -940,8 +940,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -13, y: -0.5}
-  m_SizeDelta: {x: -20, y: -13}
+  m_AnchoredPosition: {x: 4, y: -0.5}
+  m_SizeDelta: {x: -12, y: -13}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &201183050
 MonoBehaviour:
@@ -4979,9 +4979,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ad1a5b52a25e4543a24ba8912759d0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Views.UI.ChattingPanel
-  _localMessagePrefab: {fileID: 0}
-  _remoteMessagePrefab: {fileID: 0}
+  _localMessagePrefab: {fileID: 2904072417049587902, guid: fa1c0b901f547d042bf9ae725d2028ec, type: 3}
+  _remoteMessagePrefab: {fileID: 2955202921438065578, guid: d885db05b7fab92419fce66588405c16, type: 3}
   _scrollRect: {fileID: 1037337041}
+  _inputField: {fileID: 1528907229}
 --- !u!1 &1841336929
 GameObject:
   m_ObjectHideFlags: 0

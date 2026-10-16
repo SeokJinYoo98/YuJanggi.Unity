@@ -26,17 +26,19 @@ namespace YuJanggi.Network
 
         private RequestDispatcher       _requests;
         private LobbyNetworkHandler     _lobbyNetworkHandler;
-        private InGameNetworkHandler           _inGameHandler;
+        private InGameNetworkHandler    _inGameHandler;
+        private InGameChattingHandler   _inGameChat;
 
         private CancellationTokenSource _receiveCts;
         private UniTaskCompletionSource _receiveCompletion;
 
         internal LobbyNetworkHandler    Lobby
             => _lobbyNetworkHandler;
-        internal InGameNetworkHandler          InGame
+        internal InGameNetworkHandler   InGame
             => _inGameHandler;
-
- 
+        internal InGameChattingHandler InGameChat
+            => _inGameChat;
+        
 
         internal void Initialize(
             string host,
@@ -49,23 +51,28 @@ namespace YuJanggi.Network
             var client   = new NetworkClient(host, port);
             var requests = new RequestDispatcher(client);
 
-            LobbyNetworkHandler lobby   = null;
-            InGameNetworkHandler       inGame  = null;
-
+            LobbyNetworkHandler   lobby      = null;
+            InGameNetworkHandler  inGame     = null;
+            InGameChattingHandler inGameChat = null;
             try
             {
-                lobby   = new LobbyNetworkHandler(client, requests);
-                inGame  = new InGameNetworkHandler(client, requests);
+                lobby      = new LobbyNetworkHandler(client, requests);
+                inGame     = new InGameNetworkHandler(client, requests);
+                inGameChat = new InGameChattingHandler(client, requests);
 
                 _client                 = client;
                 _requests               = requests;
+
                 _lobbyNetworkHandler    = lobby;
                 _inGameHandler          = inGame;
+                _inGameChat             = inGameChat;
             }
             catch
             {
                 inGame?.Dispose();
                 lobby?.Dispose();
+                inGameChat?.Dispose();
+
                 requests.Dispose();
                 client.Dispose();
                 throw;
@@ -89,6 +96,8 @@ namespace YuJanggi.Network
                 Lobby.HandleMessage(message);
             else if (300 <= typeNum && typeNum <= 399)
                 InGame.HandleMessage(message);
+            else if (400 <= typeNum && typeNum <= 499)
+                InGameChat.HandleMessage(message);
         }
         
 
@@ -265,6 +274,8 @@ namespace YuJanggi.Network
 
             _lobbyNetworkHandler?.Dispose();
             _inGameHandler?.Dispose();
+            _inGameChat?.Dispose();
+
             _client?.Dispose();
         }
     }
