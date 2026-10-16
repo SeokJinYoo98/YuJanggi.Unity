@@ -4,6 +4,8 @@ using UnityEngine.InputSystem;
 using YuJanggi.Core.InGame;
 namespace YuJanggi.InGame.Input
 {
+    using Controller.Input;
+
     using Engine.Domain;
     using YuJanggi.Store;
 
