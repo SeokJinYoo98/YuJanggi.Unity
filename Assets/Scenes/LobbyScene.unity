@@ -1820,6 +1820,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 3662727707099967949, guid: 18529ef7d56c59347ba51863a84a03a0, type: 3}
   m_PrefabInstance: {fileID: 158300471}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &158300473 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4818067220977784088, guid: 18529ef7d56c59347ba51863a84a03a0, type: 3}
+  m_PrefabInstance: {fileID: 158300471}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68dbc8a8397993945bbab501f9056c8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.UI.Volume.VolumeSlider
 --- !u!1 &159556667
 GameObject:
   m_ObjectHideFlags: 0
@@ -14353,6 +14364,7 @@ MonoBehaviour:
   _masterSlider: {fileID: 23239555}
   _uiSlider: {fileID: 1357338731}
   _sfxSlider: {fileID: 1549376560}
+  _bgmSlider: {fileID: 158300473}
 --- !u!1 &1828837888
 GameObject:
   m_ObjectHideFlags: 0

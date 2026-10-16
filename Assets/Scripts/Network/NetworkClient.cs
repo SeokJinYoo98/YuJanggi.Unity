@@ -91,7 +91,17 @@ namespace YuJanggi.Network
                 registration =
                     token.Register(client.Dispose);
 
-                await client.ConnectAsync(_host, _port);
+                try
+                {
+                    await client.ConnectAsync(_host, _port);
+                }
+                catch (NullReferenceException exception)
+                    when (token.IsCancellationRequested)
+                {
+                    // Unity의 TcpClient.EndConnect는 연결 중 Dispose되면 이 예외를 발생시킬 수 있습니다.
+                    throw new OperationCanceledException(
+                        "서버 연결이 취소되었습니다.", exception, token);
+                }
 
                 token.ThrowIfCancellationRequested();
 

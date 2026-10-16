@@ -240,6 +240,12 @@ namespace YuJanggi.Network
             // 종료 처리를 추가할 때 미처리 예외 로그가 중복 발생하는지도 확인합니다.
         }
 
+        private void OnApplicationQuit()
+        {
+            _receiveCts?.Cancel();
+            _client?.Disconnect();
+        }
+
         private void OnDestroy()
         {
             var cts = _receiveCts;

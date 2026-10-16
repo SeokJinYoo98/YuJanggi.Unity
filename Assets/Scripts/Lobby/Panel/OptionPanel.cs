@@ -37,6 +37,8 @@ namespace YuJanggi.Lobby.Panel
             audio.SetSfxVolume(_sfxSlider.NormalizedValue);
             audio.SetUIVolume(_uiSlider.NormalizedValue);
             audio.SetBGMVolume(_bgmSlider.NormalizedValue);
+
+            YuJanggiBootStrap.Instance.SavePlayerSettings();
         }
     }
 }

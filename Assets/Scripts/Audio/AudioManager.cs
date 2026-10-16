@@ -27,8 +27,7 @@ namespace YuJanggi.Audio
 
     public class AudioManager : MonoBehaviour
     {
-        // 볼륨 변환식(20 * log10(value))에서 -7 dB에 해당합니다.
-        private const float DefaultBGMVolume = 0.4466836f;
+        private const float BGMMaxVolumeDb = -7f;
 
         private static class MixerParam
         {
@@ -46,21 +45,36 @@ namespace YuJanggi.Audio
         [SerializeField] private AudioPlayer _uiPlayer;
         [SerializeField] private AudioPlayer _bgmPlayer;
 
-        public float MasterVolume   { get; private set; } = 1f;
-        public float SfxVolume      { get; private set; } = 1f;
-        public float UIVolume       { get; private set; } = 1f;
-        public float BGMVolume      { get; private set; } = DefaultBGMVolume;
+        private PlayerAudioSettings _settings = new();
+
+        public float MasterVolume => _settings.MasterVolume;
+        public float SfxVolume => _settings.SfxVolume;
+        public float UIVolume => _settings.UIVolume;
+        public float BGMVolume => _settings.BGMVolume;
+        public void Initialize(
+            PlayerAudioSettings audioSettings)
+        {
+            _settings = audioSettings;
+
+            SetMasterVolume(audioSettings.MasterVolume);
+            SetSfxVolume(audioSettings.SfxVolume);
+            SetUIVolume(audioSettings.UIVolume);
+            SetBGMVolume(audioSettings.BGMVolume);
+            PlayBGM(Bgm.Lobby);
+        }
         public void Initialize(
                float masterVolume,
                float sfxVolume,
                float uiVolume,
-               float bgmVolume = DefaultBGMVolume)
+               float bgmVolume = 1f)
         {
-            SetMasterVolume(masterVolume);
-            SetSfxVolume(sfxVolume);
-            SetUIVolume(uiVolume);
-            SetBGMVolume(bgmVolume);
-            PlayBGM(Bgm.Lobby);
+            Initialize(new PlayerAudioSettings
+            {
+                MasterVolume = masterVolume,
+                SfxVolume = sfxVolume,
+                UIVolume = uiVolume,
+                BGMVolume = bgmVolume
+            });
         }
         public void PlaySfx(JanggiSfx type)
             => _sfxPlayer.Play((int)type);
@@ -73,23 +87,25 @@ namespace YuJanggi.Audio
 
         public void SetMasterVolume(float value)
         {
-            MasterVolume = Mathf.Clamp01(value);
+            _settings.MasterVolume = Mathf.Clamp01(value);
             SetVolume(MixerParam.Master, MasterVolume);
         }
         public void SetSfxVolume(float value)
         {
-            SfxVolume = Mathf.Clamp01(value);
+            _settings.SfxVolume = Mathf.Clamp01(value);
             SetVolume(MixerParam.SFX, SfxVolume);
         }
         public void SetUIVolume(float value)
         {
-            UIVolume = Mathf.Clamp01(value);
+            _settings.UIVolume = Mathf.Clamp01(value);
             SetVolume(MixerParam.UI, UIVolume);
         }
         public void SetBGMVolume(float value)
         {
-            BGMVolume = Mathf.Clamp01(value);
-            SetVolume(MixerParam.BGM, BGMVolume);
+            _settings.BGMVolume = Mathf.Clamp01(value);
+            _audioMixer.SetFloat(
+                MixerParam.BGM,
+                BGMVolume <= 0f ? -80f : NormalizedToDecibel(BGMVolume) + BGMMaxVolumeDb);
         }
 
         private void SetVolume(string parameter, float normalized)

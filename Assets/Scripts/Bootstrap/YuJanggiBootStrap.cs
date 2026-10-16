@@ -21,17 +21,11 @@ namespace YuJanggi.BootStrap
         public AudioManager AudioManager { get; private set; } = null!;
         [field: SerializeField]
         public HistroyManager HistoryManger { get; private set; } = null!;
-        [Header("Audio Settings")]
-        [SerializeField] private float _sfxVolume    = 1.0f;
-        [SerializeField] private float _uiVolume     = 1.0f;
-        [SerializeField] private float _masterVolume = 1.0f;
-
-
 
         private const string _host = "127.0.0.1";
         private const int    _port = 7777;
 
-
+        private PlayerSettings _playerSettings = new();
         private void Awake()
         {
             Application.targetFrameRate = 60;
@@ -42,8 +36,9 @@ namespace YuJanggi.BootStrap
                 Destroy(gameObject);
                 return;
             }
-
             Instance = this;
+
+            LoadPlayerSettings();
 
             DontDestroyOnLoad(gameObject);
         }
@@ -78,14 +73,10 @@ namespace YuJanggi.BootStrap
                 data.port);
 
 
-            AudioManager.Initialize(
-                _masterVolume,
-                _sfxVolume,
-                _uiVolume);
+            AudioManager.Initialize(_playerSettings.Audio);
 
             await UniTask.CompletedTask;
         }
-
 
         private void OnDestroy()
         {
@@ -93,6 +84,32 @@ namespace YuJanggi.BootStrap
                 return;
 
             Instance = null!;
+        }
+
+        private string SettingsPath => System.IO.Path.Combine(
+            Application.persistentDataPath,
+            "PlayerSettings.json");
+
+        private void LoadPlayerSettings()
+        {
+            _playerSettings = System.IO.File.Exists(SettingsPath)
+                ? JsonUtility.FromJson<PlayerSettings>(
+                    System.IO.File.ReadAllText(SettingsPath))
+                : new PlayerSettings();
+        }
+
+        public void SavePlayerSettings()
+        {
+            var json = JsonUtility.ToJson(_playerSettings, prettyPrint: true);
+            System.IO.File.WriteAllText(SettingsPath, json);
+        }
+
+        private void OnApplicationQuit()
+        {
+            if (Instance != this)
+                return;
+
+            SavePlayerSettings();
         }
     }
 
