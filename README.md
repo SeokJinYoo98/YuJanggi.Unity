@@ -6,111 +6,88 @@
 </p>
 
 <p align="center">
-  Unity 6000.3.1f1 · UniTask · DOTween · TCP<br />
-  Input System · uGUI / TextMeshPro · URP · UPM
+  Unity 6000.3.26f1 · UniTask · CancellationToken · DOTween<br />
+  Input System · uGUI / TextMeshPro · ScriptableObject · Object Pool<br />
+  TCP · UPM / npm · AudioMixer · JSON 설정 저장
 </p>
-
 
 # YuJanggi.Unity
 
-Unity 기반 장기 클라이언트입니다. 게임 화면·입력·대국 흐름을 담당하며, <br>
-장기 규칙과 서버 통신 계약은 공용 패키지로 분리합니다.
+로컬·AI·온라인 대국을 지원하는 Unity 장기 클라이언트입니다.<br />
+Unity 독립 규칙 Engine과 공용 Protocol을 사용하며, AWS EC2의 .NET TCP 서버와 연동합니다.
 
-## Highlights
+## 프로젝트 소개 · 플레이 영상
 
-- GameMode의 게임 진행과 Live / Replay State의 화면 처리 분리
-- 기보 보기 중에도 실제 대국은 계속 진행되며, GameMode가 턴에 따른 입력 흐름을 관리합니다.
-- State가 실제 대국을 보여주는 Live 화면과 과거 기보를 보여주는 Replay 화면을 전환합니다.
-- Random / Greedy / Minimax AI 전략 구현
-- RequestId 기반 응답 추적과 서버 Event별 Handler 분배
+한 클라이언트에서 두 진영을 조작하거나 AI와 대국하고, 네트워크 모드에서는 매칭·포진 선택 후 상대와 대국합니다.<br />
+기보 재생, 리매치와 인게임 채팅을 제공합니다.
 
-## Download
+[Windows 설치파일 — YuJanggi v1.0.0](Downloads/YuJanggi_V1.0.0_Setup.exe?raw=true)
 
-[Windows 설치파일 — YuJanggi v1.0.0](Downloads/YuJanggi_V1.0.0_Setup.exe?raw=true) · 약 35MB
+설치파일은 이전 v1.0.0 빌드입니다. 아래 기능과 구조 설명은 현재 소스를 기준으로 합니다.
 
-다운로드 후 설치파일을 실행합니다. 제공된 v1.0.0 빌드와 현재 소스는 별개이며,<br> 
-아래 설명은 현재 소스 기준입니다.
+## 주요 기능
 
-## Getting Started
+| 기능 | 구현 내용 |
+| --- | --- |
+| 대국 모드 | Local / AI / Network |
+| AI 전략 | Random / Greedy / Minimax |
+| 보드 입력 | 기물 선택 · 이동 가능 위치 표시 · 이동 요청 |
+| 기보 재생 | Live / Replay 전환 · 기록 탐색 중 실제 대국 진행 유지 |
+| 온라인 대국 | 매칭 · 포진 · 이동 · 기권 · 한 수 쉼 · 양측 요청 기반 리매치 |
+| 채팅 | 서버 Event 수신 후 메시지 표시 · 엔터·버튼 전송 · 하단 스크롤 |
+| 음량 설정 | Master / SFX / UI / BGM 조절 · JSON 저장·복원 |
 
-1. **Unity 6000.3.1f1**에서 프로젝트를 엽니다.
-2. Engine **2.5.1** / Protocol **1.5.2** UPM `.tgz`를 준비하고 [manifest.json](Packages/manifest.json)의 로컬 경로를 맞춥니다.
+## 설치 · 실행 방법
+
+1. **Unity 6000.3.26f1**에서 프로젝트를 엽니다.
+2. [manifest.json](Packages/manifest.json)에 설정된 의존성을 복원합니다.
 3. [BootStrapScene](Assets/Scenes/BootStrapScene.unity)을 열고 Play합니다. 초기화 후 Lobby로 이동합니다.
 
-Local / AI는 서버 없이 진행합니다. Network는 `YuJanggi.Server`와 두 클라이언트가 필요하며, <br>
-양쪽의 Engine / Protocol 버전이 Handshake 검사를 통과해야 합니다.
+Engine **2.8.4** / Protocol **1.7.6**은 npm Scoped Registry에서 설치합니다.<br />
+레지스트리 URL은 `https://registry.npmjs.org`, Scope는 `com.yujanggi`이며 프로젝트에 설정되어 있습니다.
 
-### 서버 주소
+Local / AI는 서버 없이 실행합니다. Network 대국은 서버와 두 클라이언트가 필요하며, Engine / Protocol 버전이 Handshake 검사를 통과해야 합니다.
 
-- `SERVER_HOST`: 환경변수가 비어 있으면 `127.0.0.1` 사용
-- `SERVER_PORT`: 정수로 읽을 수 없으면 `7777` 사용
+Unity 빌드는 [Build Profiles](Assets/Settings/Build%20Profiles)의 Debug / Release 프로필을 사용합니다.
 
-Windows 사용자 환경변수 변경 후에는 **Unity Hub와 Editor를 모두 재실행**합니다. <br>
-[Bootstrap](Assets/Scripts/Bootstrap/YuJanggiBootStrap.cs)의 `Server endpoint: <host>:<port>` 로그에서 적용된 주소를 확인할 수 있습니다.
+## 클라이언트 구조
 
-## Features
+게임 진행과 화면 탐색을 분리해, 과거 기보를 보는 동안에도 실제 대국 상태를 갱신합니다.
 
-| 모드 | 대국 방식 |
+| 구성 요소 | 역할 |
 | --- | --- |
-| Local | 한 클라이언트에서 두 진영 입력 |
-| AI | Local Player와 AI Player 대국 |
-| Network | 서버 매칭·포진 준비 후 참가자 간 대국 |
+| `InGameManager` | Engine·GameMode·State 생성, 이벤트 연결과 생명주기 관리 |
+| `GameMode` | Local / AI / Network별 명령 처리와 턴 입력 제어 |
+| `InGameLiveState` / `InGameReplayState` | 실제 대국 표시와 과거 기보 탐색 |
+| InputHandler / Player | 입력 수집, 기물 선택과 이동 요청 해석 |
+| `InGameView` | 보드·기물·대국 UI 표시 |
+| `ChattingPanel` / `MessageView` | 채팅 수신 구독, 발신 팀별 말풍선과 안내 표시 |
 
-- 기물 선택과 이동 가능 위치 표시
-- 리플레이 중에도 수신 이동을 Engine에 반영해 실제 대국과 화면 탐색을 분리
-- Main Lobby 복귀 전에 이전 매치 상태 초기화와 연결 해제
-- 
-## Architecture
+장기 규칙과 게임 상태는 `YuJanggi.Engine`, 통신 DTO와 패킷 프레이밍은 `YuJanggi.Protocol` 패키지에서 제공합니다.
 
-게임 진행은 `GameMode`, Live / Replay의 보드 표현과 기보 탐색은 `InGameState`가 담당합니다. <br>`InGameManager`는 객체 생성, 생명주기, Engine 이벤트 연결과 상태 전환을 관리합니다.
+## 서버 연동 흐름
 
-- **입력 처리**: InputHandler가 입력을 받고, LocalPlayer가 기물 선택과 이동 요청을 해석합니다.
-- **게임 진행**: LocalMode가 Engine에 명령을 전달하고 다음 턴의 입력 대상을 설정합니다.
-- **화면 표현**: LiveState는 실제 이동을 표시하고, ReplayState는 선택한 기록을 재생합니다. 기보 보기 중에도 라이브 UI 갱신은 유지합니다.
-- **입력 제어**: State 진입 시 GameMode를 통해 로컬 입력을 정지하거나 재개합니다.
-- **메시지 분배**: NetworkManager가 RequestId가 있는 응답을 RequestDispatcher로, 서버 Event를 기능별 Handler로 전달합니다.
+클라이언트는 공용 Protocol로 AWS EC2의 TCP 서버와 통신합니다.
 
-## Project Structure
+1. Lobby에서 연결·버전 Handshake·매칭·포진 준비를 진행합니다.
+2. 양쪽 클라이언트의 게임 씬 준비가 끝나면 서버 시작 Event를 받아 대국을 시작합니다.
+3. `RequestDispatcher`가 RequestId로 응답을 연결하고, `NetworkManager`가 서버 Event를 기능별 Handler로 전달합니다.
+4. 온라인 이동·최종 종료 결과는 승인 응답과 구분해 서버 Event 수신 후 반영합니다.
+5. 리매치는 양측 요청 후 확정 Event를 기다리고, 채팅도 서버가 전달한 Event를 받아 표시합니다.
 
-```text
-Assets/
-├─ Scenes/                  # Bootstrap·Login·Lobby·대국 씬
-└─ Scripts/
-   ├─ Bootstrap/            # 애플리케이션 초기화와 NetworkManager
-   ├─ Core/                 # 입력·Player·State·AI 공통 계약
-   ├─ Lobby/                # 모드별 준비 패널과 매칭·포진 통신
-   ├─ InGame/
-   │  ├─ GameMode/          # 게임 진행과 명령 처리
-   │  ├─ Input/             # 포인터·JSON 기보 입력
-   │  ├─ Player/            # 기물 선택과 이동 입력 해석
-   │  ├─ State/             # Live·Replay 화면 상태와 기보 재생
-   │  ├─ Handler/           # 인게임 네트워크 Handler
-   │  └─ Views/             # 보드·기물·이동 가이드·효과·UI
-   ├─ Network/              # TCP 통신·요청 추적·Protocol 변환
-   ├─ AI/                   # 이동 탐색과 평가 전략
-   ├─ Audio/                # 오디오 관리
-   └─ UI/                   # 공통 버튼·볼륨·표시 제어
-Packages/                   # UPM 의존성 설정
-ProjectSettings/            # Unity 프로젝트 설정
-```
+UniTask와 CancellationToken으로 비동기 작업을 관리하며, 대국 명령·채팅 요청의 응답 대기 중 중복 전송을 제한합니다.
 
-## Build / CI/CD
+## 현재 구현 범위 · 향후 계획
 
-- **Unity 빌드**: [Build Profiles](Assets/Settings/Build%20Profiles)의 Debug / Release 프로필 사용. Debug만 Development Build 활성화
-- **공용 패키지**: Engine / Protocol의 Tag 기반 GitHub Actions가 UPM `.tgz`를 Artifact로 제공. 다운로드해 로컬 패키지로 설치
-- **Unity 자동화**: 이 저장소에는 현재 별도 CI/CD Workflow가 없음
+- **구현**: 로컬·AI·온라인 대국, 기보 재생, 기권·한 수 쉼, 리매치, 채팅, 음량 설정 저장.
+- **향후 계획**: 사용자 인증·DB 연동, 이탈 알림·재접속 복구, 모바일 대응.
+- **서버 측 과제**: Engine 기반 이동·최종 결과 검증. 현재 온라인 이동 전달을 서버 권위 규칙 검증과 구분합니다.
 
-주요 의존성은 UniTask, Input System, uGUI / TextMeshPro, URP, DOTween입니다.<br>
-Protocol의 JSON 직렬화에 필요한 DLL은 `Assets/Plugins/SystemTextJson`에 포함되어 있습니다.
+Engine / Protocol의 GitHub Actions에서 UPM 패키지를 npm에 배포합니다.<br />
+이 Unity 저장소에는 별도 CI/CD Workflow가 없습니다.
 
-## Limitations
+## 관련 저장소 · 문서
 
-- 서버의 Engine 기반 이동 검증은 아직 미구현
-- 재접속 시 대국 Snapshot 복구 경로 없음
-- 온라인 무르기·한 수 쉼·제한시간의 별도 서버 동기화 계약 없음
-
-## Related Projects
-
-- [YuJanggi.Engine](https://github.com/SeokJinYoo98/YuJanggi.Engine) — Unity 비의존 장기 규칙과 게임 상태
-- [YuJanggi.Protocol](https://github.com/SeokJinYoo98/YuJanggi.Protocol) — 클라이언트·서버 공유 메시지 계약
-- [YuJanggi.Server](https://github.com/SeokJinYoo98/YuJanggi.Server) — 연결·매칭·GameRoom과 서버 메시지 처리
+- [YuJanggi.Engine](https://github.com/SeokJinYoo98/YuJanggi.Engine) — Unity 독립 장기 규칙·게임 상태·기보
+- [YuJanggi.Protocol](https://github.com/SeokJinYoo98/YuJanggi.Protocol) — 공용 메시지 계약·직렬화·패킷 프레이밍
+- [YuJanggi.Server](https://github.com/SeokJinYoo98/YuJanggi.Server) — AWS EC2 기반 TCP 서버·매칭·GameRoom·리매치·채팅
