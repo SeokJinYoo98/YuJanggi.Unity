@@ -11,29 +11,23 @@ namespace YuJanggi.UI.Volume
         [SerializeField] private TMP_Text _valueText;
         [SerializeField] private Slider   _slider;
 
-        public float NormalizedValue
-            => PercentToNormalized(_slider.value);
+        public float Value => _slider.value;
 
         public void SetValue(float value)
         {
-            float percent = NormalizedToPercent(value);
+            value = Mathf.Clamp01(value);
 
-            _slider.SetValueWithoutNotify(percent);
-            SetValueText(percent);
-        }
-
-        public void HandleValueChanged(float value)
-        {
+            _slider.SetValueWithoutNotify(value);
             SetValueText(value);
         }
 
+        public void HandleValueChanged()
+        {
+            SetValueText(_slider.value);
+        }
+
         private void SetValueText(float value)
-            => _valueText.text = $"{Mathf.RoundToInt(value)}%";
-
-        private static float NormalizedToPercent(float value)
-            => Mathf.Clamp01(value) * 100f;
-
-        private static float PercentToNormalized(float value)
-            => Mathf.Clamp(value, 0f, 100f) / 100f;
+            => _valueText.text =
+                $"{Mathf.RoundToInt(value * 100f)}%";
     }
 }

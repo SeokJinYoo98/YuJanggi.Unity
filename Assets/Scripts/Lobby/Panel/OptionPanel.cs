@@ -33,10 +33,10 @@ namespace YuJanggi.Lobby.Panel
         {
             var audio = AudioManager;
 
-            audio.SetMasterVolume(_masterSlider.NormalizedValue);
-            audio.SetSfxVolume(_sfxSlider.NormalizedValue);
-            audio.SetUIVolume(_uiSlider.NormalizedValue);
-            audio.SetBGMVolume(_bgmSlider.NormalizedValue);
+            audio.SetMasterVolume(_masterSlider.Value);
+            audio.SetSfxVolume(_sfxSlider.Value);
+            audio.SetUIVolume(_uiSlider.Value);
+            audio.SetBGMVolume(_bgmSlider.Value);
 
             YuJanggiBootStrap.Instance.SavePlayerSettings();
         }
