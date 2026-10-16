@@ -23,7 +23,7 @@ namespace YuJanggi.InGame.Views
 
         [SerializeField] private ChattingPanel   _chatPanel;
 
-        [SerializeField] private ButtonBase      _modeActionButton;
+        [SerializeField] private ButtonBase        _modeActionButton;
         [SerializeField] private LockOnClickButton _rematchButton;
         public void PrepareRematchView(
             IReadOnlyBoard board,
@@ -43,7 +43,6 @@ namespace YuJanggi.InGame.Views
             _boardView.InitPieces(board);
             _liveView.SetLiveText();
             _modeActionButton.SetText(isNetworkMode ? "채팅열기" : "무르기");
-            _rematchButton.ResetButton();
         }
         public void StartGame(
             PlayerTeam turn,
