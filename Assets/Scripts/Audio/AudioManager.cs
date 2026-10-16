@@ -62,20 +62,7 @@ namespace YuJanggi.Audio
             SetBGMVolume(audioSettings.BGMVolume);
             PlayBGM(Bgm.Lobby);
         }
-        public void Initialize(
-               float masterVolume,
-               float sfxVolume,
-               float uiVolume,
-               float bgmVolume = 1f)
-        {
-            Initialize(new PlayerAudioSettings
-            {
-                MasterVolume = masterVolume,
-                SfxVolume = sfxVolume,
-                UIVolume = uiVolume,
-                BGMVolume = bgmVolume
-            });
-        }
+
         public void PlaySfx(JanggiSfx type)
             => _sfxPlayer.Play((int)type);
         public void PlayUI(UISfx type)

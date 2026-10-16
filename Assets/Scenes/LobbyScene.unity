@@ -14362,8 +14362,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.Lobby.UI.OptionPanel
   _masterSlider: {fileID: 23239555}
-  _uiSlider: {fileID: 1357338731}
-  _sfxSlider: {fileID: 1549376560}
+  _uiSlider: {fileID: 1549376560}
+  _sfxSlider: {fileID: 1357338731}
   _bgmSlider: {fileID: 158300473}
 --- !u!1 &1828837888
 GameObject:
