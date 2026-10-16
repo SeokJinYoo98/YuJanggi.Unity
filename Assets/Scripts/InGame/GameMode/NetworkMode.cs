@@ -116,15 +116,10 @@ namespace YuJanggi.InGame.Mode
             GameResultInfo result,
             int moveCount)
         {
-            if (_commandPending)
-                return;
-
+            // 로컬 Engine 결과로 종료를 요청하지 않고 서버 GameEndedEvent를 기다립니다.
             _commandPending = true;
-
-            _netHandler.SendGameEndRequest(
-                result,
-                moveCount,
-                _gameToken).Forget();
+            SetLocalInputEnabled(false);
+            _localPlayer.ResetSelection();
         }
         #endregion
 
@@ -212,7 +207,11 @@ namespace YuJanggi.InGame.Mode
             GameResultInfo result,
             int totalMoves)
         {
-            _engine.EndEngine();
+            if (IsEnd)
+                return;
+
+            if (!_engine.References.Turn.IsEnd)
+                _engine.EndEngine();
 
             _commandPending = true;
             _localInputEnabled = false;

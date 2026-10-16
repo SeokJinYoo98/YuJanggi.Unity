@@ -97,6 +97,8 @@ namespace YuJanggi.InGame.Handler
 
             return false;
         }
+        // 외부 종료 요청용 API입니다. 정상 Engine 결과는 서버 GameEndedEvent로 확정합니다.
+        // 현재 기권은 별도의 SendGiveUpRequest를 사용합니다.
         public async UniTask<bool> SendGameEndRequest(
             GameResultInfo info,
             int totalMoves,
