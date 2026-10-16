@@ -24,28 +24,24 @@ namespace YuJanggi.InGame.Views.Chatting
 
         private void OnDisable()
             => _inputField.onSubmit.RemoveListener(HandleSendMessage);
-        private void Start()
-        {
-            if (Store.NetworkSessionStore.HasData)
-            {
-                _localTeam = Store.NetworkSessionStore.MyTeam;
-                _netHandler = BootStrap.YuJanggiBootStrap.Instance
-                    .NetworkManager.InGameChat;
-
-                _netHandler.OnChatReceived += HandleChatReceived;
-            }
-            else
-            {
-                _localTeam = PlayerTeam.None;
-                _netHandler = null;
-            }
-
-            _inputField.characterLimit = Protocol.Chat.ChatRules.MaxLen;
-        }
+  
         private void OnDestroy()
         {
             if (_netHandler != null)
                 _netHandler.OnChatReceived -= HandleChatReceived;
+        }
+        public void Initialize()
+        {
+            _inputField.characterLimit = Protocol.Chat.ChatRules.MaxLen;
+
+            if (_netHandler != null || !Store.NetworkSessionStore.HasData)
+                return;
+
+            _localTeam = Store.NetworkSessionStore.MyTeam;
+            _netHandler = BootStrap.YuJanggiBootStrap.Instance
+                .NetworkManager.InGameChat;
+
+            _netHandler.OnChatReceived += HandleChatReceived;
         }
         private void HandleChatReceived(PlayerTeam team, string message)
         {

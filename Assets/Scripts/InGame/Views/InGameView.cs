@@ -41,7 +41,13 @@ namespace YuJanggi.InGame.Views
         {
             _boardView.InitPieces(board);
             _liveView.SetLiveText();
-            _modeActionButton.SetText(isNetworkMode ? "채팅열기" : "무르기");
+            _modeActionButton.SetText("무르기");
+
+            if (isNetworkMode)
+            {
+                _modeActionButton.SetText("채팅열기");
+                _chatPanel.Initialize();
+            }     
         }
         public void StartGame(
             PlayerTeam turn,

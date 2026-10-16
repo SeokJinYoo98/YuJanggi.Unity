@@ -478,6 +478,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6519653713187152821, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6519653713187152821, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1785732927}
+    - target: {fileID: 6519653713187152821, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: HandleSendMessage
+      objectReference: {fileID: 0}
+    - target: {fileID: 6519653713187152821, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: YuJanggi.InGame.Views.Chatting.ChattingPanel, Assembly-CSharp
+      objectReference: {fileID: 0}
     - target: {fileID: 7054246277758205877, guid: f239b68d9c9d22a4d81804e0f2254abd, type: 3}
       propertyPath: m_text
       value: "\uC804\uC1A1 "

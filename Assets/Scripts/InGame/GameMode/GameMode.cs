@@ -152,7 +152,7 @@ namespace YuJanggi.InGame.Mode
             token.ThrowIfCancellationRequested();
             _engine.StartEngine();
             _play = true;
-            Debug.Log("StartGameAsync");
+
             BeginNextTurn(_engine.ControllerQuery.CurrentTurn);
 
         }
