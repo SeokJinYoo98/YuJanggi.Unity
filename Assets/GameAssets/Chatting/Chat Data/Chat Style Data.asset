@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10825623e0df40e8ab5dcf6efbb62f8e, type: 3}
+  m_Name: Chat Style Data
+  m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.InGame.Views.Chatting.ChatStyleData
+  _choIcon: {fileID: 21300000, guid: 07e6b6a9f2d9cfa439e1ee0de5783860, type: 3}
+  _hanIcon: {fileID: 21300000, guid: acdeaf50b05ecc84f81ab7abb72f18d6, type: 3}
+  _serverIcon: {fileID: 21300000, guid: c899a376a0e00e3489e6e284604c8a97, type: 3}
+  _localBubble: {fileID: 21300000, guid: 1c8bae5262f720f469c9fc0a80277f35, type: 3}
+  _remoteBubble: {fileID: 21300000, guid: 14dd005ce36b8854189c3a1f498b33cd, type: 3}
+  _serverBubble: {fileID: 21300000, guid: 2047ba15a4da89f4db94e02232ea2ac2, type: 3}
+  _localTextColor: {r: 0.16, g: 0.12, b: 0.09, a: 1}
+  _remoteTextColor: {r: 0.16, g: 0.12, b: 0.09, a: 1}
+  _serverTextColor: {r: 1, g: 1, b: 1, a: 1}

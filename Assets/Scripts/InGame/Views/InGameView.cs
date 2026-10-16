@@ -8,8 +8,7 @@ namespace YuJanggi.InGame.Views
     using Engine.JanggiBoard;
     using Engine.Domain;
 
-    using BootStrap;
-    using Audio;
+    using Chatting;
     using Board;
     using UI;
     using YuJanggi.UI;
