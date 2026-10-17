@@ -14,12 +14,10 @@ namespace YuJanggi.InGame.Handler
     using Network;
     using Network.Mapper;
     using Network.Handler;
-    public interface IInGameNetworkReceiver
+    internal interface IInGameNetworkReceiver
     {
-        void ApplyServerMove(
-            PlayerTeam team,
-            ProtocolTurnAction action,
-            Pos from, Pos to);
+        void ApplyServerGameStart(NetworkGameStartData data);
+        void ApplyServerMove(NetworkMoveData data);
 
         public void ApplyServerGameEnded(
             GameResultInfo result,
@@ -195,7 +193,7 @@ namespace YuJanggi.InGame.Handler
             switch (msg.Type)
             {
                 case ServerMessageType.GameStartEvent:
-                    _gameStart?.TrySetResult();
+                    OnServerGameStart(msg);
                     break;
                 case ServerMessageType.TurnCompletedEvent:
                     OnServerTurnCompleted(msg);
@@ -212,6 +210,21 @@ namespace YuJanggi.InGame.Handler
                     break;
             }
         }
+        private void OnServerGameStart(ServerMessage msg)
+        {
+            var payload = msg.GetPayload<GameStartEvent>();
+            var data = new NetworkGameStartData(
+                payload.StartedAt,
+                payload.TurnTimeSeconds,
+                payload.TurnNumber,
+                ProtocolMapper.ToPlayerTeamOrNone(payload.CurrentTeam),
+                payload.TurnDeadlineAt);
+
+            // 시작 데이터는 한 경로로 먼저 전달하고 기존 대기는 시작 신호로만 사용합니다.
+            _receiver?.ApplyServerGameStart(data);
+            _gameStart?.TrySetResult();
+        }
+
         private void OnServerTurnCompleted(
             ServerMessage msg)
         {
@@ -225,11 +238,18 @@ namespace YuJanggi.InGame.Handler
                 ? ProtocolMapper.ToPos(payload.ToX, payload.ToZ)
                 : Pos.Invalid;
 
-            _receiver?.ApplyServerMove(
+            var data = new NetworkMoveData(
                 team,
-                payload.Action,
+                ProtocolMapper.ToTurnAction(payload.Action),
                 from,
-                to);
+                to,
+                payload.TurnNumber,
+                payload.CompletedAt,
+                ProtocolMapper.ToPlayerTeamOrNone(payload.NextTeam),
+                payload.NextTurnDeadlineAt,
+                ProtocolMapper.ToPassReason(payload.PassReason));
+
+            _receiver?.ApplyServerMove(data);
         }
         private void OnServerGameEnded(
             ServerMessage msg)

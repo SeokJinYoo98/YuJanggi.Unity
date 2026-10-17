@@ -31,6 +31,28 @@ namespace YuJanggi.Network.Mapper
                     $"유효하지 않은 Protocol 팀입니다: {team}")
             };
         }
+        public static PlayerTeam ToPlayerTeamOrNone(ProtocolPlayerTeam team)
+            => team == ProtocolPlayerTeam.None ? PlayerTeam.None : ToPlayerTeam(team);
+
+        public static NetworkTurnAction ToTurnAction(ProtocolTurnAction action)
+            => action switch
+            {
+                ProtocolTurnAction.Move => NetworkTurnAction.Move,
+                ProtocolTurnAction.Pass => NetworkTurnAction.Pass,
+                _ => throw new InvalidDataException(
+                    $"유효하지 않은 Protocol 턴 동작입니다: {action}")
+            };
+
+        public static NetworkPassReason ToPassReason(ProtocolPassReason reason)
+            => reason switch
+            {
+                ProtocolPassReason.None => NetworkPassReason.None,
+                ProtocolPassReason.UserRequest => NetworkPassReason.UserRequest,
+                ProtocolPassReason.Timeout => NetworkPassReason.Timeout,
+                _ => throw new InvalidDataException(
+                    $"유효하지 않은 Protocol 쉼 사유입니다: {reason}")
+            };
+
         public static Formation     ToFormation(ProtocolFormation formation)
         {
             return formation switch

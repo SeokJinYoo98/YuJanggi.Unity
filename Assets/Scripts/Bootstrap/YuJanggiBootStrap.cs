@@ -51,7 +51,7 @@ namespace YuJanggi.BootStrap
 
         private (string host, int port) GetServerEndpoint()
         {
-            var serverHost = System.Environment.GetEnvironmentVariable("SERVER_HOST");
+            var serverHost = "54.117.29.175";//System.Environment.GetEnvironmentVariable("SERVER_HOST");
             var host = string.IsNullOrWhiteSpace(serverHost)
                 ? _host
                 : serverHost.Trim();

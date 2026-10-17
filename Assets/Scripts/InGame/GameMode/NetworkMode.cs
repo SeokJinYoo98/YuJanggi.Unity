@@ -15,7 +15,6 @@ namespace YuJanggi.InGame.Mode
     using Input;
     using Network;
     using Player;
-    using Protocol.InGame;
     using Store;
     using Views.UI;
 
@@ -30,6 +29,22 @@ namespace YuJanggi.InGame.Mode
         private readonly ILocalInputHandler     _localInput;
         private readonly InGameNetworkHandler   _netHandler;
         private readonly NetworkManager         _network;
+
+        internal NetworkGameStartData? ServerGameStart { get; private set; }
+        internal NetworkMoveData? LastServerTurn { get; private set; }
+
+        // 수신한 서버 상태를 조회하기 위한 값이며, 이번 단계에서는 게임 진행에 사용하지 않습니다.
+        internal int? ServerTurnNumber => LastServerTurn.HasValue
+            ? LastServerTurn.Value.NextTeam == PlayerTeam.None
+                ? (int?)null
+                : LastServerTurn.Value.TurnNumber + 1
+            : ServerGameStart?.TurnNumber;
+        internal PlayerTeam ServerTeam => LastServerTurn.HasValue
+            ? LastServerTurn.Value.NextTeam
+            : ServerGameStart?.CurrentTeam ?? PlayerTeam.None;
+        internal DateTimeOffset? ServerDeadlineAt => LastServerTurn.HasValue
+            ? LastServerTurn.Value.NextTurnDeadlineAt
+            : ServerGameStart?.TurnDeadlineAt;
 
         private bool            _commandPending = false;
         private bool IsLocalTurn
@@ -66,6 +81,8 @@ namespace YuJanggi.InGame.Mode
         #region Init & Start
         protected override void OnInitialize()
         {
+            ServerGameStart = null;
+            LastServerTurn = null;
             _commandPending = false;
             _localInput.Initialize();
             _localInput.ResetPlayer();
@@ -184,21 +201,30 @@ namespace YuJanggi.InGame.Mode
         #endregion
 
         #region Server Commands
-        public void ApplyServerMove(
-           PlayerTeam team,
-           ProtocolTurnAction action,
-           Pos from, Pos to)
+        public void ApplyServerGameStart(NetworkGameStartData data)
         {
+            ServerGameStart = data;
+            LastServerTurn = null;
+        }
+
+        public void ApplyServerMove(NetworkMoveData data)
+        {
+            LastServerTurn = data;
+            var team = data.Team;
+            var action = data.Action;
+            var from = data.From;
+            var to = data.To;
+
             if (team == _localPlayer.Team)
                 _commandPending = false;
 
             switch (action)
             {
-                case ProtocolTurnAction.Move:
+                case NetworkTurnAction.Move:
                     _engine.TryProcessTurn(from, to);
                     break;
 
-                case ProtocolTurnAction.Pass:
+                case NetworkTurnAction.Pass:
                     _engine.HandleHandicap();
                     break;
             }

@@ -214,7 +214,7 @@
       "url": "https://registry.npmjs.org"
     },
     "com.yujanggi.protocol": {
-      "version": "1.7.6",
+      "version": "1.8.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
