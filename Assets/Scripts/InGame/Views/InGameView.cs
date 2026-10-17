@@ -152,6 +152,9 @@ namespace YuJanggi.InGame.Views
         public void CloseResultView()
             => _resultView.Close();
 
+        public void ResetRematchButton()
+            => _rematchButton.ResetButton();
+
         public void ToggleChattingPanel()
         {
             _chatPanel.Toggle();

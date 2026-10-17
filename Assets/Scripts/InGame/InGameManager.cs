@@ -178,6 +178,10 @@ namespace YuJanggi.InGame
                 moveCount);
 
             _inGameView.OpenResultView();
+
+            // 로컬·AI는 즉시 재경기 후 클릭 잠금이 적용되므로, 다음 대국 종료 시 리셋합니다.
+            if (_inGameMode.ModeType != GameModeType.Network)
+                _inGameView.ResetRematchButton();
         }
         private void HandleUndoCompleted(
             UndoData data,
