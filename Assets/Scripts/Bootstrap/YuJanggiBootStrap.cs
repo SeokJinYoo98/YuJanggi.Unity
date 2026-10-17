@@ -51,18 +51,17 @@ namespace YuJanggi.BootStrap
 
         private (string host, int port) GetServerEndpoint()
         {
-            var serverHost = "54.117.29.175";//System.Environment.GetEnvironmentVariable("SERVER_HOST");
+            var serverHost = System.Environment.GetEnvironmentVariable("SERVER_HOST");
             var host = string.IsNullOrWhiteSpace(serverHost)
-                ? _host
+                ? "54.117.29.175"
                 : serverHost.Trim();
 
             var serverPort = System.Environment.GetEnvironmentVariable("SERVER_PORT");
             var port = int.TryParse(serverPort, out var parsedPort)
-                ? parsedPort
-                : _port;
+                && parsedPort is >= 1 and <= 65535
+                    ? parsedPort
+                    : _port;
 
-
-            //return ("127.0.0.1", port);
             return (host, port);
         }
         private async UniTask InitializeAsync()
