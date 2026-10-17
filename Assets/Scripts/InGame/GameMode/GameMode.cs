@@ -54,6 +54,7 @@ namespace YuJanggi.InGame.Mode
         protected bool _localInputEnabled = true;
         public bool IsEnd => !_play;
         public abstract GameModeType ModeType { get; }
+        protected virtual bool ShouldTickEngine => true;
         #endregion
         #region Constructor
         protected GameMode(
@@ -67,7 +68,7 @@ namespace YuJanggi.InGame.Mode
         #region Update
         public void Tick(float deltaTime)
         {
-            if (_play) _engine.Tick(deltaTime);
+            if (_play && ShouldTickEngine) _engine.Tick(deltaTime);
         }
         #endregion
 
