@@ -33,6 +33,7 @@ namespace YuJanggi.InGame
         private CancellationToken _lifecycleToken;
 
         private IInGameState _currState;
+        private (int cho, int han)? _networkTimerDisplay;
         #endregion
 
         private IReadOnlyEngine EngineReferences
@@ -73,7 +74,34 @@ namespace YuJanggi.InGame
                     : null);
         }
         private void Update()
-            => _inGameMode?.Tick(Time.deltaTime);
+        {
+            _inGameMode?.Tick(Time.deltaTime);
+            RefreshNetworkTimer();
+        }
+
+        private void RefreshNetworkTimer()
+        {
+            if (_inGameMode is not NetworkMode network || network.IsEnd)
+                return;
+
+            var display = network.GetServerTimerDisplay();
+            if (_networkTimerDisplay is { } previous && previous == display)
+                return;
+
+            _networkTimerDisplay = display;
+            _inGameView.HandleTimeChanged((PlayerTeam.Cho, display.cho));
+            _inGameView.HandleTimeChanged((PlayerTeam.Han, display.han));
+        }
+
+        private void ResetNetworkTimer()
+        {
+            _networkTimerDisplay = null;
+            if (_inGameMode.ModeType != GameModeType.Network)
+                return;
+
+            _inGameView.HandleTimeChanged((PlayerTeam.Cho, 0));
+            _inGameView.HandleTimeChanged((PlayerTeam.Han, 0));
+        }
         private void OnEnable()
             => BindEvents();
         private void OnDisable()
@@ -100,12 +128,14 @@ namespace YuJanggi.InGame
             _inGameView.Initialize(
                 EngineReferences.Board,
                 _inGameMode.ModeType == GameModeType.Network);
+            ResetNetworkTimer();
 
             await _inGameMode.StartGameAsync(_lifecycleToken);
 
             _inGameView.StartGame(
                 PlayerTeam.Cho,
                 _inGameMode.GetPlayerType(PlayerTeam.Cho));
+            RefreshNetworkTimer();
         }
 
         private void BindEvents()
@@ -114,7 +144,7 @@ namespace YuJanggi.InGame
             _engine.BindEvents();
 
             var engine = _engine.References;
-            _inGameView.BindEvents(engine);
+            _inGameView.BindEvents(engine, useEngineTime: _inGameMode.ModeType != GameModeType.Network);
 
             _inGameMode.OnTurnCompleted += HandleTurnCompleted;
             _inGameMode.OnUndoCompleted += HandleUndoCompleted;
@@ -164,6 +194,7 @@ namespace YuJanggi.InGame
             _currState.HandleTurnCompleted(
                 data,
                 nextType);
+            RefreshNetworkTimer();
         }
         #endregion
 
@@ -228,8 +259,10 @@ namespace YuJanggi.InGame
                 EngineReferences.Board,
                 PlayerTeam.Cho,
                 _inGameMode.GetPlayerType(PlayerTeam.Cho));
+            ResetNetworkTimer();
 
             await _inGameMode.StartGameAsync(token);
+            RefreshNetworkTimer();
         }
         #endregion
         public void ChangeState(InGameStateType type)
@@ -241,6 +274,7 @@ namespace YuJanggi.InGame
             _currState?.HandleExit(_inGameMode);
             _currState = nextState;
             _currState.HandleEnter(_inGameMode);
+            RefreshNetworkTimer();
         }
     }
 }

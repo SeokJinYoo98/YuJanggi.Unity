@@ -47,6 +47,19 @@ namespace YuJanggi.InGame.Mode
             ? LastServerTurn.Value.NextTurnDeadlineAt
             : ServerGameStart?.TurnDeadlineAt;
 
+        internal (int cho, int han) GetServerTimerDisplay()
+        {
+            var team = ServerTeam;
+            if (ServerDeadlineAt is not { } deadline || team == PlayerTeam.None)
+                return (0, 0);
+
+            var remaining = Math.Max(0,
+                (int)Math.Ceiling((deadline - DateTimeOffset.UtcNow).TotalSeconds));
+            // 대기 중인 팀은 기존 Timer UI처럼 턴 제한시간을 표시합니다.
+            var turnTime = Math.Max(0, (int)Math.Ceiling(ServerGameStart?.TurnTimeSeconds ?? 0f));
+            return team == PlayerTeam.Cho ? (remaining, turnTime) : (turnTime, remaining);
+        }
+
         private bool            _commandPending = false;
         private bool            _desynced;
         private TurnData?       _appliedTurn;

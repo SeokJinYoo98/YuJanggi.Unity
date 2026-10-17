@@ -81,16 +81,20 @@ namespace YuJanggi.InGame.Views
             _boardView.ShowMoveGuides(legal, illegal);
         }
 
-        public void BindEvents(IReadOnlyEngine engine)
+        public void HandleTimeChanged((PlayerTeam team, int time) info)
+            => _liveView.HandleTimeChanged(info);
+
+        public void BindEvents(IReadOnlyEngine engine, bool useEngineTime = true)
         {
-            engine.Turn.OnTimeChanged                += _liveView.HandleTimeChanged;
+            if (useEngineTime)
+                engine.Turn.OnTimeChanged            += HandleTimeChanged;
             engine.ReadOnlyRecord.OnRecordChanged    += _liveView.HandleRecordChanged;
             engine.Score.OnScoreChanged              += _liveView.HandleUpdateScore;
 
         }
         public void UnBindEvents(IReadOnlyEngine engine)
         {
-            engine.Turn.OnTimeChanged                -= _liveView.HandleTimeChanged;
+            engine.Turn.OnTimeChanged                -= HandleTimeChanged;
             engine.ReadOnlyRecord.OnRecordChanged    -= _liveView.HandleRecordChanged;
             engine.Score.OnScoreChanged              -= _liveView.HandleUpdateScore;
         }
