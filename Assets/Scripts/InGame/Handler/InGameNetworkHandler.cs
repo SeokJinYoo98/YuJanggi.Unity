@@ -1,6 +1,7 @@
 using System;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using UnityEngine;
 
 
 
@@ -95,6 +96,7 @@ namespace YuJanggi.InGame.Handler
             if (result == MovePieceResult.Accepted)
                 return true;
 
+            Debug.Log($"이동 요청이 거절되었습니다: {result}");
             return false;
         }
         // 외부 종료 요청용 API입니다. 정상 Engine 결과는 서버 GameEndedEvent로 확정합니다.
@@ -168,6 +170,7 @@ namespace YuJanggi.InGame.Handler
             if (result == GameRequestResult.Accepted)
                 return true;
 
+            Debug.Log($"넘기기 요청이 거절되었습니다: {result}");
             return false;
         }
         public async UniTask<bool> SendRematchRequest(

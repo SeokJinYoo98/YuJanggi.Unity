@@ -115,15 +115,26 @@ namespace YuJanggi.InGame.Mode
         {
             if (_desynced || _commandPending || ServerTurnNumber is not { } turnNumber)
                 return;
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(token, _gameToken);
+            var gameToken = _gameToken;
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(token, gameToken);
+            var isAccepted = false;
             _commandPending = true;
 
-            await _netHandler.SendMoveRequestAsync(
-                _localPlayer.Team,
-                turnNumber,
-                from,
-                to,
-                cts.Token);
+            try
+            {
+                isAccepted = await _netHandler.SendMoveRequestAsync(
+                    _localPlayer.Team,
+                    turnNumber,
+                    from,
+                    to,
+                    cts.Token);
+            }
+            finally
+            {
+                // 이전 턴/게임의 늦은 실패가 현재 pending이나 종료 상태를 바꾸지 않습니다.
+                if (!isAccepted && !IsEnd && gameToken == _gameToken && ServerTurnNumber == turnNumber)
+                    _commandPending = false;
+            }
         }
         #endregion
 
@@ -173,18 +184,22 @@ namespace YuJanggi.InGame.Mode
             if (_desynced || !IsLocalTurn || _commandPending || ServerTurnNumber is not { } turnNumber)
                 return;
 
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(token, _gameToken);
+            var gameToken = _gameToken;
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(token, gameToken);
+            var isAccepted = false;
             _commandPending = true;
 
-            var isAccepted = await _netHandler.SendPassTurnRequest(
-              _localPlayer.Team,
-              turnNumber,
-              cts.Token);
-
-            if (!isAccepted)
+            try
             {
-                _commandPending = false;
-                Debug.Log("넘기기 요청이 거절되었습니다.");
+                isAccepted = await _netHandler.SendPassTurnRequest(
+                    _localPlayer.Team,
+                    turnNumber,
+                    cts.Token);
+            }
+            finally
+            {
+                if (!isAccepted && !IsEnd && gameToken == _gameToken && ServerTurnNumber == turnNumber)
+                    _commandPending = false;
             }
         }
         public async override UniTask GiveUpAsync(
