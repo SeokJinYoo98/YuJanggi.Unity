@@ -31,8 +31,16 @@ namespace YuJanggi.InGame.Views.Board
 
         public void InitPieces(IReadOnlyBoard model)
         {
-            if (JanggiOptionStore.JanggiSetting.PlayerCho != PlayerType.Local)
+            var options = JanggiOptionStore.JanggiSetting;
+            var localTeam = options.GameMode == GameModeType.Network
+                ? NetworkSessionStore.MyTeam
+                : options.PlayerCho == PlayerType.Local
+                    ? PlayerTeam.Cho
+                    : PlayerTeam.Han;
+
+            if (localTeam == PlayerTeam.Han)
                 _garbagePos.localPosition = new Vector3(0f, 0f, -6f);
+
             _deathCnt = 0;
             _piece.SpawnPieces(model);
         }
