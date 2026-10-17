@@ -56,12 +56,20 @@ namespace YuJanggi.InGame.Handler
             CancellationToken token)
         {
             EnsureAvailable(token);
-            ResetCompletion(ref _gameStart);
+            var completion = ResetCompletion(ref _gameStart);
 
-            await SendAsync(
-                ClientMessageType.GameSceneReady,
-                new GameSceneReady(),
-                token);
+            try
+            {
+                await SendAsync(
+                    ClientMessageType.GameSceneReady,
+                    new GameSceneReady(),
+                    token);
+            }
+            catch
+            {
+                completion.TrySetCanceled();
+                throw;
+            }
         }
         public async UniTask        WaitForGameStartEvent(
             CancellationToken token)
@@ -72,7 +80,15 @@ namespace YuJanggi.InGame.Handler
                 ?? throw new InvalidOperationException(
                     "게임 시작 대기가 준비되지 않았습니다.");
 
-            await completion.Task.AttachExternalCancellation(token);
+            try
+            {
+                await completion.Task.AttachExternalCancellation(token);
+            }
+            catch (OperationCanceledException)
+            {
+                completion.TrySetCanceled();
+                throw;
+            }
         }
         public async UniTask<bool>  SendMoveRequestAsync(
             PlayerTeam team,
@@ -191,24 +207,43 @@ namespace YuJanggi.InGame.Handler
             CancellationToken token)
         {
             EnsureAvailable(token);
-            ResetCompletion(ref _rematchConfirmed);
+            var completion = ResetCompletion(ref _rematchConfirmed);
+            var accepted = false;
 
-            var response = await SendRequestAsync(
-                ClientMessageType.RematchRequest,
-                new { Requester = ProtocolMapper.ToProtocolPlayerTeam(myTeam)},
-                ServerMessageType.RematchResponse,
-                token);
+            try
+            {
+                var response = await SendRequestAsync(
+                    ClientMessageType.RematchRequest,
+                    new { Requester = ProtocolMapper.ToProtocolPlayerTeam(myTeam)},
+                    ServerMessageType.RematchResponse,
+                    token);
 
-            return response.GetPayload<GameRequestResponse>().Result
-                == GameRequestResult.Accepted;
+                accepted = response.GetPayload<GameRequestResponse>().Result
+                    == GameRequestResult.Accepted;
+                return accepted;
+            }
+            finally
+            {
+                if (!accepted)
+                    completion.TrySetCanceled();
+            }
         }
         public async UniTask WaitForRematchConfirmedEvent(
             CancellationToken token)
         {
             EnsureAvailable(token);
 
-            var completion = _rematchConfirmed;
-            await completion.Task.AttachExternalCancellation(token);
+            var completion = _rematchConfirmed
+                ?? throw new InvalidOperationException("재대결 확정 대기가 준비되지 않았습니다.");
+            try
+            {
+                await completion.Task.AttachExternalCancellation(token);
+            }
+            catch (OperationCanceledException)
+            {
+                completion.TrySetCanceled();
+                throw;
+            }
         }
         protected override void OnHandleMessage(
             ServerMessage msg)

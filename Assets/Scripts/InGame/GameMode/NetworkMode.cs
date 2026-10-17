@@ -63,12 +63,15 @@ namespace YuJanggi.InGame.Mode
         private bool            _commandPending = false;
         private bool            _desynced;
         private TurnData?       _appliedTurn;
+        private GameResultInfo? _engineGameResult;
         private UniTaskCompletionSource? _commandCompletion;
         private bool _waitingForGameEnd;
+        private CancellationTokenSource? _rematchCts;
         private CancellationTokenRegistration _connectionRegistration;
         private CancellationTokenRegistration _gameRegistration;
         private bool IsLocalTurn
             => !IsEnd && !_gameToken.IsCancellationRequested
+                && !_engine.References.Turn.IsEnd
                 && _engine.ControllerQuery.CurrentTurn == _localPlayer.Team;
         public NetworkMode(
             IJanggiEngine        engine,
@@ -104,12 +107,14 @@ namespace YuJanggi.InGame.Mode
         {
             _connectionRegistration.Dispose();
             _gameRegistration.Dispose();
+            CancelRematchWait();
+            _netHandler.CancelPendingEvents();
             _commandCompletion = null;
             _waitingForGameEnd = false;
             ServerGameStart = null;
             LastServerTurn = null;
-            _desynced = false;
             _appliedTurn = null;
+            _engineGameResult = null;
             _commandPending = false;
             _localInput.Initialize();
             _localInput.ResetPlayer();
@@ -179,6 +184,11 @@ namespace YuJanggi.InGame.Mode
         {
             _connectionRegistration.Dispose();
             _gameRegistration.Dispose();
+            ServerGameStart = null;
+            LastServerTurn = null;
+            _engineGameResult = null;
+            CancelRematchWait();
+            _netHandler.CancelPendingEvents();
             _commandCompletion?.TrySetCanceled();
             _commandCompletion = null;
             _waitingForGameEnd = false;
@@ -192,6 +202,7 @@ namespace YuJanggi.InGame.Mode
             int moveCount)
         {
             // 로컬 Engine 결과로 종료를 요청하지 않고 서버 GameEndedEvent를 기다립니다.
+            _engineGameResult = result;
             _commandPending = true;
             SetLocalInputEnabled(false);
             _localPlayer.ResetSelection();
@@ -202,16 +213,33 @@ namespace YuJanggi.InGame.Mode
         public async override UniTask<bool> RequestRematchAsync(
             CancellationToken token)
         {
-            bool accepted = await _netHandler.SendRematchRequest(
-                _localPlayer.Team,
-                token);
-
-            if (!accepted)
+            if (!IsEnd || !ServerGameStart.HasValue || _rematchCts is not null)
                 return false;
 
-            await _netHandler.WaitForRematchConfirmedEvent(token);
+            var gameToken = _gameToken;
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(token, _network.ConnectionToken);
+            _rematchCts = cts;
+            try
+            {
+                if (!await _netHandler.SendRematchRequest(_localPlayer.Team, cts.Token))
+                    return false;
 
-            return true;
+                await _netHandler.WaitForRematchConfirmedEvent(cts.Token);
+                cts.Token.ThrowIfCancellationRequested();
+                return gameToken == _gameToken && IsEnd && ReferenceEquals(_rematchCts, cts);
+            }
+            finally
+            {
+                if (gameToken == _gameToken && ReferenceEquals(_rematchCts, cts))
+                    _rematchCts = null;
+            }
+        }
+
+        private void CancelRematchWait()
+        {
+            var cts = _rematchCts;
+            _rematchCts = null;
+            cts?.Cancel();
         }
 
         #endregion
@@ -321,8 +349,17 @@ namespace YuJanggi.InGame.Mode
         #region Server Commands
         public void ApplyServerGameStart(NetworkGameStartData data)
         {
+            if (!IsEnd || ServerGameStart.HasValue || _gameToken.IsCancellationRequested)
+            {
+                Debug.Log("[NetworkMode] 이미 수신했거나 대기 중이 아닌 GameStartEvent를 무시합니다.");
+                return;
+            }
+
             ServerGameStart = data;
             LastServerTurn = null;
+            _engineGameResult = null;
+            // 준비/Rematch 응답이 아니라 서버의 새 게임 시작에서만 이전 desync를 해제합니다.
+            _desynced = false;
         }
 
         public void ApplyServerMove(NetworkMoveData data)
@@ -457,18 +494,47 @@ namespace YuJanggi.InGame.Mode
             GameResultInfo result,
             int totalMoves)
         {
-            if (IsEnd)
+            if (IsEnd || _gameToken.IsCancellationRequested)
                 return;
+
+            LogGameEndMismatch(result, totalMoves);
 
             if (!_engine.References.Turn.IsEnd)
                 _engine.EndEngine();
 
+            // 대기 객체를 먼저 분리해 이전 async finally가 종료/다음 게임 상태를 바꾸지 못하게 합니다.
+            var completion = _commandCompletion;
+            _commandCompletion = null;
+            _waitingForGameEnd = false;
             _commandPending = false;
-            _localInputEnabled = false;
-            ClearLocalInput();
 
-            _commandCompletion?.TrySetResult();
-            NotifyGameEnded(result, totalMoves);
+            try
+            {
+                // IsEnd 전환 및 game token 취소가 입력/Receiver와 현재 게임 요청만 정리합니다.
+                NotifyGameEnded(result, totalMoves);
+            }
+            finally
+            {
+                completion?.TrySetResult();
+            }
+        }
+
+        private void LogGameEndMismatch(GameResultInfo result, int totalMoves)
+        {
+            var recordCount = _engine.References.ReadOnlyRecord.Count;
+            if (_engineGameResult is { } engineResult)
+            {
+                if (engineResult.Type != result.Type || engineResult.Winner != result.Winner
+                    || recordCount != totalMoves)
+                    Debug.LogWarning($"[NetworkMode] 종료 결과 불일치: "
+                        + $"server={result.Type}/{result.Winner}/{totalMoves}, "
+                        + $"engine={engineResult.Type}/{engineResult.Winner}/{recordCount}");
+            }
+            else if (result.Type != GameResult.GiveUp || recordCount != totalMoves)
+            {
+                Debug.LogWarning($"[NetworkMode] 서버 종료 결과에 대응하는 Engine 결과/기록을 확인할 수 없습니다: "
+                    + $"server={result.Type}/{result.Winner}/{totalMoves}, engineRecordCount={recordCount}");
+            }
         }
         #endregion
 
@@ -499,7 +565,7 @@ namespace YuJanggi.InGame.Mode
         protected override void OnSetLocalInputEnabled(
             bool enabled)
         {
-            if (enabled && !IsEnd)
+            if (enabled && !IsEnd && !_engine.References.Turn.IsEnd)
             {
                 BeginNextTurn(_engine.ControllerQuery.CurrentTurn);
             }

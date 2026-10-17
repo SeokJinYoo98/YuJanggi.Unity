@@ -253,6 +253,10 @@ namespace YuJanggi.InGame
             if (!await _inGameMode.RequestRematchAsync(token))
                 return;
 
+            // 이전 기보 재생은 Engine 기록/보드를 초기화하기 전에 기존 전환 경로로 종료합니다.
+            if (_inGameMode.ModeType == GameModeType.Network)
+                ChangeState(InGameStateType.Live);
+
             _inGameMode.Initialize(token);
 
             _inGameView.PrepareRematchView(
