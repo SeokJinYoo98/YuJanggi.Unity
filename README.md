@@ -21,14 +21,14 @@ Unity 독립 규칙 Engine과 공용 Protocol을 사용하며, AWS EC2의 .NET T
 한 클라이언트에서 두 진영을 조작하거나 AI와 대국하고, 네트워크 모드에서는 매칭·포진 선택 후 상대와 대국합니다.<br />
 기보 재생, 리매치와 인게임 채팅을 제공합니다.
 
-### 플레이 빌드 다운로드 · v1.0.1
+### 플레이 빌드 다운로드 · v1.0.2
 
 | 플랫폼 | 다운로드 | 실행 방법 |
 | --- | --- | --- |
-| Android | [APK 다운로드](https://github.com/SeokJinYoo98/YuJanggi.Unity/releases/download/play-v1.0.1/YuJanggi_v1.0.1.apk) | Android 기기에 APK를 설치합니다. |
-| Windows | [ZIP 다운로드](https://github.com/SeokJinYoo98/YuJanggi.Unity/releases/download/play-v1.0.1/YuJanggi.v1.0.1.zip) | 압축을 모두 해제한 뒤 `YuJanggi.exe`를 실행합니다. |
+| Android | [APK 다운로드](https://github.com/SeokJinYoo98/YuJanggi.Unity/releases/download/play-v1.0.2/YuJanggi_v1.0.2.apk) | Android 기기에 APK를 설치합니다. |
+| Windows | [ZIP 다운로드](https://github.com/SeokJinYoo98/YuJanggi.Unity/releases/download/play-v1.0.2/YuJanggi.v1.0.2.zip) | 압축을 모두 해제한 뒤 `YuJanggi.exe`를 실행합니다. |
 
-[플레이 빌드 Release](https://github.com/SeokJinYoo98/YuJanggi.Unity/releases/tag/play-v1.0.1) · [이전 Windows 설치파일](Downloads/YuJanggi_V1.0.0_Setup.exe?raw=true)
+[플레이 빌드 Release](https://github.com/SeokJinYoo98/YuJanggi.Unity/releases/tag/play-v1.0.2) · [이전 Windows 설치파일](Downloads/YuJanggi_V1.0.0_Setup.exe?raw=true)
 
 ## 주요 기능
 
