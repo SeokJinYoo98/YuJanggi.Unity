@@ -63,6 +63,7 @@ namespace YuJanggi.InGame.Handler
         }
         public async UniTask<bool>  SendMoveRequestAsync(
             PlayerTeam team,
+            int turnNumber,
             Pos from,
             Pos to,
             CancellationToken token)
@@ -75,6 +76,7 @@ namespace YuJanggi.InGame.Handler
             var request = new MovePieceRequest
             {
                 Team = ProtocolMapper.ToProtocolPlayerTeam(team),
+                TurnNumber = turnNumber,
 
                 FromX = fromPos.X,
                 FromZ = fromPos.Z,
@@ -146,13 +148,18 @@ namespace YuJanggi.InGame.Handler
         }
         public async UniTask<bool> SendPassTurnRequest(
             PlayerTeam myTeam,
+            int turnNumber,
             CancellationToken token)
         {
             EnsureAvailable(token);
 
             var response = await SendRequestAsync(
                 ClientMessageType.PassTurnRequest,
-                 new { Requester = ProtocolMapper.ToProtocolPlayerTeam(myTeam) },
+                new GamePlayerRequest
+                {
+                    Requester = ProtocolMapper.ToProtocolPlayerTeam(myTeam),
+                    TurnNumber = turnNumber
+                },
                 ServerMessageType.PassTurnResponse,
                 token);
 

@@ -33,7 +33,7 @@ namespace YuJanggi.InGame.Mode
         internal NetworkGameStartData? ServerGameStart { get; private set; }
         internal NetworkMoveData? LastServerTurn { get; private set; }
 
-        // 수신한 서버 상태를 조회하기 위한 값이며, 이번 단계에서는 게임 진행에 사용하지 않습니다.
+        // 서버 Event로 갱신된 상태에서 다음 요청에 사용할 턴 번호를 조회합니다.
         internal int? ServerTurnNumber => LastServerTurn.HasValue
             ? LastServerTurn.Value.NextTeam == PlayerTeam.None
                 ? (int?)null
@@ -108,12 +108,14 @@ namespace YuJanggi.InGame.Mode
             Pos to,
             CancellationToken token)
         {
-            if (_commandPending) return;
+            if (_commandPending || ServerTurnNumber is not { } turnNumber)
+                return;
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(token, _gameToken);
             _commandPending = true;
 
             await _netHandler.SendMoveRequestAsync(
                 _localPlayer.Team,
+                turnNumber,
                 from,
                 to,
                 cts.Token);
@@ -163,7 +165,7 @@ namespace YuJanggi.InGame.Mode
         public async override UniTask PassTurnAsync(
             CancellationToken token)
         {
-            if (!IsLocalTurn || _commandPending)
+            if (!IsLocalTurn || _commandPending || ServerTurnNumber is not { } turnNumber)
                 return;
 
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(token, _gameToken);
@@ -171,6 +173,7 @@ namespace YuJanggi.InGame.Mode
 
             var isAccepted = await _netHandler.SendPassTurnRequest(
               _localPlayer.Team,
+              turnNumber,
               cts.Token);
 
             if (!isAccepted)
