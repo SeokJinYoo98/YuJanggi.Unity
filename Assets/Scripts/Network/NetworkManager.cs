@@ -20,6 +20,12 @@ namespace YuJanggi.Network
     /// <summary>연결 시작과 종료, 수신 루프, Response/Event 라우팅을 담당합니다.</summary>
     public sealed class NetworkManager : MonoBehaviour
     {
+        // 통신 응답과 승인 후 Event 대기의 제한이며 게임 턴 제한시간과는 무관합니다.
+        [SerializeField, Min(1f)] private float _requestTimeoutSeconds = 10f;
+        internal TimeSpan RequestTimeout { get; private set; }
+        internal CancellationToken ConnectionToken
+            => _receiveCts?.Token ?? new CancellationToken(canceled: true);
+
         private readonly SemaphoreSlim _connectLock = new(1, 1);
 
         private NetworkClient _client;
@@ -48,8 +54,9 @@ namespace YuJanggi.Network
                 throw new InvalidOperationException(
                     "NetworkManager가 이미 초기화되었습니다.");
 
+            RequestTimeout = TimeSpan.FromSeconds(_requestTimeoutSeconds);
             var client   = new NetworkClient(host, port);
-            var requests = new RequestDispatcher(client);
+            var requests = new RequestDispatcher(client, RequestTimeout);
 
             LobbyNetworkHandler   lobby      = null;
             InGameNetworkHandler  inGame     = null;
@@ -168,10 +175,6 @@ namespace YuJanggi.Network
                     await StopReceiveLoopAsync();
                 }
             }
-
-            // TODO: 명시적 Disconnect 후 Handler의 Event 대기가 남는지 테스트합니다.
-            // 대기가 남으면 해당 대기를 취소하는 처리를 추가합니다.
-            // 정상 연결 종료를 IOException으로 만들어 전달하지 않습니다.
         }
 
         // TCP 연결 성공 직후 시작해 Handshake Response도 라우팅합니다.
@@ -184,22 +187,16 @@ namespace YuJanggi.Network
 
             _receiveCts         = new CancellationTokenSource();
             _receiveCompletion  = new UniTaskCompletionSource();
+            _requests.BeginConnection(_receiveCts.Token);
 
             ReceiveLoopAsync(
                 _client,
-                _receiveCts.Token,
+                _receiveCts,
                 _receiveCompletion)
                 .Forget();
-
-            // TODO: 재연결 후 이전 Handler 대기 상태가 새 요청에 영향을 주는지 테스트합니다.
-            // 문제가 확인되면 연결 시작 시 필요한 대기 상태만 초기화합니다.
         }
 
-        // TODO: 로그인 씬 구현 시 ReceiveLoop 종료 예외 처리 정리
-        // - Pending Request 종료
-        // - 연결 상태 Offline 처리
-        // - Disconnect
-        // - 재접속 또는 로그인 씬 전환 정책 적용
+        // TODO: 로그인 씬 구현 시 연결 종료 상태 표시와 씬 전환 정책을 연결합니다.
         public async UniTask StopReceiveLoopAsync()
         {
             var cts = _receiveCts;
@@ -208,20 +205,16 @@ namespace YuJanggi.Network
                 return;
 
             cts.Cancel();
+            _client?.Disconnect();
             await completion.Task;
-            if (ReferenceEquals(_receiveCts, cts))
-            {
-                _receiveCts = null;
-                _receiveCompletion = null;
-                cts.Dispose();
-            }
         }
 
         private async UniTask ReceiveLoopAsync(
             NetworkClient client,
-            CancellationToken token,
+            CancellationTokenSource cts,
             UniTaskCompletionSource completion)
         {
+            var token = cts.Token;
             try
             {
                 while (!token.IsCancellationRequested)
@@ -241,12 +234,43 @@ namespace YuJanggi.Network
             }
             finally
             {
-                completion.TrySetResult();
+                try
+                {
+                    if (ReferenceEquals(_receiveCts, cts))
+                    {
+                        // 토큰부터 종료해 새 요청을 막고 전송/응답/Event 대기를 함께 끝냅니다.
+                        try
+                        {
+                            cts.Cancel();
+                        }
+                        finally
+                        {
+                            try
+                            {
+                                _requests?.Clear();
+                            }
+                            finally
+                            {
+                                try
+                                {
+                                    _inGameHandler?.CancelPendingEvents();
+                                }
+                                finally
+                                {
+                                    _receiveCts = null;
+                                    _receiveCompletion = null;
+                                    client.Disconnect();
+                                }
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    completion.TrySetResult();
+                    cts.Dispose();
+                }
             }
-
-            // TODO: 서버 연결 종료 후 Request/Response 및 Handler의 Event 대기가 남는지 테스트합니다.
-            // 대기가 남으면 수신 종료 경로에 필요한 대기 취소 처리를 추가합니다.
-            // 종료 처리를 추가할 때 미처리 예외 로그가 중복 발생하는지도 확인합니다.
         }
 
         private void OnApplicationQuit()
@@ -257,18 +281,7 @@ namespace YuJanggi.Network
 
         private void OnDestroy()
         {
-            var cts = _receiveCts;
-            _receiveCts = null;
-            _receiveCompletion = null;
-            try
-            {
-                cts?.Cancel();
-            }
-            finally
-            {
-                cts?.Dispose();
-            }
-
+            _receiveCts?.Cancel();
             _client?.Disconnect();
             _requests?.Dispose();
 

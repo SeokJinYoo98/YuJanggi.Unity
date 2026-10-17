@@ -46,7 +46,13 @@ namespace YuJanggi.Network
         {
             ValidateRequestId(requestId);
 
-            return _pendingRequests.Remove(requestId);
+            if (!_pendingRequests.TryGetValue(requestId, out var pendingRequest))
+                return false;
+
+            _pendingRequests.Remove(requestId);
+            // timeout/전송 실패로 제거되는 경우에도 원본 응답 대기를 완료합니다.
+            pendingRequest.CompletionSource.TrySetCanceled();
+            return true;
         }
 
         public void Clear()

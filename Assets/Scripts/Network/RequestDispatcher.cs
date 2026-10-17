@@ -20,12 +20,23 @@ namespace YuJanggi.Network
     {
         private readonly NetworkClient _client;
         private readonly PendingRequestTracker _pendingRequestTracker = new();
+        private readonly TimeSpan _requestTimeout;
+        private CancellationToken _connectionToken = new CancellationToken(canceled: true);
         private bool _disposed;
 
-        public RequestDispatcher(NetworkClient client)
+        public RequestDispatcher(NetworkClient client, TimeSpan requestTimeout)
         {
             _client = client
                 ?? throw new ArgumentNullException(nameof(client));
+            if (requestTimeout <= TimeSpan.Zero)
+                throw new ArgumentOutOfRangeException(nameof(requestTimeout));
+            _requestTimeout = requestTimeout;
+        }
+
+        internal void BeginConnection(CancellationToken token)
+        {
+            EnsureAvailable(token);
+            _connectionToken = token;
         }
 
         public async UniTask<ServerMessage> SendRequestAsync(
@@ -43,18 +54,32 @@ namespace YuJanggi.Network
                     "RequestId가 없는 요청입니다.",
                     nameof(request));
 
+            var connectionToken = _connectionToken;
+            using var timeoutCts = new CancellationTokenSource();
+            using var timeout = timeoutCts.CancelAfterSlim(_requestTimeout, DelayType.Realtime);
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(
+                token, connectionToken, timeoutCts.Token);
+            var requestToken = cts.Token;
+            requestToken.ThrowIfCancellationRequested();
+
             string requestId = request.RequestId;
             var responseTask = _pendingRequestTracker.Add(
                 requestId,
                 expectedResponseType);
             try
             {
-                await _client.SendAsync(request, token);
-                token.ThrowIfCancellationRequested();
+                await _client.SendAsync(request, requestToken).AttachExternalCancellation(requestToken);
+                requestToken.ThrowIfCancellationRequested();
 
-                var response = await responseTask.AttachExternalCancellation(token);
-                token.ThrowIfCancellationRequested();
+                var response = await responseTask.AttachExternalCancellation(requestToken);
+                requestToken.ThrowIfCancellationRequested();
                 return response;
+            }
+            catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested
+                && !token.IsCancellationRequested && !connectionToken.IsCancellationRequested)
+            {
+                throw new TimeoutException(
+                    $"응답 대기 제한시간({_requestTimeout.TotalSeconds}초)을 초과했습니다: {request.Type}, {requestId}");
             }
             finally
             {

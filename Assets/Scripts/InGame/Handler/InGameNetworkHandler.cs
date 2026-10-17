@@ -40,6 +40,18 @@ namespace YuJanggi.InGame.Handler
             receiver)
             => _receiver = receiver;
 
+        internal void CancelPendingEvents()
+        {
+            _gameStart?.TrySetCanceled();
+            _rematchConfirmed?.TrySetCanceled();
+        }
+
+        protected override void OnDispose()
+        {
+            CancelPendingEvents();
+            _receiver = null;
+        }
+
         public async UniTask        SendInGameReadyAsync(
             CancellationToken token)
         {
@@ -146,6 +158,7 @@ namespace YuJanggi.InGame.Handler
             if (result == GameRequestResult.Accepted)
                 return true;
 
+            Debug.Log($"기권 요청이 거절되었습니다: {result}");
             return false;
         }
         public async UniTask<bool> SendPassTurnRequest(

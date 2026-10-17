@@ -50,8 +50,13 @@ namespace YuJanggi.InGame.Mode
         private bool            _commandPending = false;
         private bool            _desynced;
         private TurnData?       _appliedTurn;
+        private UniTaskCompletionSource? _commandCompletion;
+        private bool _waitingForGameEnd;
+        private CancellationTokenRegistration _connectionRegistration;
+        private CancellationTokenRegistration _gameRegistration;
         private bool IsLocalTurn
-            => !IsEnd && _engine.ControllerQuery.CurrentTurn == _localPlayer.Team;
+            => !IsEnd && !_gameToken.IsCancellationRequested
+                && _engine.ControllerQuery.CurrentTurn == _localPlayer.Team;
         public NetworkMode(
             IJanggiEngine        engine,
             InputHandlerFactory  inputs,
@@ -84,6 +89,10 @@ namespace YuJanggi.InGame.Mode
         #region Init & Start
         protected override void OnInitialize()
         {
+            _connectionRegistration.Dispose();
+            _gameRegistration.Dispose();
+            _commandCompletion = null;
+            _waitingForGameEnd = false;
             ServerGameStart = null;
             LastServerTurn = null;
             _desynced = false;
@@ -93,6 +102,23 @@ namespace YuJanggi.InGame.Mode
             _localInput.ResetPlayer();
             _localPlayer.ResetSelection();
             _commandPending = true;
+
+            var gameToken = _gameToken;
+            _connectionRegistration = _network.ConnectionToken.Register(() =>
+            {
+                if (gameToken == _gameToken && !gameToken.IsCancellationRequested)
+                    BlockForNetworkFailure("연결의 수신 처리가 종료되었습니다.");
+            });
+            _gameRegistration = gameToken.Register(() =>
+            {
+                if (gameToken != _gameToken)
+                    return;
+                _connectionRegistration.Dispose();
+                _localInputEnabled = false;
+                ClearLocalInput();
+                _commandCompletion?.TrySetCanceled();
+                _commandPending = false;
+            });
         }
         protected override async UniTask OnGameStartAsync(
             CancellationToken token)
@@ -100,10 +126,18 @@ namespace YuJanggi.InGame.Mode
             _commandPending = true;
             _netHandler.SetReceiver(this);
 
-            await _netHandler.SendInGameReadyAsync(token);
-            await _netHandler.WaitForGameStartEvent(token);
-
-            _commandPending = false;
+            var gameToken = _gameToken;
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(token, gameToken, _network.ConnectionToken);
+            try
+            {
+                await _netHandler.SendInGameReadyAsync(cts.Token);
+                await _netHandler.WaitForGameStartEvent(cts.Token);
+            }
+            finally
+            {
+                if (gameToken == _gameToken)
+                    _commandPending = false;
+            }
         }
         #endregion
 
@@ -113,28 +147,16 @@ namespace YuJanggi.InGame.Mode
             Pos to,
             CancellationToken token)
         {
-            if (_desynced || _commandPending || ServerTurnNumber is not { } turnNumber)
+            if (_desynced || !IsLocalTurn || _commandPending || ServerTurnNumber is not { } turnNumber)
                 return;
-            var gameToken = _gameToken;
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(token, gameToken);
-            var isAccepted = false;
-            _commandPending = true;
 
-            try
-            {
-                isAccepted = await _netHandler.SendMoveRequestAsync(
+            await SendCommandAsync(turnNumber, token,
+                commandToken => _netHandler.SendMoveRequestAsync(
                     _localPlayer.Team,
                     turnNumber,
                     from,
                     to,
-                    cts.Token);
-            }
-            finally
-            {
-                // 이전 턴/게임의 늦은 실패가 현재 pending이나 종료 상태를 바꾸지 않습니다.
-                if (!isAccepted && !IsEnd && gameToken == _gameToken && ServerTurnNumber == turnNumber)
-                    _commandPending = false;
-            }
+                    commandToken));
         }
         #endregion
 
@@ -142,6 +164,11 @@ namespace YuJanggi.InGame.Mode
         protected override async UniTask OnClearAsync(
             CancellationToken token)
         {
+            _connectionRegistration.Dispose();
+            _gameRegistration.Dispose();
+            _commandCompletion?.TrySetCanceled();
+            _commandCompletion = null;
+            _waitingForGameEnd = false;
             _commandPending = false;
             ClearLocalInput();
 
@@ -184,42 +211,97 @@ namespace YuJanggi.InGame.Mode
             if (_desynced || !IsLocalTurn || _commandPending || ServerTurnNumber is not { } turnNumber)
                 return;
 
-            var gameToken = _gameToken;
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(token, gameToken);
-            var isAccepted = false;
-            _commandPending = true;
-
-            try
-            {
-                isAccepted = await _netHandler.SendPassTurnRequest(
+            await SendCommandAsync(turnNumber, token,
+                commandToken => _netHandler.SendPassTurnRequest(
                     _localPlayer.Team,
                     turnNumber,
-                    cts.Token);
-            }
-            finally
-            {
-                if (!isAccepted && !IsEnd && gameToken == _gameToken && ServerTurnNumber == turnNumber)
-                    _commandPending = false;
-            }
+                    commandToken));
         }
         public async override UniTask GiveUpAsync(
             CancellationToken token)
         {
-            if (!IsLocalTurn || _commandPending)
+            if (_desynced || !IsLocalTurn || _commandPending || ServerTurnNumber is not { } turnNumber)
                 return;
 
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(token, _gameToken);
+            await SendCommandAsync(turnNumber, token,
+                commandToken => _netHandler.SendGiveUpRequest(_localPlayer.Team, commandToken),
+                waitForGameEnd: true);
+        }
+
+        private async UniTask SendCommandAsync(
+            int turnNumber,
+            CancellationToken token,
+            Func<CancellationToken, UniTask<bool>> sendRequest,
+            bool waitForGameEnd = false)
+        {
+            var gameToken = _gameToken;
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(
+                token, gameToken, _network.ConnectionToken);
+            var completion = new UniTaskCompletionSource();
+            _commandCompletion = completion;
+            _waitingForGameEnd = waitForGameEnd;
             _commandPending = true;
 
-            var isAccepted = await _netHandler.SendGiveUpRequest(
-                _localPlayer.Team,
-                cts.Token);
-
-            if (!isAccepted)
+            try
             {
-                _commandPending = false;
-                Debug.Log("기권 요청이 거절되었습니다.");
+                if (!await sendRequest(cts.Token))
+                    return; // 명확한 서버 거절일 때만 재입력을 허용합니다.
+
+                await WaitForCommandEventAsync(completion, waitForGameEnd, cts.Token);
             }
+            catch (OperationCanceledException) when (gameToken.IsCancellationRequested)
+            {
+                // 게임/씬 종료에 따른 취소이며 새 게임의 상태는 변경하지 않습니다.
+            }
+            catch (Exception exception)
+            {
+                if (ReferenceEquals(_commandCompletion, completion) && gameToken == _gameToken
+                    && !IsEnd && completion.Task.Status != UniTaskStatus.Succeeded
+                    && (waitForGameEnd || ServerTurnNumber == turnNumber))
+                    BlockForNetworkFailure($"게임 명령의 서버 결과를 확인하지 못했습니다: {exception}");
+            }
+            finally
+            {
+                // 이전 명령의 늦은 완료가 다음 명령/재대결의 pending을 해제하지 않습니다.
+                if (ReferenceEquals(_commandCompletion, completion) && gameToken == _gameToken)
+                {
+                    _commandCompletion = null;
+                    _waitingForGameEnd = false;
+                    _commandPending = false;
+                }
+            }
+        }
+
+        private async UniTask WaitForCommandEventAsync(
+            UniTaskCompletionSource completion,
+            bool waitForGameEnd,
+            CancellationToken token)
+        {
+            using var timeoutCts = new CancellationTokenSource();
+            using var timeout = timeoutCts.CancelAfterSlim(_network.RequestTimeout, DelayType.Realtime);
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCts.Token);
+            try
+            {
+                await completion.Task.AttachExternalCancellation(cts.Token);
+            }
+            catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !token.IsCancellationRequested)
+            {
+                var eventName = waitForGameEnd ? "GameEndedEvent" : "TurnCompletedEvent";
+                throw new TimeoutException(
+                    $"승인 후 {eventName} 대기 제한시간({_network.RequestTimeout.TotalSeconds}초)을 초과했습니다.");
+            }
+        }
+
+        private void BlockForNetworkFailure(string reason)
+        {
+            if (_desynced)
+                return;
+            _desynced = true;
+            SetLocalInputEnabled(false);
+            _localPlayer.ResetSelection();
+            _commandPending = false;
+            Debug.LogError($"[NetworkMode] 서버 상태 불확실: {reason}");
+            _commandCompletion?.TrySetCanceled();
         }
         #endregion
 
@@ -338,10 +420,12 @@ namespace YuJanggi.InGame.Mode
             }
 
             LastServerTurn = data;
-            if (data.Team == _localPlayer.Team)
+            if (data.Team == _localPlayer.Team && !_waitingForGameEnd)
                 _commandPending = false;
 
             base.HandleTurnCompleted(appliedTurn);
+            if (data.Team == _localPlayer.Team && !_waitingForGameEnd)
+                _commandCompletion?.TrySetResult();
         }
 
         private void BlockForDesync(NetworkMoveData data, string reason)
@@ -354,6 +438,7 @@ namespace YuJanggi.InGame.Mode
                 + $"serverTeam={ServerTeam}, actingTeam={data.Team}, nextTeam={data.NextTeam}, "
                 + $"engineTeam={_engine.ControllerQuery.CurrentTurn}, "
                 + $"engineRecordCount={_engine.References.ReadOnlyRecord.Count}");
+            _commandCompletion?.TrySetCanceled();
         }
         public void ApplyServerGameEnded(
             GameResultInfo result,
@@ -365,10 +450,11 @@ namespace YuJanggi.InGame.Mode
             if (!_engine.References.Turn.IsEnd)
                 _engine.EndEngine();
 
-            _commandPending = true;
+            _commandPending = false;
             _localInputEnabled = false;
             ClearLocalInput();
 
+            _commandCompletion?.TrySetResult();
             NotifyGameEnded(result, totalMoves);
         }
         #endregion
