@@ -26,6 +26,8 @@ namespace YuJanggi.InGame.Views.Piece
         private MeshFilter   _meshFilter;
         private MeshRenderer _meshRenderer;
         private Material[]   _materials;
+        private bool         _selectable = true;
+        private bool         _isSelected;
      
         private Tween _moveTween;
         private Tween _highlightMoveTween;
@@ -64,6 +66,8 @@ namespace YuJanggi.InGame.Views.Piece
             _moveTween?.Kill();
             _moveTween = null;
             StopHighlightTweens();
+            _isSelected = false;
+            UpdateCollider();
             _visual.localPosition = _visualOriginLocalPos;
             _visual.localRotation = _visualOriginLocalRot;
         }
@@ -73,6 +77,8 @@ namespace YuJanggi.InGame.Views.Piece
         #region Public Methods
         public void Init(PieceData data, Pos pos)
         {
+            _isSelected = false;
+            SetSelectable(true);
             _boardPos                = pos;
             _meshFilter.sharedMesh   = data.PieceMesh;
 
@@ -99,15 +105,22 @@ namespace YuJanggi.InGame.Views.Piece
         }
 
         public void SetSelectable(bool selectable)
-            => _boxCollider.enabled = selectable;
+        {
+            _selectable = selectable;
+            UpdateCollider();
+        }
         public void SelectPiece()
         {
+            _isSelected = true;
+            UpdateCollider();
             MoveToHighlightPosition();
             SwapMaterial();
             StartHighlightRotation();
         }
         public void UnSelectPiece()
         {
+            _isSelected = false;
+            UpdateCollider();
             StopHighlightTweens();
             MoveToOriginPosition();
             RestoreHighlightRotation();
@@ -132,6 +145,9 @@ namespace YuJanggi.InGame.Views.Piece
         #endregion
 
         #region Private Methods
+
+        private void UpdateCollider()
+            => _boxCollider.enabled = _selectable && !_isSelected;
 
         private void HandleMoveCompleted()
         {
