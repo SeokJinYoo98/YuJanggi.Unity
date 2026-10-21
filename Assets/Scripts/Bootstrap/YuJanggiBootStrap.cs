@@ -46,7 +46,7 @@ namespace YuJanggi.BootStrap
         {
             await InitializeAsync();
 
-            await SceneManager.LoadSceneAsync("LobbyScene");
+            await SceneManager.LoadSceneAsync("LoginScene");
         }
 
         private (string host, int port) GetServerEndpoint()

@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/Scenes/BootStrapScene.unity
     guid: c3d7257ca8d3f834ebee287f471cc054
   - enabled: 1
+    path: Assets/Scenes/LoginScene.unity
+    guid: 7c396b051f52974448e8b56469fa1072
+  - enabled: 1
     path: Assets/Scenes/LobbyScene.unity
     guid: b8616a54cbf4ff343954cbc6d18a9a91
   - enabled: 1
