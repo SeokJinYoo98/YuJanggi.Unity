@@ -417,6 +417,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::YuJanggi.Login.LoginController
   _googleLoginButton: {fileID: 1243305690}
   _statusText: {fileID: 1797632458}
+  _googleClientJsonPath: D:\Secure\Google\client_secret_632049778013-mnro36svlh90cqtki394cvkfbvhvgg1b.apps.googleusercontent.com.json
 --- !u!4 &1109328200
 Transform:
   m_ObjectHideFlags: 0
