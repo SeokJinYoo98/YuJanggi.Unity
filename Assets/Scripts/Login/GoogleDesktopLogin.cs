@@ -64,11 +64,11 @@ namespace YuJanggi.Login
         {
             var values = new Dictionary<string, string>
             {
-                ["client_id"] = client.client_id,
-                ["code"] = code,
-                ["code_verifier"] = verifier,
-                ["redirect_uri"] = redirectUri,
-                ["grant_type"] = "authorization_code"
+                ["client_id"]       = client.client_id,
+                ["code"]            = code,
+                ["code_verifier"]   = verifier,
+                ["redirect_uri"]    = redirectUri,
+                ["grant_type"]      = "authorization_code"
             };
             if (!string.IsNullOrWhiteSpace(client.client_secret))
                 values["client_secret"] = client.client_secret;
